@@ -24,7 +24,9 @@
   --header-h: 76px;
 }
 
-* { box-sizing: border-box; }
+/* min-width:0 은 grid/flex 자식이 텍스트 내용 때문에 트랙보다 커지는 것을
+   막아줍니다 (긴 한글 단어가 overflow-wrap으로도 줄바꿈되지 않는 문제 방지) */
+* { box-sizing: border-box; min-width: 0; }
 html { scroll-behavior: smooth; overflow-x: hidden; }
 
 body {
@@ -35,6 +37,7 @@ body {
   background: var(--color-white);
   line-height: 1.6;
   word-break: keep-all;
+  overflow-wrap: break-word;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
@@ -228,7 +231,7 @@ button { font-family: inherit; cursor: pointer; }
   margin-bottom: 18px;
 }
 .hero h1 {
-  font-size: 42px;
+  font-size: clamp(26px, 4vw + 14px, 42px);
   line-height: 1.32;
   font-weight: 800;
   letter-spacing: -0.01em;
@@ -310,7 +313,7 @@ button { font-family: inherit; cursor: pointer; }
   border-radius: 999px;
   margin-bottom: 14px;
 }
-.section-head h2 { font-size: 30px; font-weight: 800; color: var(--color-ink); letter-spacing: -0.01em; }
+.section-head h2 { font-size: clamp(21px, 2.2vw + 14px, 30px); font-weight: 800; color: var(--color-ink); letter-spacing: -0.01em; }
 .section-head p { margin-top: 12px; font-size: 15.5px; color: var(--color-muted); }
 .section-head.align-left { text-align: left; margin: 0 0 40px; }
 
@@ -467,7 +470,7 @@ button { font-family: inherit; cursor: pointer; }
   gap: 24px;
   flex-wrap: wrap;
 }
-.cta-banner h3 { font-size: 24px; font-weight: 800; }
+.cta-banner h3 { font-size: clamp(19px, 1.6vw + 14px, 24px); font-weight: 800; }
 .cta-banner p { margin-top: 8px; color: rgba(255,255,255,0.85); }
 .cta-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 
@@ -492,7 +495,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .breadcrumb { font-size: 13px; color: rgba(255,255,255,0.75); margin-bottom: 12px; }
 .breadcrumb a { color: rgba(255,255,255,0.85); }
-.page-header h1 { font-size: 32px; font-weight: 800; }
+.page-header h1 { font-size: clamp(22px, 2.6vw + 12px, 32px); font-weight: 800; }
 .page-header p { margin-top: 10px; color: rgba(255,255,255,0.85); font-size: 15px; }
 
 /* ---------- Info / table blocks ---------- */
@@ -502,6 +505,7 @@ button { font-family: inherit; cursor: pointer; }
   border-radius: var(--radius-lg);
   padding: 28px;
 }
+.table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 table.simple-table { width: 100%; border-collapse: collapse; }
 table.simple-table th, table.simple-table td {
   text-align: left;
@@ -761,6 +765,17 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
 /* ==========================================================================
    Responsive
    ========================================================================== */
+/* 헤더 내비게이션: 태블릿부터 햄버거 메뉴로 전환 (로고+전체 메뉴+버튼 2개가
+   761~1080px 폭에서는 한 줄에 들어가지 않으므로, 콘텐츠 그리드 기준(980px)보다
+   먼저 전환합니다) */
+@media (max-width: 1080px) {
+  .main-nav { position: fixed; top: var(--header-h); left: 0; right: 0; bottom: 0; background: #fff; flex-direction: column; align-items: stretch; padding: 18px; gap: 4px; transform: translateX(100%); transition: transform 0.25s ease; overflow-y: auto; }
+  .main-nav.is-open { transform: translateX(0); }
+  .main-nav a { padding: 14px 12px; font-size: 16px; border-bottom: 1px solid var(--color-line); border-radius: 0; }
+  .header-cta .btn-outline { display: none; }
+  .nav-toggle { display: flex; }
+}
+
 @media (max-width: 980px) {
   .hero .container { grid-template-columns: 1fr; padding-top: 44px; padding-bottom: 44px; min-height: auto; }
   .hero-visual { max-width: 300px; margin: 20px auto 0; }
@@ -779,18 +794,11 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
   .brand .mark { width: 32px; height: 32px; }
   .brand-sub { display: none; }
   .header-cta { flex-shrink: 0; gap: 8px; }
-  .main-nav { position: fixed; top: var(--header-h); left: 0; right: 0; bottom: 0; background: #fff; flex-direction: column; align-items: stretch; padding: 18px; gap: 4px; transform: translateX(100%); transition: transform 0.25s ease; overflow-y: auto; }
-  .main-nav.is-open { transform: translateX(0); }
-  .main-nav a { padding: 14px 12px; font-size: 16px; border-bottom: 1px solid var(--color-line); border-radius: 0; }
-  .header-cta .btn-outline { display: none; }
-  .nav-toggle { display: flex; }
-  .hero h1 { font-size: 30px; }
   .hero-stats { gap: 20px; }
   .grid-4, .grid-3, .grid-2, .steps { grid-template-columns: 1fr; }
   .section { padding: 56px 0; }
   .cta-banner { flex-direction: column; text-align: center; padding: 34px 24px; }
   .footer-top { grid-template-columns: 1fr; gap: 28px; }
   .form-grid { grid-template-columns: 1fr; }
-  .page-header h1 { font-size: 25px; }
   .contact-side { order: -1; }
 }
