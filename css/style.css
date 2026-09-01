@@ -260,27 +260,26 @@ button { font-family: inherit; cursor: pointer; }
 
 .hero-visual {
   position: relative;
-  aspect-ratio: 1 / 1;
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   margin-left: auto;
 }
-.hero-visual .ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
+.hero-photo {
+  position: relative;
+  border-radius: 28px;
+  overflow: hidden;
+  border: 6px solid rgba(255,255,255,0.25);
+  box-shadow: var(--shadow-lg);
   background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.25);
 }
-.hero-visual .ring:nth-child(2) { inset: 34px; background: rgba(255,255,255,0.10); }
-.hero-visual .icon-wheel {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.hero-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 8 / 5;
+  object-fit: cover;
+  object-position: center 20%;
 }
-.hero-visual .icon-wheel svg { width: 62%; height: 62%; }
 .hero-badge {
   position: absolute;
   left: 6%;
