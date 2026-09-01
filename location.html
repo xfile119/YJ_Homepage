@@ -60,17 +60,30 @@
     <div class="container grid-2">
       <div>
         <div class="map-embed">
-          <div id="daumRoughmapContainer1444899774557" class="root_daum_roughmap root_daum_roughmap_landing"></div>
-          <script charset="UTF-8" class="daum_roughmap_loader_script" src="https://dmaps.daum.net/map_js_init/roughmapLoader.js"></script>
-          <script charset="UTF-8">
-            new daum.roughmap.Lander({
-              "timestamp" : "1444899774557",
-              "key" : "62ks",
-              "mapWidth" : "640",
-              "mapHeight" : "480"
-            }).render();
-          </script>
+          <div id="kakao-map"></div>
         </div>
+        <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=180b5c3893615045c003277761877da9&libraries=services"></script>
+        <script>
+          (function () {
+            var container = document.getElementById("kakao-map");
+            if (!container || typeof kakao === "undefined") return;
+            var map = new kakao.maps.Map(container, {
+              center: new kakao.maps.LatLng(35.1595, 126.8526),
+              level: 3
+            });
+            map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
+            new kakao.maps.services.Geocoder().addressSearch("광주광역시 광산구 목련로 372-19", function (result, status) {
+              if (status !== kakao.maps.services.Status.OK) return;
+              var coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+              map.setCenter(coords);
+              var marker = new kakao.maps.Marker({ map: map, position: coords });
+              var infowindow = new kakao.maps.InfoWindow({
+                content: '<div style="padding:6px 10px;font-size:12.5px;font-weight:700;white-space:nowrap;">영진자동차운전전문학원</div>'
+              });
+              infowindow.open(map, marker);
+            });
+          })();
+        </script>
       </div>
       <div class="info-card">
         <div class="table-scroll">

@@ -198,17 +198,25 @@
           <h2 style="font-size:24px;">오시는 길</h2>
         </div>
         <div class="map-embed">
-          <div id="daumRoughmapContainer1444899774557" class="root_daum_roughmap root_daum_roughmap_landing"></div>
-          <script charset="UTF-8" class="daum_roughmap_loader_script" src="https://dmaps.daum.net/map_js_init/roughmapLoader.js"></script>
-          <script charset="UTF-8">
-            new daum.roughmap.Lander({
-              "timestamp" : "1444899774557",
-              "key" : "62ks",
-              "mapWidth" : "480",
-              "mapHeight" : "320"
-            }).render();
-          </script>
+          <div id="kakao-map-home"></div>
         </div>
+        <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=180b5c3893615045c003277761877da9&libraries=services"></script>
+        <script>
+          (function () {
+            var container = document.getElementById("kakao-map-home");
+            if (!container || typeof kakao === "undefined") return;
+            var map = new kakao.maps.Map(container, {
+              center: new kakao.maps.LatLng(35.1595, 126.8526),
+              level: 3
+            });
+            new kakao.maps.services.Geocoder().addressSearch("광주광역시 광산구 목련로 372-19", function (result, status) {
+              if (status !== kakao.maps.services.Status.OK) return;
+              var coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+              map.setCenter(coords);
+              new kakao.maps.Marker({ map: map, position: coords });
+            });
+          })();
+        </script>
         <div class="table-scroll">
         <table class="simple-table" style="margin-top:18px;">
           <tr><th>주소</th><td>광주광역시 광산구 목련로 372-19</td></tr>
