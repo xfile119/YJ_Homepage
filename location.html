@@ -36,15 +36,12 @@
     <nav class="main-nav" id="main-nav">
       <a href="index.html" data-page="index.html">홈</a>
       <a href="about.html" data-page="about.html">학원소개</a>
-      <a href="courses.html" data-page="courses.html">교육과정</a>
       <a href="license-guide.html" data-page="license-guide.html">면허가이드</a>
       <a href="notice.html" data-page="notice.html">공지사항</a>
       <a href="location.html" data-page="location.html">오시는길</a>
       <a href="contact.html" data-page="contact.html">상담문의</a>
     </nav>
     <div class="header-cta">
-      <a href="tel:062-951-5100" class="btn btn-outline btn-sm">전화상담</a>
-      <a href="http://pf.kakao.com/_UftKG/chat" target="_blank" rel="noopener" class="btn btn-primary btn-sm">카카오 상담</a>
       <button class="nav-toggle" aria-label="메뉴 열기" aria-expanded="false"><span></span></button>
     </div>
   </div>
@@ -62,9 +59,17 @@
   <section class="section">
     <div class="container grid-2">
       <div>
-        <div class="map-box" style="aspect-ratio:16/11;">
-          <strong>지도 영역 (지도 API 연동 예정)</strong>
-          <small>카카오맵 또는 네이버지도 API 키를 발급받아 iframe/스크립트로 교체해주세요.</small>
+        <div class="map-embed">
+          <div id="daumRoughmapContainer1444899774557" class="root_daum_roughmap root_daum_roughmap_landing"></div>
+          <script charset="UTF-8" class="daum_roughmap_loader_script" src="https://dmaps.daum.net/map_js_init/roughmapLoader.js"></script>
+          <script charset="UTF-8">
+            new daum.roughmap.Lander({
+              "timestamp" : "1444899774557",
+              "key" : "62ks",
+              "mapWidth" : "640",
+              "mapHeight" : "480"
+            }).render();
+          </script>
         </div>
       </div>
       <div class="info-card">
@@ -158,19 +163,9 @@
         <h5>바로가기</h5>
         <ul>
           <li><a href="about.html">학원소개</a></li>
-          <li><a href="courses.html">교육과정</a></li>
           <li><a href="license-guide.html">면허가이드</a></li>
           <li><a href="notice.html">공지사항</a></li>
           <li><a href="location.html">오시는길</a></li>
-        </ul>
-      </div>
-      <div class="footer-col">
-        <h5>교육과정</h5>
-        <ul>
-          <li><a href="courses.html#type1-common">1종보통</a></li>
-          <li><a href="courses.html#type2-common">2종보통</a></li>
-          <li><a href="courses.html#type1-large">1종대형</a></li>
-          <li><a href="courses.html#type2-small">2종소형(이륜)</a></li>
         </ul>
       </div>
       <div class="footer-col">

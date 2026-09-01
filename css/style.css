@@ -537,6 +537,18 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
   padding: 20px;
 }
 .map-box strong { color: var(--color-ink); font-size: 15px; }
+
+/* 다음(카카오) 약도 위젯 — 위젯 자체가 고정 픽셀 크기라 좁은 화면에서는
+   레이아웃을 깨는 대신 가로 스크롤로 감쌉니다. */
+.map-embed {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  padding: 12px;
+}
+.map-embed .root_daum_roughmap { margin: 0 auto; }
 .map-box small { font-size: 12.5px; }
 
 .shuttle-list { display: flex; flex-direction: column; gap: 14px; }
@@ -700,7 +712,7 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
 
 /* ---------- Footer ---------- */
 .site-footer { background: #12151c; color: rgba(255,255,255,0.75); padding: 56px 0 0; }
-.footer-top { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 32px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.footer-top { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.1); }
 .footer-brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 800; font-size: 18px; margin-bottom: 14px; }
 .footer-brand .mark { width: 34px; height: 34px; border-radius: 9px; background: var(--color-primary); display: flex; align-items: center; justify-content: center; }
 .footer-brand .mark svg { width: 18px; height: 18px; color: #fff; }
