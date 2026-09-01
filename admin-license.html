@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>면허가이드 데이터 편집 (비공개)</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<style>
+  body { background: var(--color-surface); }
+  .admin-shell { max-width: 1080px; margin: 0 auto; padding: 32px 24px 80px; }
+  .admin-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+  .admin-header h1 { font-size: 22px; font-weight: 800; color: var(--color-ink); }
+  .admin-warning {
+    background: #fff4e5; border: 1px solid #ffe1b3; color: #8a5910;
+    border-radius: var(--radius-md); padding: 16px 18px; font-size: 13.5px; line-height: 1.7; margin-bottom: 28px;
+  }
+  .admin-section { background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 22px; }
+  .admin-section h2 { font-size: 16px; font-weight: 800; color: var(--color-ink); margin-bottom: 16px; }
+  .admin-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .admin-field { display: flex; flex-direction: column; gap: 6px; }
+  .admin-field label { font-size: 12.5px; font-weight: 700; color: var(--color-muted); }
+  .admin-field input, .admin-field select {
+    border: 1px solid var(--color-line); border-radius: var(--radius-sm); padding: 9px 11px;
+    font-size: 13.5px; font-family: inherit; color: var(--color-ink);
+  }
+  .admin-field input:focus, .admin-field select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
+  .fee-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  table.edit-table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+  table.edit-table th { text-align: left; font-size: 11.5px; color: var(--color-muted); padding: 8px 6px; border-bottom: 2px solid var(--color-ink); white-space: nowrap; }
+  table.edit-table td { padding: 6px; border-bottom: 1px solid var(--color-line); vertical-align: middle; }
+  table.edit-table input, table.edit-table select {
+    width: 100%; border: 1px solid var(--color-line); border-radius: 6px; padding: 6px 7px; font-size: 12.5px; font-family: inherit; box-sizing: border-box;
+  }
+  table.edit-table input.narrow { width: 62px; }
+  table.edit-table td.code-cell { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--color-primary); white-space: nowrap; }
+  .admin-actions { position: sticky; bottom: 0; background: var(--color-surface); padding: 16px 0; display: flex; gap: 10px; flex-wrap: wrap; border-top: 1px solid var(--color-line); margin-top: 8px; }
+  .admin-note { font-size: 12.5px; color: var(--color-muted); margin-top: 8px; line-height: 1.7; }
+  textarea#codeOutput {
+    width: 100%; min-height: 160px; margin-top: 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    border: 1px solid var(--color-line); border-radius: var(--radius-sm); padding: 12px; box-sizing: border-box; display: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+  <div class="admin-header">
+    <h1>면허가이드 데이터 편집</h1>
+    <a href="license-guide.html" class="btn btn-outline btn-sm">← 면허가이드로 돌아가기</a>
+  </div>
+
+  <div class="admin-warning">
+    <strong>이 페이지는 비공개 도구입니다.</strong> 홈페이지 메뉴 어디에도 연결되어 있지 않고 검색엔진에도 노출되지 않아요.<br>
+    수정 후 <strong>파일 다운로드</strong>를 누르면 새로운 <code>license-guide.html</code> 파일이 저장됩니다. 이 파일을 GitHub 저장소에 올려야(또는 Claude에게 전달해야) 실제 홈페이지에 반영됩니다 — 이 화면에서 저장한다고 방문자에게 바로 보이는 건 아니에요.
+  </div>
+
+  <div class="admin-section">
+    <h2>학원 정보</h2>
+    <div class="admin-grid">
+      <div class="admin-field"><label>상호명</label><input id="f-contact-name" type="text" /></div>
+      <div class="admin-field"><label>전화번호 (표시용, 예: 062-951-5100)</label><input id="f-contact-phone" type="text" /></div>
+      <div class="admin-field"><label>전화번호 (tel: 링크용, 숫자만, 예: 0629515100)</label><input id="f-contact-phoneHref" type="text" /></div>
+      <div class="admin-field"><label>주소</label><input id="f-contact-address" type="text" /></div>
+    </div>
+  </div>
+
+  <div class="admin-section">
+    <h2>시험 응시료 안내 (면허 종류별, 없으면 비워두세요)</h2>
+    <div class="fee-grid" id="feeGrid"></div>
+  </div>
+
+  <div class="admin-section">
+    <h2>케이스별 교육시간 · 수강료</h2>
+    <p class="admin-note">시간·수강료 칸을 비워두면 "해당없음"으로 처리됩니다. 수강료 칸에 <code>unknown</code>이라고 입력하면 "문의"로 표시돼요.</p>
+    <div class="table-scroll">
+      <table class="edit-table">
+        <thead>
+          <tr>
+            <th>코드</th><th>대상 면허</th><th>상태</th>
+            <th>학과(h)</th><th>기능(h)</th><th>도로(h)</th>
+            <th>학과(원)</th><th>기능(원)</th><th>도로(원)</th>
+            <th>비고</th>
+          </tr>
+        </thead>
+        <tbody id="casesBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="admin-actions">
+    <button type="button" id="btnDownload" class="btn btn-primary">📥 수정된 license-guide.html 다운로드</button>
+    <button type="button" id="btnCopyCode" class="btn btn-outline">DATA 코드만 복사하기</button>
+    <span id="statusMsg" style="align-self:center;font-size:13px;font-weight:700;"></span>
+  </div>
+  <textarea id="codeOutput" readonly></textarea>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* 현재 license-guide.html의 DATA와 동일한 초기값입니다.
+   license-guide.html 안의 DATA_START ~ DATA_END 표시 사이 블록을 교체하는 방식으로 동작합니다. */
+var DATA = {
+  updatedAt:"2026-08-31",
+  contact:{ name:"(주)영진자동차운전전문학원", phone:"062-951-5100", phoneHref:"0629515100", address:"광주광역시 광산구 목련로 372-19" },
+  examFee:{
+    B2:"장내검정 5만원 + 도로주행검정 5만원 (별도)",
+    B1:"장내검정 5만원 + 도로주행검정 5만원 (별도)",
+    TM:"장내검정 5만원 + 도로주행검정 5만원 (별도)",
+    S2:"장내검정 4만원 (별도)",
+    WD:"장내검정 4만원 (별도)",
+    DH:"장내검정 6만8천원 (별도)",
+    SG:"장내검정 7만원 (별도)",
+    DG:"장내검정 7만원 (별도)",
+    GN:null
+  },
+  cases:{
+    "B2-01":{status:"ok", target:"제2종 보통면허", hours:{hak:[3,3],gi:[4,4],doro:[6,6]}, cost:{hak:30000,gi:220000,doro:330000}, note:"처음 취득하시는 표준 과정이에요."},
+    "B2-02":{status:"ok", target:"제2종 보통면허", hours:{hak:[2,2],gi:[4,4],doro:[6,6]}, cost:{hak:20000,gi:220000,doro:330000}, note:"원동기면허가 있어 학과교육이 2시간으로 줄어들어요."},
+    "B2-03":{status:"ok", target:"제2종 보통면허", hours:{hak:[2,2],gi:[4,4],doro:[6,6]}, cost:{hak:20000,gi:220000,doro:330000}, note:"2종소형면허가 있어 학과교육이 2시간으로 줄어들어요."},
+    "B2-05":{status:"ok", target:"제2종 보통면허", hours:{hak:[1,1],gi:[2,2],doro:[6,6]}, cost:{hak:10000,gi:110000,doro:330000}, note:"취소 후 재취득 할인 과정이 적용돼요."},
+    "B2-06":{status:"ok", target:"제2종 보통면허", hours:{hak:[0,0],gi:[0,0],doro:[6,6]}, cost:{hak:0,gi:0,doro:330000}, note:"학과·기능 교육을 이미 마치셨어요. 도로주행만 남았어요."},
+    "B1-01":{status:"ok", target:"제1종 보통면허", hours:{hak:[3,3],gi:[4,4],doro:[6,6]}, cost:{hak:30000,gi:220000,doro:330000}, note:"처음 취득하시는 표준 과정이에요."},
+    "B1-02":{status:"ok", target:"제1종 보통면허", hours:{hak:[2,2],gi:[4,4],doro:[6,6]}, cost:{hak:20000,gi:220000,doro:330000}, note:"원동기면허가 있어 학과교육이 2시간으로 줄어들어요."},
+    "B1-03":{status:"ok", target:"제1종 보통면허", hours:{hak:[2,2],gi:[4,4],doro:[6,6]}, cost:{hak:20000,gi:220000,doro:330000}, note:"2종소형면허가 있어 학과교육이 2시간으로 줄어들어요."},
+    "TM-01":{status:"ok", target:"제1종 보통면허(수동)", hours:{hak:[0,3],gi:[0,0],doro:[3,6]}, cost:{hak:20000,gi:0,doro:330000}, note:"2종보통(수동) 보유자의 표준 전환 과정이에요. 기능교육은 면제돼요."},
+    "TM-02":{status:"warn", target:"제1종 보통면허(자동)", hours:{hak:[0,3],gi:[0,0],doro:[3,6]}, cost:{hak:20000,gi:0,doro:330000}, note:"실제 사례가 드문 조합이라 상담을 통해 한 번 더 확인해드려요."},
+    "TM-03":{status:"ok", target:"제1종 보통면허(자동)", hours:{hak:[0,3],gi:[0,0],doro:[3,6]}, cost:{hak:20000,gi:0,doro:330000}, note:"자동↔자동 전환이라 기능교육이 면제돼요."},
+    "TM-04":{status:"ok", target:"제1종 보통면허(수동)", hours:{hak:[0,3],gi:[4,4],doro:[6,6]}, cost:{hak:20000,gi:220000,doro:330000}, note:"2종보통(자동)에서 1종보통(수동)을 취득하는 경우라 기능·도로주행은 원칙 시간이 적용돼요."},
+    "CD-01":{status:"unknown", target:"제1종 보통면허(수동)", hours:{hak:null,gi:null,doro:null}, cost:{hak:null,gi:null,doro:null}, note:"이 조합은 절차가 아직 확정되지 않았어요. 학원에 직접 문의해주시면 정확히 안내해드릴게요."},
+    "B1-05":{status:"doc", target:"제1종 보통면허", hours:{hak:null,gi:null,doro:null}, cost:{hak:null,gi:null,doro:null}, note:"학과·기능·도로주행 시험 없이 서류(운전경력증명서 등)로 전환할 수 있어요. 정확한 절차와 수수료는 상담 시 안내해드려요."},
+    "B1-06":{status:"ok", target:"제1종 보통면허", hours:{hak:[0,3],gi:[0,4],doro:[6,6]}, cost:{hak:20000,gi:110000,doro:330000}, note:"대형·특수·소형면허 보유자에게 적용되는 학원 자율 과정이에요."},
+    "B1-07":{status:"ok", target:"제1종 보통면허", hours:{hak:[1,1],gi:[2,2],doro:[6,6]}, cost:{hak:10000,gi:110000,doro:330000}, note:"취소 후 재취득 할인 과정이 적용돼요."},
+    "B1-08":{status:"ok", target:"제1종 보통면허", hours:{hak:[0,0],gi:[0,0],doro:[6,6]}, cost:{hak:0,gi:0,doro:330000}, note:"학과·기능 교육을 이미 마치셨어요. 도로주행만 남았어요."},
+    "S2-01":{status:"ok", target:"제2종 소형면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:0,gi:400000,doro:null}, note:"학과교육 비용은 별도로 받지 않아요."},
+    "S2-02":{status:"ok", target:"제2종 소형면허", hours:{hak:[0,0],gi:[6,6],doro:null}, cost:{hak:0,gi:240000,doro:null}, note:"원동기면허가 있어 학과는 면제, 기능교육도 할인돼요."},
+    "S2-03":{status:"ok", target:"제2종 소형면허", hours:{hak:[2,3],gi:[10,10],doro:null}, cost:{hak:0,gi:400000,doro:null}, note:"학과교육 비용은 별도로 받지 않아요."},
+    "S2-04":{status:"ok", target:"제2종 소형면허", hours:{hak:[2,3],gi:[10,10],doro:null}, cost:{hak:0,gi:400000,doro:null}, note:"학과교육 비용은 별도로 받지 않아요."},
+    "S2-05":{status:"ok", target:"제2종 소형면허", hours:{hak:[2,3],gi:[10,10],doro:null}, cost:{hak:0,gi:400000,doro:null}, note:"학과교육 비용은 별도로 받지 않아요."},
+    "S2-06":{status:"ok", target:"제2종 소형면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:0,gi:400000,doro:null}, note:"취소 후 재취득도 신규와 같은 기준이 적용돼요."},
+    "WD-01":{status:"ok", target:"원동기장치자전거면허", hours:{hak:[3,3],gi:[8,8],doro:null}, cost:{hak:30000,gi:340000,doro:null}, note:"처음 취득하시는 표준 과정이에요."},
+    "WD-02":{status:"ok", target:"원동기장치자전거면허", hours:{hak:[3,3],gi:[8,8],doro:null}, cost:{hak:30000,gi:340000,doro:null}, note:"다른 면허가 있어도 원동기는 별도로 표준 과정을 이수해요."},
+    "DH-02":{status:"ok", target:"제1종 대형면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:33000,gi:680000,doro:null}, note:"감면 조항이 없어 표준 기준이 그대로 적용돼요."},
+    "DH-03":{status:"ok", target:"제1종 대형면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:33000,gi:680000,doro:null}, note:"감면 조항이 없어 표준 기준이 그대로 적용돼요."},
+    "DH-05":{status:"ok", target:"제1종 대형면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:33000,gi:680000,doro:null}, note:"감면 조항이 없어 표준 기준이 그대로 적용돼요."},
+    "DH-06":{status:"ok", target:"제1종 대형면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:33000,gi:680000,doro:null}, note:"취소 후 재취득도 동일한 요금이 적용돼요."},
+    "SG-02":{status:"ok", target:"소형견인차면허", hours:{hak:[3,3],gi:[4,4],doro:null}, cost:{hak:30000,gi:280000,doro:null}, note:"감면 조항이 없어 표준 기준이 그대로 적용돼요."},
+    "SG-03":{status:"ok", target:"소형견인차면허", hours:{hak:[3,3],gi:[4,4],doro:null}, cost:{hak:30000,gi:280000,doro:null}, note:"감면 조항이 없어 표준 기준이 그대로 적용돼요."},
+    "SG-04":{status:"ok", target:"소형견인차면허", hours:{hak:[3,3],gi:[4,4],doro:null}, cost:{hak:30000,gi:280000,doro:null}, note:"취소 후 재취득도 동일한 요금이 적용돼요."},
+    "DG-02":{status:"ok", target:"대형견인차면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:30000,gi:800000,doro:null}, note:"감면 조항이 없어 표준 기준이 그대로 적용돼요."},
+    "DG-03":{status:"ok", target:"대형견인차면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:30000,gi:800000,doro:null}, note:"감면 조항이 없어 표준 기준이 그대로 적용돼요."},
+    "DG-04":{status:"ok", target:"대형견인차면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:30000,gi:800000,doro:null}, note:"감면 조항이 없어 표준 기준이 그대로 적용돼요."},
+    "DG-05":{status:"ok", target:"대형견인차면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:30000,gi:800000,doro:null}, note:"취소 후 재취득도 동일한 요금이 적용돼요."},
+    "GN-02":{status:"warn", target:"구난차면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:"unknown",gi:"unknown",doro:null}, note:"교육시간은 확정됐지만 정확한 수강료는 학원에 문의해주세요."},
+    "GN-03":{status:"warn", target:"구난차면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:"unknown",gi:"unknown",doro:null}, note:"교육시간은 확정됐지만 정확한 수강료는 학원에 문의해주세요."},
+    "GN-04":{status:"warn", target:"구난차면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:"unknown",gi:"unknown",doro:null}, note:"교육시간은 확정됐지만 정확한 수강료는 학원에 문의해주세요."}
+  }
+};
+
+var STATUS_OPTIONS = [
+  ["ok","신청 가능"],
+  ["warn","상담 후 확정"],
+  ["unknown","상담 필요"],
+  ["doc","서류로 전환 가능"]
+];
+
+function esc(s){ return (s===null||s===undefined) ? "" : String(s); }
+
+function buildContactForm(){
+  document.getElementById("f-contact-name").value = esc(DATA.contact.name);
+  document.getElementById("f-contact-phone").value = esc(DATA.contact.phone);
+  document.getElementById("f-contact-phoneHref").value = esc(DATA.contact.phoneHref);
+  document.getElementById("f-contact-address").value = esc(DATA.contact.address);
+}
+
+function buildFeeGrid(){
+  var labels = { B2:"제2종 보통", B1:"제1종 보통", TM:"1↔2종 전환", S2:"제2종 소형", WD:"원동기", DH:"제1종 대형", SG:"소형견인차", DG:"대형견인차", GN:"구난차" };
+  var grid = document.getElementById("feeGrid");
+  Object.keys(labels).forEach(function(key){
+    var wrap = document.createElement("div");
+    wrap.className = "admin-field";
+    wrap.innerHTML = '<label>'+labels[key]+' ('+key+')</label><input type="text" id="fee-'+key+'" value="'+esc(DATA.examFee[key]).replace(/"/g,"&quot;")+'" />';
+    grid.appendChild(wrap);
+  });
+}
+
+function buildCasesTable(){
+  var tbody = document.getElementById("casesBody");
+  var rows = "";
+  Object.keys(DATA.cases).forEach(function(code){
+    var c = DATA.cases[code];
+    var h = c.hours || {hak:null,gi:null,doro:null};
+    var cost = c.cost || {hak:null,gi:null,doro:null};
+    var opts = STATUS_OPTIONS.map(function(o){
+      return '<option value="'+o[0]+'"'+(c.status===o[0]?' selected':'')+'>'+o[1]+'</option>';
+    }).join("");
+    rows += '<tr data-code="'+code+'">'
+      + '<td class="code-cell">'+code+'</td>'
+      + '<td><input type="text" class="f-target" value="'+esc(c.target).replace(/"/g,"&quot;")+'"></td>'
+      + '<td><select class="f-status">'+opts+'</select></td>'
+      + '<td><input type="text" class="narrow f-hak-h" value="'+(h.hak?h.hak[0]:"")+'"></td>'
+      + '<td><input type="text" class="narrow f-gi-h" value="'+(h.gi?h.gi[0]:"")+'"></td>'
+      + '<td><input type="text" class="narrow f-doro-h" value="'+(h.doro?h.doro[0]:"")+'"></td>'
+      + '<td><input type="text" class="narrow f-hak-c" value="'+esc(cost.hak)+'"></td>'
+      + '<td><input type="text" class="narrow f-gi-c" value="'+esc(cost.gi)+'"></td>'
+      + '<td><input type="text" class="narrow f-doro-c" value="'+esc(cost.doro)+'"></td>'
+      + '<td><input type="text" class="f-note" value="'+esc(c.note).replace(/"/g,"&quot;")+'" style="min-width:220px;"></td>'
+      + '</tr>';
+  });
+  tbody.innerHTML = rows;
+}
+
+function parseHour(v){
+  v = v.trim();
+  if(v==="") return null;
+  var n = Number(v);
+  if(isNaN(n)) return null;
+  return [n, n];
+}
+function parseCost(v){
+  v = v.trim();
+  if(v==="") return null;
+  if(v.toLowerCase()==="unknown") return "unknown";
+  var n = Number(v);
+  if(isNaN(n)) return v;
+  return n;
+}
+
+function collectData(){
+  var out = {
+    updatedAt: new Date().toISOString().slice(0,10),
+    contact: {
+      name: document.getElementById("f-contact-name").value.trim(),
+      phone: document.getElementById("f-contact-phone").value.trim(),
+      phoneHref: document.getElementById("f-contact-phoneHref").value.trim(),
+      address: document.getElementById("f-contact-address").value.trim()
+    },
+    examFee: {},
+    cases: {}
+  };
+  Object.keys(DATA.examFee).forEach(function(key){
+    var el = document.getElementById("fee-"+key);
+    var v = el ? el.value.trim() : "";
+    out.examFee[key] = v === "" ? null : v;
+  });
+  document.querySelectorAll("#casesBody tr").forEach(function(tr){
+    var code = tr.getAttribute("data-code");
+    out.cases[code] = {
+      status: tr.querySelector(".f-status").value,
+      target: tr.querySelector(".f-target").value.trim(),
+      hours: {
+        hak: parseHour(tr.querySelector(".f-hak-h").value),
+        gi: parseHour(tr.querySelector(".f-gi-h").value),
+        doro: parseHour(tr.querySelector(".f-doro-h").value)
+      },
+      cost: {
+        hak: parseCost(tr.querySelector(".f-hak-c").value),
+        gi: parseCost(tr.querySelector(".f-gi-c").value),
+        doro: parseCost(tr.querySelector(".f-doro-c").value)
+      },
+      note: tr.querySelector(".f-note").value.trim()
+    };
+  });
+  return out;
+}
+
+function jsVal(v){
+  if(v === null || v === undefined) return "null";
+  if(typeof v === "number") return String(v);
+  if(Array.isArray(v)) return "["+v.map(jsVal).join(",")+"]";
+  if(typeof v === "object"){
+    var parts = Object.keys(v).map(function(k){ return k+":"+jsVal(v[k]); });
+    return "{"+parts.join(", ")+"}";
+  }
+  // string
+  return JSON.stringify(String(v));
+}
+
+function serializeData(data){
+  var lines = [];
+  lines.push("var DATA = {");
+  lines.push('  updatedAt:'+jsVal(data.updatedAt)+',');
+  lines.push('  contact:'+jsVal(data.contact)+',');
+  lines.push('  examFee:{');
+  var feeKeys = Object.keys(data.examFee);
+  feeKeys.forEach(function(k, i){
+    lines.push('    '+k+':'+jsVal(data.examFee[k])+(i<feeKeys.length-1?',':''));
+  });
+  lines.push('  },');
+  lines.push('  cases:{');
+  var codes = Object.keys(data.cases);
+  codes.forEach(function(code, i){
+    var c = data.cases[code];
+    lines.push('    "'+code+'":{status:'+jsVal(c.status)+', target:'+jsVal(c.target)+', hours:'+jsVal(c.hours)+', cost:'+jsVal(c.cost)+', note:'+jsVal(c.note)+'}'+(i<codes.length-1?',':''));
+  });
+  lines.push('  }');
+  lines.push('};');
+  return lines.join("\n");
+}
+
+function showStatus(msg, ok){
+  var el = document.getElementById("statusMsg");
+  el.textContent = msg;
+  el.style.color = ok ? "#1c8a4f" : "#c53030";
+}
+
+function downloadFile(filename, content){
+  var blob = new Blob([content], { type: "text/html;charset=utf-8" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById("btnDownload").addEventListener("click", function(){
+  var data = collectData();
+  var newDataBlock = serializeData(data);
+  showStatus("license-guide.html 파일을 불러오는 중...", true);
+  fetch("license-guide.html")
+    .then(function(res){
+      if(!res.ok) throw new Error("license-guide.html을 불러올 수 없습니다 (HTTP "+res.status+")");
+      return res.text();
+    })
+    .then(function(html){
+      var startMarker = "/* DATA_START */";
+      var endMarker = "/* DATA_END */";
+      var startIdx = html.indexOf(startMarker);
+      var endIdx = html.indexOf(endMarker);
+      if(startIdx === -1 || endIdx === -1 || endIdx < startIdx){
+        throw new Error("license-guide.html 안에서 DATA 블록 표시를 찾지 못했습니다.");
+      }
+      var before = html.slice(0, startIdx + startMarker.length);
+      var after = html.slice(endIdx);
+      var newHtml = before + "\n" + newDataBlock + "\n" + after;
+      downloadFile("license-guide.html", newHtml);
+      showStatus("다운로드 완료! 이 파일을 GitHub에 올리면 반영됩니다.", true);
+    })
+    .catch(function(err){
+      showStatus("실패: " + err.message + " (아래 '코드만 복사하기'를 이용해주세요)", false);
+    });
+});
+
+document.getElementById("btnCopyCode").addEventListener("click", function(){
+  var data = collectData();
+  var code = serializeData(data);
+  var ta = document.getElementById("codeOutput");
+  ta.style.display = "block";
+  ta.value = code;
+  ta.select();
+  try {
+    document.execCommand("copy");
+    showStatus("DATA 코드가 복사되었습니다.", true);
+  } catch(e) {
+    showStatus("자동 복사에 실패했습니다. 아래 텍스트를 직접 복사해주세요.", false);
+  }
+});
+
+buildContactForm();
+buildFeeGrid();
+buildCasesTable();
+
+})();
+</script>
+</body>
+</html>
