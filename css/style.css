@@ -3,23 +3,23 @@
    ========================================================================== */
 
 :root {
-  --color-primary: #144a94;
-  --color-primary-dark: #0c3168;
-  --color-primary-light: #e8f0fc;
-  --color-accent: #ffb800;
-  --color-accent-dark: #e6a400;
-  --color-ink: #1b1f27;
-  --color-body: #3f4654;
-  --color-muted: #6b7280;
-  --color-line: #e5e8ee;
-  --color-surface: #f6f8fb;
+  --color-primary: #8a6a4d;
+  --color-primary-dark: #5c4530;
+  --color-primary-light: #f6f0e4;
+  --color-accent: #e2a542;
+  --color-accent-dark: #c98f2f;
+  --color-ink: #2b2420;
+  --color-body: #4a4038;
+  --color-muted: #7a6f63;
+  --color-line: #e8e1d5;
+  --color-surface: #faf6ef;
   --color-white: #ffffff;
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 22px;
-  --shadow-sm: 0 2px 8px rgba(16, 34, 64, 0.06);
-  --shadow-md: 0 10px 30px rgba(16, 34, 64, 0.10);
-  --shadow-lg: 0 20px 50px rgba(16, 34, 64, 0.16);
+  --shadow-sm: 0 2px 8px rgba(60, 44, 24, 0.08);
+  --shadow-md: 0 10px 30px rgba(60, 44, 24, 0.12);
+  --shadow-lg: 0 20px 50px rgba(60, 44, 24, 0.18);
   --container: 1160px;
   --header-h: 76px;
 }
@@ -199,7 +199,7 @@ button { font-family: inherit; cursor: pointer; }
 .hero {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(120deg, var(--color-primary-dark) 0%, var(--color-primary) 60%, #1c63c4 100%);
+  background: linear-gradient(120deg, var(--color-primary-dark) 0%, var(--color-primary) 60%, #b5875a 100%);
   color: #fff;
 }
 .hero::after {
@@ -210,7 +210,7 @@ button { font-family: inherit; cursor: pointer; }
   width: 520px;
   height: 520px;
   border-radius: 50%;
-  background: radial-gradient(circle at center, rgba(255,184,0,0.25), rgba(255,184,0,0) 70%);
+  background: radial-gradient(circle at center, rgba(226,165,66,0.25), rgba(226,165,66,0) 70%);
 }
 .hero .container {
   position: relative;
@@ -464,7 +464,7 @@ button { font-family: inherit; cursor: pointer; }
 
 /* ---------- CTA banner ---------- */
 .cta-banner {
-  background: linear-gradient(120deg, var(--color-primary), #1c63c4);
+  background: linear-gradient(120deg, var(--color-primary), #b5875a);
   border-radius: var(--radius-lg);
   padding: 48px;
   color: #fff;
@@ -711,7 +711,7 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
 .instructor-card span { font-size: 13px; color: var(--color-muted); }
 
 /* ---------- Footer ---------- */
-.site-footer { background: #12151c; color: rgba(255,255,255,0.75); padding: 56px 0 0; }
+.site-footer { background: #241c15; color: rgba(255,255,255,0.75); padding: 56px 0 0; }
 .footer-top { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.1); }
 .footer-brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 800; font-size: 18px; margin-bottom: 14px; }
 .footer-brand .mark { width: 34px; height: 34px; border-radius: 9px; background: var(--color-primary); display: flex; align-items: center; justify-content: center; }
