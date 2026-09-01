@@ -45,43 +45,4 @@ document.addEventListener("DOMContentLoaded", function () {
       link.classList.add("is-active");
     }
   });
-
-  // 상담 신청 폼 (백엔드 미연동 상태의 클라이언트 측 검증 + 안내 메시지)
-  var consultForm = document.querySelector("#consult-form");
-  if (consultForm) {
-    consultForm.addEventListener("submit", function (e) {
-      e.preventDefault();
-      var status = consultForm.querySelector(".form-status");
-      var name = consultForm.querySelector("#name");
-      var phone = consultForm.querySelector("#phone");
-      var privacy = consultForm.querySelector("#privacy");
-
-      var phonePattern = /^0\d{1,2}-?\d{3,4}-?\d{4}$/;
-
-      if (!name.value.trim()) {
-        showStatus(status, "이름을 입력해주세요.", false);
-        name.focus();
-        return;
-      }
-      if (!phonePattern.test(phone.value.trim())) {
-        showStatus(status, "연락처를 정확히 입력해주세요. (예: 010-1234-5678)", false);
-        phone.focus();
-        return;
-      }
-      if (privacy && !privacy.checked) {
-        showStatus(status, "개인정보 수집 및 이용에 동의해주세요.", false);
-        return;
-      }
-
-      // TODO: 실제 서비스 시에는 이 부분을 서버/이메일 발송 API 연동으로 교체하세요.
-      showStatus(status, "상담 신청이 접수되었습니다. 빠른 시간 내에 연락드리겠습니다.", true);
-      consultForm.reset();
-    });
-  }
-
-  function showStatus(el, message, success) {
-    if (!el) return;
-    el.textContent = message;
-    el.className = "form-status " + (success ? "is-success" : "is-error");
-  }
 });
