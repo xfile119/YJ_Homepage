@@ -742,6 +742,8 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
   border: none;
 }
 .fa-call { background: var(--color-accent); color: var(--color-ink); }
+.fa-kakao { background: #FEE500; color: #3C1E1E; }
+.fa-naver { background: #03C75A; color: #fff; }
 .fa-top { background: #fff; color: var(--color-ink); border: 1px solid var(--color-line); opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
 .fa-top.is-visible { opacity: 1; pointer-events: auto; }
 .floating-actions svg { width: 22px; height: 22px; }
