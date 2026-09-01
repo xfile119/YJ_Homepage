@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>관리자 모드 (비공개)</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<style>
+  body { background: var(--color-surface); }
+  .admin-shell { max-width: 640px; margin: 0 auto; padding: 48px 24px 80px; }
+  .admin-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+  .admin-header h1 { font-size: 22px; font-weight: 800; color: var(--color-ink); }
+  .admin-warning {
+    background: #fff4e5; border: 1px solid #ffe1b3; color: #8a5910;
+    border-radius: var(--radius-md); padding: 16px 18px; font-size: 13.5px; line-height: 1.7; margin-bottom: 28px;
+  }
+  .admin-section { background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 22px; }
+  .login-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .login-row input {
+    flex: 1; min-width: 180px; border: 1px solid var(--color-line); border-radius: var(--radius-sm);
+    padding: 11px 13px; font-size: 14px; font-family: inherit; color: var(--color-ink);
+  }
+  .login-row input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
+  #loginError { color: #d64545; font-size: 13px; font-weight: 700; margin-top: 10px; display: none; }
+  .tool-list { display: flex; flex-direction: column; gap: 14px; }
+  .tool-card {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: 18px 20px; flex-wrap: wrap;
+  }
+  .tool-card h3 { font-size: 15.5px; font-weight: 800; color: var(--color-ink); margin-bottom: 4px; }
+  .tool-card p { font-size: 12.5px; color: var(--color-muted); line-height: 1.6; }
+  #unlockedPanel { display: none; }
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+  <div class="admin-header">
+    <h1>관리자 모드</h1>
+    <a href="index.html" class="btn btn-outline btn-sm">← 홈으로</a>
+  </div>
+
+  <div class="admin-warning">
+    <strong>이 페이지는 비공개 도구이며, 진짜 로그인 보안이 아닙니다.</strong> 홈페이지 메뉴 어디에도 연결되어 있지 않고 검색엔진에도 노출되지 않아요.<br>
+    아래 비밀번호는 이 파일의 소스코드 안에 그대로 적혀 있어서, 개발자 도구로 페이지 코드를 보면 누구나 알아낼 수 있습니다. 방문자를 막는 용도가 아니라 "실수로 관리 도구 링크를 누르는 것 방지" 정도의 용도예요.
+    아직 DB가 없어서, 여기서 하는 수정은 실제 홈페이지에 바로 반영되지 않고 <strong>수정된 파일을 다운로드해서 GitHub에 올려야</strong> 반영됩니다.
+  </div>
+
+  <div class="admin-section" id="loginPanel">
+    <h2 style="font-size:16px;font-weight:800;color:var(--color-ink);margin-bottom:14px;">비밀번호 입력</h2>
+    <div class="login-row">
+      <input type="password" id="pwInput" placeholder="관리자 비밀번호" autocomplete="off" />
+      <button type="button" id="btnLogin" class="btn btn-primary">입장</button>
+    </div>
+    <p id="loginError">비밀번호가 올바르지 않습니다.</p>
+  </div>
+
+  <div class="admin-section" id="unlockedPanel">
+    <h2 style="font-size:16px;font-weight:800;color:var(--color-ink);margin-bottom:18px;">관리 도구</h2>
+    <div class="tool-list">
+      <div class="tool-card">
+        <div>
+          <h3>공지사항 관리</h3>
+          <p>공지사항 추가·수정·삭제, 홈 화면 미리보기 반영</p>
+        </div>
+        <a href="admin-notice.html" class="btn btn-primary btn-sm">열기</a>
+      </div>
+      <div class="tool-card">
+        <div>
+          <h3>수강료 · 교육시간 관리</h3>
+          <p>면허가이드 페이지의 학원 정보, 응시료, 케이스별 교육시간·수강료 수정</p>
+        </div>
+        <a href="admin-license.html" class="btn btn-primary btn-sm">열기</a>
+      </div>
+    </div>
+    <button type="button" id="btnLock" class="btn btn-outline btn-sm" style="margin-top:20px;">잠그기</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var ADMIN_PASSWORD = "yj2026admin";
+var SESSION_KEY = "yj-admin-unlocked";
+
+var loginPanel = document.getElementById("loginPanel");
+var unlockedPanel = document.getElementById("unlockedPanel");
+var pwInput = document.getElementById("pwInput");
+var loginError = document.getElementById("loginError");
+
+function unlock(){
+  loginPanel.style.display = "none";
+  unlockedPanel.style.display = "block";
+}
+function lock(){
+  sessionStorage.removeItem(SESSION_KEY);
+  loginPanel.style.display = "block";
+  unlockedPanel.style.display = "none";
+  pwInput.value = "";
+  loginError.style.display = "none";
+}
+
+try {
+  if (sessionStorage.getItem(SESSION_KEY) === "1") unlock();
+} catch (e) {}
+
+document.getElementById("btnLogin").addEventListener("click", function(){
+  if (pwInput.value === ADMIN_PASSWORD) {
+    try { sessionStorage.setItem(SESSION_KEY, "1"); } catch (e) {}
+    loginError.style.display = "none";
+    unlock();
+  } else {
+    loginError.style.display = "block";
+  }
+});
+pwInput.addEventListener("keydown", function(e){
+  if (e.key === "Enter") document.getElementById("btnLogin").click();
+});
+document.getElementById("btnLock").addEventListener("click", lock);
+
+})();
+</script>
+</body>
+</html>
