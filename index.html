@@ -212,10 +212,6 @@
             }
 
             function initMap() {
-              if (typeof kakao === "undefined" || !kakao.maps) {
-                showError("카카오맵 SDK를 사용할 수 없습니다. Kakao Developers에서 도메인 등록/카카오맵 API 활성화 여부를 확인하세요.");
-                return;
-              }
               if (fallback) fallback.remove();
               var map = new kakao.maps.Map(container, {
                 center: new kakao.maps.LatLng(35.1595, 126.8526),
@@ -239,10 +235,15 @@
             }, 6000);
 
             var script = document.createElement("script");
-            script.src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=180b5c3893615045c003277761877da9&libraries=services";
+            script.src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=180b5c3893615045c003277761877da9&libraries=services&autoload=false";
             script.onload = function () {
               clearTimeout(timer);
-              if (!timedOut) initMap();
+              if (timedOut) return;
+              if (typeof kakao === "undefined" || !kakao.maps) {
+                showError("카카오맵 SDK를 사용할 수 없습니다. Kakao Developers에서 도메인 등록/카카오맵 API 활성화 여부를 확인하세요.");
+                return;
+              }
+              kakao.maps.load(initMap);
             };
             script.onerror = function () {
               clearTimeout(timer);
