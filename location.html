@@ -73,25 +73,67 @@
               if (fallback) fallback.textContent = "지도를 불러오지 못했습니다. " + msg;
             }
 
+            var LANDMARK_NAMES = ["광주중앙아동병원", "신가병원"];
+
+            function addLandmarkLabel(map, place) {
+              var pos = new kakao.maps.LatLng(place.y, place.x);
+              new kakao.maps.CustomOverlay({
+                map: map,
+                position: pos,
+                yAnchor: 1.4,
+                content:
+                  '<div style="background:#fff;border:1px solid #d8dee8;border-radius:6px;padding:3px 9px;' +
+                  'font-size:11.5px;font-weight:700;color:#555;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.12);">' +
+                  place.place_name + '</div>'
+              });
+              return pos;
+            }
+
             function initMap() {
               if (fallback) fallback.remove();
               var map = new kakao.maps.Map(container, {
                 center: new kakao.maps.LatLng(35.1595, 126.8526),
-                level: 3
+                level: 4
               });
               map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
+
               new kakao.maps.services.Geocoder().addressSearch("광주광역시 광산구 목련로 372-19", function (result, status) {
                 if (status !== kakao.maps.services.Status.OK) {
                   showError("주소를 좌표로 변환하지 못했습니다 (status: " + status + ").");
                   return;
                 }
                 var coords = new kakao.maps.LatLng(result[0].y, result[0].x);
-                map.setCenter(coords);
                 var marker = new kakao.maps.Marker({ map: map, position: coords });
                 var infowindow = new kakao.maps.InfoWindow({
                   content: '<div style="padding:6px 10px;font-size:12.5px;font-weight:700;white-space:nowrap;">영진자동차운전전문학원</div>'
                 });
                 infowindow.open(map, marker);
+
+                var bounds = new kakao.maps.LatLngBounds();
+                bounds.extend(coords);
+                var places = new kakao.maps.services.Places();
+                var pending = LANDMARK_NAMES.length;
+                var found = 0;
+
+                function finish() {
+                  pending--;
+                  if (pending > 0) return;
+                  if (found > 0) {
+                    map.setBounds(bounds);
+                  } else {
+                    map.setCenter(coords);
+                  }
+                }
+
+                LANDMARK_NAMES.forEach(function (name) {
+                  places.keywordSearch(name, function (data, status2) {
+                    if (status2 === kakao.maps.services.Status.OK && data[0]) {
+                      bounds.extend(addLandmarkLabel(map, data[0]));
+                      found++;
+                    }
+                    finish();
+                  }, { location: coords, radius: 3000, sort: kakao.maps.services.SortBy.DISTANCE });
+                });
               });
             }
 
