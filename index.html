@@ -198,23 +198,57 @@
           <h2 style="font-size:24px;">오시는 길</h2>
         </div>
         <div class="map-embed">
-          <div id="kakao-map-home"></div>
+          <div id="kakao-map-home"><p id="kakao-map-home-fallback" class="map-status">지도를 불러오는 중입니다...</p></div>
         </div>
-        <script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=180b5c3893615045c003277761877da9&libraries=services"></script>
         <script>
           (function () {
             var container = document.getElementById("kakao-map-home");
-            if (!container || typeof kakao === "undefined") return;
-            var map = new kakao.maps.Map(container, {
-              center: new kakao.maps.LatLng(35.1595, 126.8526),
-              level: 3
-            });
-            new kakao.maps.services.Geocoder().addressSearch("광주광역시 광산구 목련로 372-19", function (result, status) {
-              if (status !== kakao.maps.services.Status.OK) return;
-              var coords = new kakao.maps.LatLng(result[0].y, result[0].x);
-              map.setCenter(coords);
-              new kakao.maps.Marker({ map: map, position: coords });
-            });
+            var fallback = document.getElementById("kakao-map-home-fallback");
+            if (!container) return;
+
+            function showError(msg) {
+              console.error("[kakao-map]", msg);
+              if (fallback) fallback.textContent = "지도를 불러오지 못했습니다. " + msg;
+            }
+
+            function initMap() {
+              if (typeof kakao === "undefined" || !kakao.maps) {
+                showError("카카오맵 SDK를 사용할 수 없습니다. Kakao Developers에서 도메인 등록/카카오맵 API 활성화 여부를 확인하세요.");
+                return;
+              }
+              if (fallback) fallback.remove();
+              var map = new kakao.maps.Map(container, {
+                center: new kakao.maps.LatLng(35.1595, 126.8526),
+                level: 3
+              });
+              new kakao.maps.services.Geocoder().addressSearch("광주광역시 광산구 목련로 372-19", function (result, status) {
+                if (status !== kakao.maps.services.Status.OK) {
+                  showError("주소를 좌표로 변환하지 못했습니다 (status: " + status + ").");
+                  return;
+                }
+                var coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+                map.setCenter(coords);
+                new kakao.maps.Marker({ map: map, position: coords });
+              });
+            }
+
+            var timedOut = false;
+            var timer = setTimeout(function () {
+              timedOut = true;
+              showError("지도 스크립트 응답이 없습니다 (네트워크 차단, 광고 차단 확장 프로그램, 또는 도메인 미등록 가능성이 있습니다).");
+            }, 6000);
+
+            var script = document.createElement("script");
+            script.src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=180b5c3893615045c003277761877da9&libraries=services";
+            script.onload = function () {
+              clearTimeout(timer);
+              if (!timedOut) initMap();
+            };
+            script.onerror = function () {
+              clearTimeout(timer);
+              if (!timedOut) showError("지도 스크립트 파일을 불러오지 못했습니다.");
+            };
+            document.head.appendChild(script);
           })();
         </script>
         <div class="table-scroll">
