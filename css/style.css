@@ -3,23 +3,23 @@
    ========================================================================== */
 
 :root {
-  --color-primary: #8a6a4d;
-  --color-primary-dark: #5c4530;
-  --color-primary-light: #f6f0e4;
-  --color-accent: #e2a542;
-  --color-accent-dark: #c98f2f;
-  --color-ink: #2b2420;
-  --color-body: #4a4038;
-  --color-muted: #7a6f63;
-  --color-line: #e8e1d5;
-  --color-surface: #faf6ef;
+  --color-primary: #8f6f52;
+  --color-primary-dark: #664e37;
+  --color-primary-light: #f8f3ea;
+  --color-accent: #e8ad52;
+  --color-accent-dark: #d29a3d;
+  --color-ink: #332920;
+  --color-body: #554839;
+  --color-muted: #87796a;
+  --color-line: #ece4d6;
+  --color-surface: #fbf8f2;
   --color-white: #ffffff;
   --radius-sm: 8px;
   --radius-md: 14px;
   --radius-lg: 22px;
-  --shadow-sm: 0 2px 8px rgba(60, 44, 24, 0.08);
-  --shadow-md: 0 10px 30px rgba(60, 44, 24, 0.12);
-  --shadow-lg: 0 20px 50px rgba(60, 44, 24, 0.18);
+  --shadow-sm: 0 2px 8px rgba(60, 44, 24, 0.07);
+  --shadow-md: 0 10px 30px rgba(60, 44, 24, 0.10);
+  --shadow-lg: 0 20px 50px rgba(60, 44, 24, 0.15);
   --container: 1160px;
   --header-h: 76px;
 }
@@ -199,7 +199,7 @@ button { font-family: inherit; cursor: pointer; }
 .hero {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(120deg, var(--color-primary-dark) 0%, var(--color-primary) 60%, #b5875a 100%);
+  background: linear-gradient(120deg, var(--color-primary-dark) 0%, var(--color-primary) 60%, #c89b6e 100%);
   color: #fff;
 }
 .hero::after {
@@ -210,7 +210,7 @@ button { font-family: inherit; cursor: pointer; }
   width: 520px;
   height: 520px;
   border-radius: 50%;
-  background: radial-gradient(circle at center, rgba(226,165,66,0.25), rgba(226,165,66,0) 70%);
+  background: radial-gradient(circle at center, rgba(232,173,82,0.25), rgba(232,173,82,0) 70%);
 }
 .hero .container {
   position: relative;
@@ -259,31 +259,21 @@ button { font-family: inherit; cursor: pointer; }
 .hero-stats div span { font-size: 13px; color: rgba(255,255,255,0.8); }
 
 .hero-visual {
-  position: relative;
   width: 100%;
-  max-width: 440px;
+  max-width: 460px;
   margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
 }
-.hero-photo {
-  position: relative;
-  border-radius: 28px;
-  overflow: hidden;
-  border: 6px solid rgba(255,255,255,0.25);
-  box-shadow: var(--shadow-lg);
-  background: rgba(255,255,255,0.08);
-}
-.hero-photo img {
+.hero-cutout {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 8 / 5;
-  object-fit: cover;
-  object-position: center 20%;
+  filter: drop-shadow(0 22px 34px rgba(30, 20, 10, 0.35));
 }
 .hero-badge {
-  position: absolute;
-  left: 6%;
-  bottom: 8%;
   background: #fff;
   color: var(--color-ink);
   padding: 14px 18px;
@@ -464,7 +454,7 @@ button { font-family: inherit; cursor: pointer; }
 
 /* ---------- CTA banner ---------- */
 .cta-banner {
-  background: linear-gradient(120deg, var(--color-primary), #b5875a);
+  background: linear-gradient(120deg, var(--color-primary), #c89b6e);
   border-radius: var(--radius-lg);
   padding: 48px;
   color: #fff;
@@ -711,7 +701,7 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
 .instructor-card span { font-size: 13px; color: var(--color-muted); }
 
 /* ---------- Footer ---------- */
-.site-footer { background: #241c15; color: rgba(255,255,255,0.75); padding: 56px 0 0; }
+.site-footer { background: #362a1e; color: rgba(255,255,255,0.75); padding: 56px 0 0; }
 .footer-top { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.1); }
 .footer-brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 800; font-size: 18px; margin-bottom: 14px; }
 .footer-brand .mark { width: 34px; height: 34px; border-radius: 9px; background: var(--color-primary); display: flex; align-items: center; justify-content: center; }
@@ -797,7 +787,7 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
 
 @media (max-width: 980px) {
   .hero .container { grid-template-columns: 1fr; padding-top: 44px; padding-bottom: 44px; min-height: auto; }
-  .hero-visual { max-width: 300px; margin: 20px auto 0; }
+  .hero-visual { max-width: 300px; margin: 20px auto 0; align-items: center; }
   .split { grid-template-columns: 1fr; }
   .split-media { order: -1; }
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
