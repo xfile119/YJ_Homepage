@@ -28,7 +28,6 @@
     font-size: 13.5px; font-family: inherit; color: var(--color-ink);
   }
   .admin-field input:focus, .admin-field select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
-  .fee-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
   table.edit-table { width: 100%; border-collapse: collapse; min-width: 1000px; }
   table.edit-table th { text-align: left; font-size: 11.5px; color: var(--color-muted); padding: 8px 6px; border-bottom: 2px solid var(--color-ink); white-space: nowrap; }
   table.edit-table td { padding: 6px; border-bottom: 1px solid var(--color-line); vertical-align: middle; }
@@ -74,16 +73,12 @@
   </div>
 
   <div class="admin-section">
-    <h2>시험 응시료 안내 (면허 종류별, 없으면 비워두세요)</h2>
-    <div class="fee-grid" id="feeGrid"></div>
-  </div>
-
-  <div class="admin-section">
-    <h2>수강료 자동계산 요금표</h2>
+    <h2>수강료 · 시험 응시료 자동계산 요금표</h2>
     <p class="admin-note">
-      여기서 시간당 단가를 정하면, 아래 표에서 "자동"으로 설정된 케이스의 수강료가 <strong>교육시간 × 단가</strong>로 자동 계산돼요.
+      여기서 시간당 단가와 시험 응시료(검정료)를 정하면, 아래 표에서 "자동"으로 설정된 케이스의 수강료가 <strong>교육시간 × 단가</strong>로 자동 계산되고
+      면허가이드 페이지에도 검정료 안내 문구가 자동으로 반영돼요.
       학과교육비는 원칙적으로 모든 면허에 공통 적용되고, 필요한 경우에만 면허별로 다른 금액을 따로 지정할 수 있어요 (비워두면 공통 단가가 적용됩니다).
-      특정 케이스만 요금표로 설명이 안 되는 경우 그 줄만 "수동"으로 바꿔서 직접 입력하세요.
+      도로주행이 없는 면허 종류는 도로주행 관련 칸을 비워두세요.
     </p>
     <div class="admin-field" style="max-width:280px;margin-bottom:16px;">
       <label>학과교육비 (공통, 원/시간)</label>
@@ -93,7 +88,7 @@
       <table class="edit-table" id="rateTable">
         <thead>
           <tr>
-            <th>면허 종류</th><th>기능(장내) 교육비 (원/시간)</th><th>도로주행 교육비 (원/시간)</th><th>학과교육비 별도 지정 (원/시간, 비우면 공통 적용)</th>
+            <th>면허 종류</th><th>학과<br>(원/시간, 비우면 공통)</th><th>장내기능<br>(원/시간)</th><th>장내검정료<br>(원)</th><th>도로주행<br>(원/시간)</th><th>도로주행검정료<br>(원)</th>
           </tr>
         </thead>
         <tbody id="rateBody"></tbody>
@@ -147,15 +142,15 @@ var RATE_TYPE_KEYS = ["B2","B1","TM","S2","WD","DH","SG","DG","GN"];
 var DEFAULT_RATES = {
   hak: 10000,
   types: {
-    B2: { gi: 55000, doro: 55000, hak: null },
-    B1: { gi: 55000, doro: 55000, hak: null },
-    TM: { gi: 55000, doro: 55000, hak: null },
-    S2: { gi: 40000, doro: null, hak: 0 },
-    WD: { gi: 42500, doro: null, hak: null },
-    DH: { gi: 68000, doro: null, hak: 11000 },
-    SG: { gi: 70000, doro: null, hak: null },
-    DG: { gi: 80000, doro: null, hak: null },
-    GN: { gi: null, doro: null, hak: null }
+    B2: { gi: 55000, doro: 55000, hak: null, examGi: 50000, examDoro: 50000 },
+    B1: { gi: 55000, doro: 55000, hak: null, examGi: 50000, examDoro: 50000 },
+    TM: { gi: 55000, doro: 55000, hak: null, examGi: 50000, examDoro: 50000 },
+    S2: { gi: 40000, doro: null, hak: 0, examGi: 40000, examDoro: null },
+    WD: { gi: 42500, doro: null, hak: null, examGi: 40000, examDoro: null },
+    DH: { gi: 68000, doro: null, hak: 11000, examGi: 68000, examDoro: null },
+    SG: { gi: 70000, doro: null, hak: null, examGi: 70000, examDoro: null },
+    DG: { gi: 80000, doro: null, hak: null, examGi: 70000, examDoro: null },
+    GN: { gi: null, doro: null, hak: null, examGi: null, examDoro: null }
   }
 };
 var MANUAL_DEFAULT_CODES = ["TM-01","TM-02","TM-03","TM-04","B1-06"];
@@ -163,15 +158,20 @@ var MANUAL_DEFAULT_CODES = ["TM-01","TM-02","TM-03","TM-04","B1-06"];
 function esc(s){ return (s===null||s===undefined) ? "" : String(s); }
 
 function ensureRatesAndModes(){
-  if(!DATA.rates){
-    DATA.rates = JSON.parse(JSON.stringify(DEFAULT_RATES));
-  } else {
-    if(DATA.rates.hak===undefined||DATA.rates.hak===null) DATA.rates.hak = DEFAULT_RATES.hak;
-    if(!DATA.rates.types) DATA.rates.types = {};
-    RATE_TYPE_KEYS.forEach(function(k){
-      if(!DATA.rates.types[k]) DATA.rates.types[k] = { gi:null, doro:null, hak:null };
-    });
-  }
+  if(!DATA.rates) DATA.rates = { hak: null, types: {} };
+  if(DATA.rates.hak===undefined||DATA.rates.hak===null) DATA.rates.hak = DEFAULT_RATES.hak;
+  if(!DATA.rates.types) DATA.rates.types = {};
+  RATE_TYPE_KEYS.forEach(function(k){
+    var d = DEFAULT_RATES.types[k];
+    var t = DATA.rates.types[k] || {};
+    DATA.rates.types[k] = {
+      gi: (t.gi===undefined) ? d.gi : t.gi,
+      doro: (t.doro===undefined) ? d.doro : t.doro,
+      hak: (t.hak===undefined) ? d.hak : t.hak,
+      examGi: (t.examGi===undefined) ? d.examGi : t.examGi,
+      examDoro: (t.examDoro===undefined) ? d.examDoro : t.examDoro
+    };
+  });
   Object.keys(DATA.cases).forEach(function(code){
     var c = DATA.cases[code];
     if(!c.costMode){
@@ -201,9 +201,11 @@ function currentRatesFromForm(){
   var r = { hak: numOrNull(document.getElementById("rate-hak").value), types: {} };
   RATE_TYPE_KEYS.forEach(function(k){
     r.types[k] = {
+      hak: numOrNull(document.getElementById("rate-hak-"+k).value),
       gi: numOrNull(document.getElementById("rate-gi-"+k).value),
+      examGi: numOrNull(document.getElementById("rate-examGi-"+k).value),
       doro: numOrNull(document.getElementById("rate-doro-"+k).value),
-      hak: numOrNull(document.getElementById("rate-hak-"+k).value)
+      examDoro: numOrNull(document.getElementById("rate-examDoro-"+k).value)
     };
   });
   return r;
@@ -217,9 +219,11 @@ function buildRatesForm(){
     var t = DATA.rates.types[k] || {};
     rows += '<tr>'
       + '<td>'+TYPE_LABELS[k]+' ('+k+')</td>'
-      + '<td><input type="number" id="rate-gi-'+k+'" value="'+esc(t.gi)+'"></td>'
-      + '<td><input type="number" id="rate-doro-'+k+'" value="'+esc(t.doro)+'"></td>'
       + '<td><input type="number" id="rate-hak-'+k+'" placeholder="공통 적용" value="'+esc(t.hak)+'"></td>'
+      + '<td><input type="number" id="rate-gi-'+k+'" value="'+esc(t.gi)+'"></td>'
+      + '<td><input type="number" id="rate-examGi-'+k+'" value="'+esc(t.examGi)+'"></td>'
+      + '<td><input type="number" id="rate-doro-'+k+'" value="'+esc(t.doro)+'"></td>'
+      + '<td><input type="number" id="rate-examDoro-'+k+'" value="'+esc(t.examDoro)+'"></td>'
       + '</tr>';
   });
   body.innerHTML = rows;
@@ -267,17 +271,6 @@ function buildContactForm(){
   document.getElementById("f-contact-phone").value = esc(DATA.contact.phone);
   document.getElementById("f-contact-phoneHref").value = esc(DATA.contact.phoneHref);
   document.getElementById("f-contact-address").value = esc(DATA.contact.address);
-}
-
-function buildFeeGrid(){
-  var labels = { B2:"제2종 보통", B1:"제1종 보통", TM:"1↔2종 전환", S2:"제2종 소형", WD:"원동기", DH:"제1종 대형", SG:"소형견인차", DG:"대형견인차", GN:"구난차" };
-  var grid = document.getElementById("feeGrid");
-  Object.keys(labels).forEach(function(key){
-    var wrap = document.createElement("div");
-    wrap.className = "admin-field";
-    wrap.innerHTML = '<label>'+labels[key]+' ('+key+')</label><input type="text" id="fee-'+key+'" value="'+esc(DATA.examFee[key]).replace(/"/g,"&quot;")+'" />';
-    grid.appendChild(wrap);
-  });
 }
 
 function buildCasesTable(){
@@ -333,14 +326,8 @@ function collectData(){
       phoneHref: document.getElementById("f-contact-phoneHref").value.trim(),
       address: document.getElementById("f-contact-address").value.trim()
     },
-    examFee: {},
     cases: {}
   };
-  Object.keys(DATA.examFee).forEach(function(key){
-    var el = document.getElementById("fee-"+key);
-    var v = el ? el.value.trim() : "";
-    out.examFee[key] = v === "" ? null : v;
-  });
   out.rates = currentRatesFromForm();
   recomputeAll();
   document.querySelectorAll("#casesBody tr").forEach(function(tr){
@@ -398,10 +385,9 @@ fetch("api/auth.php").then(function(r){ return r.json(); }).then(function(res){
     return;
   }
   return fetch("api/license-data.php").then(function(r){ return r.json(); }).then(function(res2){
-    DATA = (res2 && res2.data) || { contact: {}, examFee: {}, cases: {} };
+    DATA = (res2 && res2.data) || { contact: {}, cases: {} };
     ensureRatesAndModes();
     buildContactForm();
-    buildFeeGrid();
     buildRatesForm();
     buildCasesTable();
     recomputeAll();

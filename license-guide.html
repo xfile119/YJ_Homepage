@@ -346,16 +346,19 @@ var STATUS_LABEL = {
 var DATA = {
   updatedAt:"2026-08-31",
   contact:{ name:"(주)영진자동차운전전문학원", phone:"062-951-5100", phoneHref:"0629515100", address:"광주광역시 광산구 목련로 372-19" },
-  examFee:{
-    B2:"장내검정 5만원 + 도로주행검정 5만원 (별도)",
-    B1:"장내검정 5만원 + 도로주행검정 5만원 (별도)",
-    TM:"장내검정 5만원 + 도로주행검정 5만원 (별도)",
-    S2:"장내검정 4만원 (별도)",
-    WD:"장내검정 4만원 (별도)",
-    DH:"장내검정 6만8천원 (별도)",
-    SG:"장내검정 7만원 (별도)",
-    DG:"장내검정 7만원 (별도)",
-    GN:null
+  rates:{
+    hak: 10000,
+    types:{
+      B2:{ gi:55000, doro:55000, hak:null, examGi:50000, examDoro:50000 },
+      B1:{ gi:55000, doro:55000, hak:null, examGi:50000, examDoro:50000 },
+      TM:{ gi:55000, doro:55000, hak:null, examGi:50000, examDoro:50000 },
+      S2:{ gi:40000, doro:null, hak:0, examGi:40000, examDoro:null },
+      WD:{ gi:42500, doro:null, hak:null, examGi:40000, examDoro:null },
+      DH:{ gi:68000, doro:null, hak:11000, examGi:68000, examDoro:null },
+      SG:{ gi:70000, doro:null, hak:null, examGi:70000, examDoro:null },
+      DG:{ gi:80000, doro:null, hak:null, examGi:70000, examDoro:null },
+      GN:{ gi:null, doro:null, hak:null, examGi:null, examDoro:null }
+    }
   },
   cases:{
     "B2-01":{status:"ok", target:"제2종 보통면허", hours:{hak:[3,3],gi:[4,4],doro:[6,6]}, cost:{hak:30000,gi:220000,doro:330000}, note:"처음 취득하시는 표준 과정이에요."},
@@ -434,7 +437,12 @@ function calcTotal(cost){
 }
 function examFeeFor(code){
   var prefix=code.split("-")[0];
-  return (DATA.examFee && DATA.examFee[prefix]) || null;
+  var t = DATA.rates && DATA.rates.types && DATA.rates.types[prefix];
+  if(!t) return null;
+  var parts=[];
+  if(typeof t.examGi==="number") parts.push("장내검정 "+won(t.examGi));
+  if(typeof t.examDoro==="number") parts.push("도로주행검정 "+won(t.examDoro));
+  return parts.length ? parts.join(" + ") : null;
 }
 
 /* =======================================================================
