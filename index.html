@@ -189,6 +189,23 @@
           <!-- NOTICE_PREVIEW_END -->
         </div>
         <a href="notice.html" class="btn btn-outline btn-sm" style="margin-top:22px;">공지사항 전체보기</a>
+        <script>
+          (function () {
+            function esc(s) {
+              return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+            }
+            fetch("api/notices.php").then(function (r) { return r.ok ? r.json() : null; }).then(function (res) {
+              if (!res || !Array.isArray(res.notices)) return;
+              var list = document.querySelector(".notice-list");
+              list.innerHTML = res.notices.slice(0, 3).map(function (n) {
+                var badgeHtml = n.badge && n.badge !== "없음"
+                  ? '<span class="notice-badge' + (n.badge === "안내" ? " info" : "") + '">' + esc(n.badge) + "</span>"
+                  : "";
+                return '<div class="notice-row">' + badgeHtml + '<span class="notice-title">' + esc(n.title) + '</span><span class="notice-date">' + esc(n.date) + "</span></div>";
+              }).join("");
+            }).catch(function () {});
+          })();
+        </script>
       </div>
       <div>
         <div class="section-head align-left" style="margin-bottom:24px;">

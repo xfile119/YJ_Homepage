@@ -124,6 +124,25 @@
         </tbody>
       </table>
       </div>
+      <script>
+        (function () {
+          function esc(s) {
+            return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+          }
+          fetch("api/notices.php").then(function (r) { return r.ok ? r.json() : null; }).then(function (res) {
+            if (!res || !Array.isArray(res.notices)) return;
+            var tbody = document.querySelector(".notice-table tbody");
+            var flag = document.querySelector(".data-flag");
+            if (flag) flag.remove();
+            tbody.innerHTML = res.notices.map(function (n) {
+              var badgeHtml = n.badge && n.badge !== "없음"
+                ? ' <span class="notice-badge' + (n.badge === "안내" ? " info" : "") + '">' + esc(n.badge) + "</span>"
+                : "";
+              return '<tr><td class="col-no">' + esc(n.no) + '</td><td class="col-title"><a href="' + esc(n.link || "#") + '">' + esc(n.title) + "</a>" + badgeHtml + '</td><td class="col-date">' + esc(n.date) + "</td></tr>";
+            }).join("");
+          }).catch(function () {});
+        })();
+      </script>
 
       <div class="pagination">
         <span class="is-current">1</span>

@@ -13,8 +13,11 @@
 /contact.html         상담문의 (카카오톡·네이버 톡톡)
 /privacy.html         개인정보처리방침 (기존 사이트 내용 이식)
 /admin.html          관리자 모드 진입 허브 (비공개, 메뉴에 없음)
-/admin-notice.html      공지사항 추가·수정·삭제 도구 (비공개, DB 없음 — 파일 다운로드 방식)
-/admin-license.html      면허가이드 수강료·교육시간 편집 도구 (비공개, DB 없음 — 파일 다운로드 방식)
+/admin-notice.html      공지사항 추가·수정·삭제 도구 (비공개, DB 연동)
+/admin-license.html      면허가이드 수강료·교육시간 편집 도구 (비공개, DB 연동)
+/api/              PHP API (notices.php, license-data.php, auth.php) — DB 있는 서버에서만 동작
+/db/               schema.sql, setup.php(최초 1회 설치 스크립트), 기본 데이터 시드 JSON
+/config.example.php     DB 접속정보 템플릿 (복사해서 config.php로 만들고 실제 값 입력, git에는 안 올라감)
 /css/style.css        전체 스타일시트
 /js/main.js          모바일 메뉴, 스크롤 헤더
 ```
@@ -33,23 +36,61 @@
 4. ~~**교육과정별 정확한 수강료**~~ — `license-guide.html`에 입력된 실제 데이터(처음 취득 기준)로 반영 완료. 장롱면허 클리닉 등 일부 항목은 여전히 "문의"로 남아 있음.
 5. **연혁(History)** — `about.html`의 타임라인 항목 전체가 예시입니다. 실제 설립연도와 주요 연혁으로 교체하세요.
 6. **강사진 정보** — `about.html`. 현재는 팀 단위 placeholder만 있습니다. 실제 강사 성함/약력/사진으로 교체 권장.
-7. **공지사항** — `notice.html`, `index.html`의 미리보기. 전부 예시 게시글입니다. `admin-notice.html`에서 추가·수정·삭제 후 파일을 다운로드해 실제 내용으로 교체하세요 (DB 연동 전까지의 임시 방식, 아래 "관리자 모드" 참고).
+7. **공지사항** — `notice.html`, `index.html`의 미리보기. DB 연동 후에는 `admin-notice.html`에서 추가·수정·삭제하면 저장 즉시 반영됩니다 (아래 "관리자 모드 (DB 연동)" 참고). DB 연동 전(GitHub Pages 등 정적 호스팅)에는 이 예시 데이터가 그대로 보입니다.
 8. **셔틀버스 노선 및 시간표** — `location.html`. 예시 노선이며, 기존 사이트의 실제 노선 이미지(`img/shuttle_info.png`)를 참고해 정확한 노선으로 교체가 필요합니다.
 9. ~~**오시는 길 지도**~~ — 기존 사이트의 2015년식 Daum 약도 위젯이 서비스 종료로 빈 화면이 되어, 카카오맵 최신 JavaScript API로 교체 완료 (`location.html`, `index.html`). 주소를 카카오 Geocoder로 좌표 변환해 마커를 표시합니다. **카카오 개발자 앱의 JavaScript 키가 코드에 들어가 있습니다** — 만약 지도가 다시 안 보이면 [Kakao Developers](https://developers.kakao.com) → 내 애플리케이션 → 앱 설정 → 일반 → 플랫폼에서 사이트 도메인(`https://xfile119.github.io`, 커스텀 도메인 사용 시 그 주소도 추가)이 등록되어 있는지 확인하세요.
 10. ~~**온라인 상담**~~ — 웹 폼은 제거하고 카카오톡·네이버 톡톡(파트너 ID 84989) 두 채널로 일원화 완료.
 11. **파비콘/실제 사진** — 현재 로고와 이미지는 모두 SVG 아이콘으로 대체되어 있습니다. 실제 학원 사진, 로고, 파비콘 파일을 `/images` 폴더에 추가하고 각 페이지에서 연결하세요.
-12. **공지사항·수강료 관리자 모드** — `admin.html`(진입 허브) + `admin-notice.html`(공지사항) + `admin-license.html`(수강료·교육시간)으로 구축 완료. 다만 아직 **DB가 없어** "수정 → 파일 다운로드 → GitHub 업로드" 방식입니다 (아래 "관리자 모드" 항목 참고). 실시간 DB 연동(Supabase 추천, 기존 사이트 마스터 DB와는 분리된 새 전용 DB)은 여전히 진행 예정.
+12. ~~**공지사항·수강료 관리자 모드**~~ — `admin.html`(진입 허브) + `admin-notice.html`(공지사항) + `admin-license.html`(수강료·교육시간)으로 구축 완료, **PHP+MySQL DB와 연동해 저장 즉시 실제 홈페이지에 반영**됩니다 (아래 "관리자 모드 (DB 연동)" 및 "카페24 배포 가이드" 참고). GitHub Pages 등 PHP가 없는 정적 호스팅에서는 이 기능이 자동으로 비활성화되고 예시 데이터만 보입니다.
 13. ~~**개인정보처리방침**~~ — 기존 사이트(`PS_Police.html`)의 실제 조항 14개를 그대로 옮겨 `privacy.html`로 반영 완료. 단, 시행일(2018.7.1)과 위탁업체(네오정보플러스) 정보는 오래된 내용일 수 있으니 실제 운영 전 검토가 필요합니다.
 
-## 관리자 모드 (admin.html / admin-notice.html / admin-license.html)
+## 관리자 모드 (DB 연동)
 
-DB 없이 동작하는 **임시 관리자 도구**입니다. 세 파일 모두 메뉴·검색엔진에 노출되지 않는 비공개 페이지(`noindex`)입니다.
+`admin.html`(진입 허브) + `admin-notice.html`(공지사항) + `admin-license.html`(수강료·교육시간)은 서버의 PHP API(`api/*.php`)와 MySQL DB로 동작합니다. 세 파일 모두 메뉴·검색엔진에 노출되지 않는 비공개 페이지(`noindex`)입니다.
 
-- **입장 방법**: `admin.html`에 접속해 비밀번호(`yj2026admin`, 소스코드에 평문으로 존재)를 입력하면 두 도구로 가는 버튼이 나타납니다. `sessionStorage`를 쓰므로 브라우저 탭을 닫으면 다시 잠깁니다.
-- ⚠️ **진짜 보안이 아닙니다.** 비밀번호가 HTML 소스에 그대로 노출되어 있어 개발자 도구로 누구나 확인할 수 있습니다. 실수 방지용일 뿐, 외부인 접근을 막는 용도로 쓰지 마세요. 실제 운영 시에는 반드시 서버 기반 로그인(Supabase Auth 등)으로 교체해야 합니다. 비밀번호를 바꾸려면 `admin.html`의 `ADMIN_PASSWORD` 값을 수정하세요.
-- **동작 방식**: 화면에서 값을 수정하면, "다운로드" 버튼이 해당 페이지(`notice.html`/`index.html`/`license-guide.html`)를 실시간으로 가져와 표시(`<!-- ..._START -->` ~ `<!-- ..._END -->`) 구간만 새 내용으로 바꾼 뒤 파일로 저장합니다. **다운로드만으로는 실제 홈페이지에 반영되지 않으며**, 받은 파일을 저장소에 올리고 배포해야 합니다.
-- `admin-notice.html`: 공지사항 목록을 표로 편집(추가/삭제/순서변경/뱃지)하고, `notice.html`(전체 목록)과 `index.html`(상위 3개 미리보기)을 각각 다운로드할 수 있습니다.
-- `admin-license.html`: 학원 연락처, 응시료, 39개 케이스별 교육시간·수강료를 편집하고 `license-guide.html`을 다운로드할 수 있습니다.
+- **로그인**: `admin.html`에서 아이디/비밀번호를 입력하면 서버가 DB에 저장된 해시와 대조합니다(`password_hash`/`password_verify`, PHP 세션 기반). 계정은 `db/setup.php`에서 최초 1회 생성합니다.
+- **저장 방식**: 각 관리 화면에서 값을 수정하고 "저장하기"를 누르면 즉시 DB에 쓰고, 홈페이지(`notice.html`/`index.html`/`license-guide.html`)는 방문할 때마다 `api/notices.php`, `api/license-data.php`를 호출해 최신 데이터를 그려줍니다. 다운로드/재배포가 필요 없습니다.
+- **PHP가 없는 곳(GitHub Pages 등)에서는?** `api/*.php`가 실행되지 않으니 `fetch`가 실패하고, 각 페이지는 자동으로 원래 있던 예시 데이터를 그대로 보여줍니다(정상 동작, 에러 아님). 관리자 화면도 "서버(api)에 접속할 수 없습니다" 메시지만 뜨고 조용히 멈춥니다.
+- `admin-notice.html`: 공지사항 목록을 표로 편집(추가/삭제/순서변경/뱃지)하고 저장하면, `notice.html`(전체 목록)과 `index.html`(상위 3개 미리보기)에 한 번에 반영됩니다.
+- `admin-license.html`: 학원 연락처, 응시료, 39개 케이스별 교육시간·수강료를 편집해 저장하면 `license-guide.html`에 바로 반영됩니다.
+
+## 카페24 배포 가이드 (DB 연동해서 서버에서 동작시키기)
+
+기존 www.yjcdrive.co.kr 호스팅 계정(카페24) 안에 새 사이트를 **`yjcdrive.co.kr/new` 하위 경로**로 올리는 방법입니다. 기존 홈페이지·기존 DB는 전혀 건드리지 않습니다.
+
+### 1. 파일 준비
+1. 이 저장소의 `config.example.php`를 복사해서 `config.php`로 저장합니다. (이 파일은 `.gitignore`에 등록되어 있어 저장소에는 절대 올라가지 않습니다.)
+2. `config.php`에 실제 DB 정보를 입력합니다:
+   ```php
+   return [
+       'db_host' => 'localhost',
+       'db_name' => '실제 DB 이름',
+       'db_user' => '실제 DB 사용자명',
+       'db_pass' => '실제 DB 비밀번호',
+       'table_prefix' => 'yj_',   // 기존 DB를 같이 쓸 경우 테이블 이름 충돌 방지용
+   ];
+   ```
+
+### 2. DB 준비 (카페24)
+카페24 표준 웹호스팅은 보통 **DB 1개**만 기본 제공됩니다(추가 구매 가능). 두 가지 중 편한 방법을 쓰세요.
+- **여유 DB가 있다면**: 카페24 호스팅센터 → 나의서비스관리에서 새 DB를 만들고, 그 접속정보를 `config.php`에 입력합니다.
+- **기존 DB 1개만 있다면**: 문제 없습니다. 기존 사이트가 쓰던 DB 접속정보(예전 `dbconfig.php`에 있던 값)를 그대로 `config.php`에 입력하되, `table_prefix`를 `yj_`(또는 원하는 값)로 유지하세요. 새 테이블(`yj_notices` 등)만 추가로 생성되고 기존 테이블은 전혀 건드리지 않습니다.
+- 카페24는 보안상 phpMyAdmin을 기본 제공하지 않습니다 — 아래 3단계의 `db/setup.php`가 phpMyAdmin 없이 테이블을 자동으로 만들어주므로 신경 쓰지 않아도 됩니다.
+
+### 3. 업로드
+1. 카페24 호스팅센터 → FTP 정보로 접속(FTP 클라이언트 또는 웹FTP/파일관리자 사용).
+2. 웹 루트 아래 `new` 폴더를 만들고, 이 저장소의 **모든 파일**(방금 만든 `config.php` 포함)을 그 안에 업로드합니다.
+
+### 4. 설치 스크립트 실행 (최초 1회)
+1. 브라우저에서 `https://yjcdrive.co.kr/new/db/setup.php` 접속.
+2. 자동으로 테이블 생성 + 공지사항/면허가이드 기본 데이터가 채워집니다.
+3. 화면에 나오는 폼에 원하는 **관리자 아이디/비밀번호**(8자 이상)를 입력하고 "관리자 계정 만들기".
+4. 완료 메시지가 뜨면 **`db/setup.php` 파일을 서버에서 삭제**하세요 (다시 실행되면 안 되므로).
+
+### 5. 확인
+- `https://yjcdrive.co.kr/new/admin.html`에서 방금 만든 아이디/비밀번호로 로그인 → 공지사항/수강료 관리 화면이 열리는지 확인.
+- `https://yjcdrive.co.kr/new/notice.html`, `/new/license-guide.html`이 정상적으로 데이터를 보여주는지 확인.
+- 문제가 있으면 브라우저 개발자도구 Console/Network 탭에서 `api/*.php` 요청의 에러 메시지를 확인해주세요 (대부분 `config.php`의 DB 정보 오류입니다).
 
 ## license-guide.html (면허 취득 안내 위젯)
 

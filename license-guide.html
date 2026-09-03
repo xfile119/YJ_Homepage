@@ -595,7 +595,14 @@ function init(){
   render();
 }
 
-if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", init); } else { init(); }
+function startWithFreshData(){
+  fetch("api/license-data.php").then(function(r){ return r.ok ? r.json() : null; }).then(function(res){
+    if(res && res.data){ DATA = res.data; }
+  }).catch(function(){}).then(function(){
+    if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", init); } else { init(); }
+  });
+}
+startWithFreshData();
 
 })();
 </script>

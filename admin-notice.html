@@ -38,6 +38,7 @@
   table.edit-table td.op-cell button.danger:hover { background: #fdeeee; border-color: #d64545; color: #d64545; }
   .admin-actions { position: sticky; bottom: 0; background: var(--color-surface); padding: 16px 0; display: flex; gap: 10px; flex-wrap: wrap; border-top: 1px solid var(--color-line); margin-top: 12px; }
   #statusMsg { align-self: center; font-size: 13px; font-weight: 700; }
+  #mainArea { display: none; }
 </style>
 </head>
 <body>
@@ -53,38 +54,40 @@
 
   <div class="admin-warning">
     <strong>이 페이지는 비공개 도구입니다.</strong> 홈페이지 메뉴 어디에도 연결되어 있지 않고 검색엔진에도 노출되지 않아요.<br>
-    아래에서 수정한 뒤 <strong>두 개의 다운로드 버튼</strong>을 각각 눌러 <code>notice.html</code>과 <code>index.html</code>을 새로 받으세요. 이 파일들을 GitHub 저장소에 올려야 실제 홈페이지에 반영됩니다.
-    홈 화면(index.html)에는 아래 표의 <strong>맨 위 3개 항목</strong>만 미리보기로 표시되니, 최신순으로 정렬해 주세요.
+    저장 버튼을 누르면 <strong>DB에 바로 저장되어 실제 홈페이지에 즉시 반영</strong>됩니다. 홈 화면(index.html)에는 아래 표의 <strong>맨 위 3개 항목</strong>만 미리보기로 표시되니, 최신순으로 정렬해 주세요.
   </div>
 
-  <div class="admin-section">
-    <h2>공지사항 목록</h2>
-    <p class="admin-note">
-      <strong>번호</strong> 칸에는 숫자 또는 "공지"(상단 고정)를 입력하세요. <strong>뱃지</strong>가 "없음"이면 표시되지 않습니다.
-      ↑↓ 버튼으로 순서를 바꿀 수 있어요 (표의 순서가 곧 홈페이지 미리보기 순서입니다).
-    </p>
-    <div class="table-scroll">
-      <table class="edit-table">
-        <thead>
-          <tr>
-            <th style="width:70px;">번호</th>
-            <th>제목</th>
-            <th style="width:140px;">링크(선택)</th>
-            <th style="width:90px;">뱃지</th>
-            <th style="width:120px;">날짜</th>
-            <th style="width:80px;">순서/삭제</th>
-          </tr>
-        </thead>
-        <tbody id="rowsBody"></tbody>
-      </table>
+  <p id="loadingMsg">불러오는 중...</p>
+
+  <div id="mainArea">
+    <div class="admin-section">
+      <h2>공지사항 목록</h2>
+      <p class="admin-note">
+        <strong>번호</strong> 칸에는 숫자 또는 "공지"(상단 고정)를 입력하세요. <strong>뱃지</strong>가 "없음"이면 표시되지 않습니다.
+        ↑↓ 버튼으로 순서를 바꿀 수 있어요 (표의 순서가 곧 홈페이지 미리보기 순서입니다).
+      </p>
+      <div class="table-scroll">
+        <table class="edit-table">
+          <thead>
+            <tr>
+              <th style="width:70px;">번호</th>
+              <th>제목</th>
+              <th style="width:140px;">링크(선택)</th>
+              <th style="width:90px;">뱃지</th>
+              <th style="width:120px;">날짜</th>
+              <th style="width:80px;">순서/삭제</th>
+            </tr>
+          </thead>
+          <tbody id="rowsBody"></tbody>
+        </table>
+      </div>
+      <button type="button" id="btnAddRow" class="btn btn-outline btn-sm" style="margin-top:14px;">+ 공지사항 추가</button>
     </div>
-    <button type="button" id="btnAddRow" class="btn btn-outline btn-sm" style="margin-top:14px;">+ 공지사항 추가</button>
-  </div>
 
-  <div class="admin-actions">
-    <button type="button" id="btnDownloadNotice" class="btn btn-primary">📥 notice.html 다운로드</button>
-    <button type="button" id="btnDownloadIndex" class="btn btn-primary">📥 index.html 다운로드</button>
-    <span id="statusMsg"></span>
+    <div class="admin-actions">
+      <button type="button" id="btnSave" class="btn btn-primary">💾 저장하기</button>
+      <span id="statusMsg"></span>
+    </div>
   </div>
 </div>
 
@@ -92,27 +95,11 @@
 (function(){
 "use strict";
 
-var ROWS_START = "<!-- NOTICE_ROWS_START -->";
-var ROWS_END = "<!-- NOTICE_ROWS_END -->";
-var PREVIEW_START = "<!-- NOTICE_PREVIEW_START -->";
-var PREVIEW_END = "<!-- NOTICE_PREVIEW_END -->";
-
-/* notice.html에 현재 올라와 있는 예시 데이터와 동일한 초기값입니다. */
-var DATA = [
-  { no:"공지", title:"2026년 하반기 학과교육 시간표 변경 안내", link:"#", badge:"필독", date:"2026.08.20" },
-  { no:"공지", title:"개인정보처리방침 개정 안내", link:"#", badge:"필독", date:"2026.08.10" },
-  { no:"12", title:"여름 성수기 셔틀버스 임시 노선 운영 안내", link:"#", badge:"안내", date:"2026.08.05" },
-  { no:"11", title:"기능시험장 정기 점검에 따른 임시 휴장 안내", link:"#", badge:"안내", date:"2026.07.22" },
-  { no:"10", title:"2종소형(이륜) 교육과정 신설 안내", link:"#", badge:"없음", date:"2026.07.02" },
-  { no:"9", title:"여름철 폭염 대비 실습 시간 조정 안내", link:"#", badge:"없음", date:"2026.06.18" },
-  { no:"8", title:"1종대형면허 특별반 모집 안내", link:"#", badge:"없음", date:"2026.05.30" },
-  { no:"7", title:"신규 실습 차량 도입 안내", link:"#", badge:"없음", date:"2026.05.14" },
-  { no:"6", title:"근로자의 날 휴원 안내", link:"#", badge:"없음", date:"2026.04.28" },
-  { no:"5", title:"봄맞이 수강료 할인 이벤트 안내", link:"#", badge:"없음", date:"2026.04.01" }
-];
-
+var DATA = [];
 var rowsBody = document.getElementById("rowsBody");
 var statusMsg = document.getElementById("statusMsg");
+var loadingMsg = document.getElementById("loadingMsg");
+var mainArea = document.getElementById("mainArea");
 
 function esc(str){
   return String(str == null ? "" : str)
@@ -168,63 +155,32 @@ document.getElementById("btnAddRow").addEventListener("click", function(){
   renderRows();
 });
 
-function buildNoticeRowsHtml(){
-  return DATA.map(function(row){
-    var badgeHtml = row.badge === "없음" ? "" : ' <span class="notice-badge' + (row.badge === "안내" ? " info" : "") + '">' + esc(row.badge) + '</span>';
-    return '          <tr>\n' +
-      '            <td class="col-no">' + esc(row.no) + '</td>\n' +
-      '            <td class="col-title"><a href="' + esc(row.link || "#") + '">' + esc(row.title) + '</a>' + badgeHtml + '</td>\n' +
-      '            <td class="col-date">' + esc(row.date) + '</td>\n' +
-      '          </tr>';
-  }).join("\n");
-}
+document.getElementById("btnSave").addEventListener("click", function(){
+  statusMsg.textContent = "저장 중...";
+  fetch("api/notices.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "save_all", notices: DATA })
+  }).then(function(r){ return r.json().then(function(data){ return { ok: r.ok, data: data }; }); })
+    .then(function(res){
+      statusMsg.textContent = res.ok ? "저장 완료! 홈페이지에 바로 반영됩니다." : "오류: " + (res.data.error || "저장 실패");
+    }).catch(function(){ statusMsg.textContent = "서버에 접속할 수 없습니다."; });
+});
 
-function buildPreviewHtml(){
-  return DATA.slice(0, 3).map(function(row){
-    var badgeSpan = row.badge === "없음" ? "" : '<span class="notice-badge' + (row.badge === "안내" ? " info" : "") + '">' + esc(row.badge) + '</span>\n            ';
-    return '          <div class="notice-row">\n' +
-      '            ' + badgeSpan + '<span class="notice-title">' + esc(row.title) + '</span>\n' +
-      '            <span class="notice-date">' + esc(row.date) + '</span>\n' +
-      '          </div>';
-  }).join("\n");
-}
-
-function downloadFile(filename, content){
-  var blob = new Blob([content], { type: "text/html;charset=utf-8" });
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement("a");
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-function patchFile(sourceFile, startMarker, endMarker, bodyHtml, outFilename){
-  statusMsg.textContent = "불러오는 중...";
-  fetch(sourceFile, { cache: "no-store" }).then(function(res){
-    if (!res.ok) throw new Error("fetch failed: " + res.status);
-    return res.text();
-  }).then(function(html){
-    var startIdx = html.indexOf(startMarker);
-    var endIdx = html.indexOf(endMarker);
-    if (startIdx === -1 || endIdx === -1) throw new Error("marker not found");
-    var before = html.slice(0, startIdx);
-    var after = html.slice(endIdx + endMarker.length);
-    var patched = before + startMarker + "\n" + bodyHtml + "\n          " + endMarker + after;
-    downloadFile(outFilename, patched);
-    statusMsg.textContent = outFilename + " 다운로드 완료!";
-  }).catch(function(err){
-    statusMsg.textContent = "오류: " + err.message + " (같은 폴더에서 이 파일을 직접 열었다면, 로컬 웹서버로 실행해 보세요.)";
+fetch("api/auth.php").then(function(r){ return r.json(); }).then(function(res){
+  if (!res || !res.loggedIn) {
+    location.href = "admin.html";
+    return;
+  }
+  return fetch("api/notices.php").then(function(r){ return r.json(); }).then(function(res2){
+    DATA = (res2 && res2.notices) || [];
+    renderRows();
+    loadingMsg.style.display = "none";
+    mainArea.style.display = "block";
   });
-}
-
-document.getElementById("btnDownloadNotice").addEventListener("click", function(){
-  patchFile("notice.html", ROWS_START, ROWS_END, buildNoticeRowsHtml(), "notice.html");
+}).catch(function(){
+  loadingMsg.textContent = "서버(api)에 접속할 수 없습니다. DB 연동 배포 전(정적 미리보기)에는 이 페이지가 동작하지 않아요.";
 });
-document.getElementById("btnDownloadIndex").addEventListener("click", function(){
-  patchFile("index.html", PREVIEW_START, PREVIEW_END, buildPreviewHtml(), "index.html");
-});
-
-renderRows();
 
 })();
 </script>

@@ -1,0 +1,26 @@
+-- 참고용 스키마입니다. 실제 테이블 생성은 db/setup.php를 브라우저에서 열어 실행하세요.
+-- {prefix}는 config.php의 table_prefix 값으로 치환됩니다 (기본값: yj_).
+
+CREATE TABLE IF NOT EXISTS {prefix}admin_users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS {prefix}notices (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  display_no VARCHAR(20) NOT NULL DEFAULT '',
+  title VARCHAR(255) NOT NULL,
+  link VARCHAR(255) NOT NULL DEFAULT '#',
+  badge VARCHAR(10) NOT NULL DEFAULT '없음',
+  posted_date VARCHAR(20) NOT NULL DEFAULT '',
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS {prefix}license_data (
+  id INT PRIMARY KEY,
+  data_json LONGTEXT NOT NULL,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
