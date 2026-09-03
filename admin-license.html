@@ -36,7 +36,9 @@
     width: 100%; border: 1px solid var(--color-line); border-radius: 6px; padding: 6px 7px; font-size: 12.5px; font-family: inherit; box-sizing: border-box;
   }
   table.edit-table input.narrow { width: 62px; }
+  table.edit-table input:disabled { background: #f3efe8; color: var(--color-muted); }
   table.edit-table td.code-cell { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--color-primary); white-space: nowrap; }
+  table.edit-table select.f-mode { width: 72px; }
   .admin-actions { position: sticky; bottom: 0; background: var(--color-surface); padding: 16px 0; display: flex; gap: 10px; flex-wrap: wrap; border-top: 1px solid var(--color-line); margin-top: 8px; }
   .admin-note { font-size: 12.5px; color: var(--color-muted); margin-top: 8px; line-height: 1.7; }
   #mainArea { display: none; }
@@ -77,13 +79,39 @@
   </div>
 
   <div class="admin-section">
+    <h2>수강료 자동계산 요금표</h2>
+    <p class="admin-note">
+      여기서 시간당 단가를 정하면, 아래 표에서 "자동"으로 설정된 케이스의 수강료가 <strong>교육시간 × 단가</strong>로 자동 계산돼요.
+      학과교육비는 원칙적으로 모든 면허에 공통 적용되고, 필요한 경우에만 면허별로 다른 금액을 따로 지정할 수 있어요 (비워두면 공통 단가가 적용됩니다).
+      특정 케이스만 요금표로 설명이 안 되는 경우 그 줄만 "수동"으로 바꿔서 직접 입력하세요.
+    </p>
+    <div class="admin-field" style="max-width:280px;margin-bottom:16px;">
+      <label>학과교육비 (공통, 원/시간)</label>
+      <input type="number" id="rate-hak" />
+    </div>
+    <div class="table-scroll">
+      <table class="edit-table" id="rateTable">
+        <thead>
+          <tr>
+            <th>면허 종류</th><th>기능(장내) 교육비 (원/시간)</th><th>도로주행 교육비 (원/시간)</th><th>학과교육비 별도 지정 (원/시간, 비우면 공통 적용)</th>
+          </tr>
+        </thead>
+        <tbody id="rateBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="admin-section">
     <h2>케이스별 교육시간 · 수강료</h2>
-    <p class="admin-note">시간·수강료 칸을 비워두면 "해당없음"으로 처리됩니다. 수강료 칸에 <code>unknown</code>이라고 입력하면 "문의"로 표시돼요.</p>
+    <p class="admin-note">
+      시간 칸을 비워두면 "해당없음"으로 처리됩니다. "자동" 모드는 위 요금표로 수강료를 자동 계산해서 보여줘요(직접 입력 불가).
+      "수동" 모드에서는 수강료 칸을 직접 입력할 수 있고, <code>unknown</code>이라고 입력하면 "문의"로 표시돼요.
+    </p>
     <div class="table-scroll">
       <table class="edit-table">
         <thead>
           <tr>
-            <th>코드</th><th>대상 면허</th><th>상태</th>
+            <th>코드</th><th>대상 면허</th><th>상태</th><th>자동/수동</th>
             <th>학과(h)</th><th>기능(h)</th><th>도로(h)</th>
             <th>학과(원)</th><th>기능(원)</th><th>도로(원)</th>
             <th>비고</th>
@@ -114,7 +142,125 @@ var STATUS_OPTIONS = [
   ["doc","서류로 전환 가능"]
 ];
 
+var TYPE_LABELS = { B2:"제2종 보통", B1:"제1종 보통", TM:"1↔2종 전환", S2:"제2종 소형", WD:"원동기", DH:"제1종 대형", SG:"소형견인차", DG:"대형견인차", GN:"구난차" };
+var RATE_TYPE_KEYS = ["B2","B1","TM","S2","WD","DH","SG","DG","GN"];
+var DEFAULT_RATES = {
+  hak: 10000,
+  types: {
+    B2: { gi: 55000, doro: 55000, hak: null },
+    B1: { gi: 55000, doro: 55000, hak: null },
+    TM: { gi: 55000, doro: 55000, hak: null },
+    S2: { gi: 40000, doro: null, hak: 0 },
+    WD: { gi: 42500, doro: null, hak: null },
+    DH: { gi: 68000, doro: null, hak: 11000 },
+    SG: { gi: 70000, doro: null, hak: null },
+    DG: { gi: 80000, doro: null, hak: null },
+    GN: { gi: null, doro: null, hak: null }
+  }
+};
+var MANUAL_DEFAULT_CODES = ["TM-01","TM-02","TM-03","TM-04","B1-06"];
+
 function esc(s){ return (s===null||s===undefined) ? "" : String(s); }
+
+function ensureRatesAndModes(){
+  if(!DATA.rates){
+    DATA.rates = JSON.parse(JSON.stringify(DEFAULT_RATES));
+  } else {
+    if(DATA.rates.hak===undefined||DATA.rates.hak===null) DATA.rates.hak = DEFAULT_RATES.hak;
+    if(!DATA.rates.types) DATA.rates.types = {};
+    RATE_TYPE_KEYS.forEach(function(k){
+      if(!DATA.rates.types[k]) DATA.rates.types[k] = { gi:null, doro:null, hak:null };
+    });
+  }
+  Object.keys(DATA.cases).forEach(function(code){
+    var c = DATA.cases[code];
+    if(!c.costMode){
+      c.costMode = MANUAL_DEFAULT_CODES.indexOf(code) >= 0 ? "manual" : "auto";
+    }
+  });
+}
+
+function typeOfCode(code){ return code.split("-")[0]; }
+function numOrNull(v){
+  v = (v===null||v===undefined) ? "" : String(v).trim();
+  if(v==="") return null;
+  var n = Number(v);
+  return isNaN(n) ? null : n;
+}
+function calcCost(hoursVal, rate){
+  if(hoursVal===null || hoursVal===undefined) return null;
+  if(rate===null || rate===undefined) return "unknown";
+  return hoursVal * rate;
+}
+function fmtCostForInput(v){
+  if(v===null || v===undefined) return "";
+  return String(v);
+}
+
+function currentRatesFromForm(){
+  var r = { hak: numOrNull(document.getElementById("rate-hak").value), types: {} };
+  RATE_TYPE_KEYS.forEach(function(k){
+    r.types[k] = {
+      gi: numOrNull(document.getElementById("rate-gi-"+k).value),
+      doro: numOrNull(document.getElementById("rate-doro-"+k).value),
+      hak: numOrNull(document.getElementById("rate-hak-"+k).value)
+    };
+  });
+  return r;
+}
+
+function buildRatesForm(){
+  document.getElementById("rate-hak").value = esc(DATA.rates.hak);
+  var body = document.getElementById("rateBody");
+  var rows = "";
+  RATE_TYPE_KEYS.forEach(function(k){
+    var t = DATA.rates.types[k] || {};
+    rows += '<tr>'
+      + '<td>'+TYPE_LABELS[k]+' ('+k+')</td>'
+      + '<td><input type="number" id="rate-gi-'+k+'" value="'+esc(t.gi)+'"></td>'
+      + '<td><input type="number" id="rate-doro-'+k+'" value="'+esc(t.doro)+'"></td>'
+      + '<td><input type="number" id="rate-hak-'+k+'" placeholder="공통 적용" value="'+esc(t.hak)+'"></td>'
+      + '</tr>';
+  });
+  body.innerHTML = rows;
+}
+
+function parseHourVal(v){
+  v = v.trim();
+  if(v==="") return null;
+  var n = Number(v);
+  return isNaN(n) ? null : n;
+}
+
+function recomputeRow(tr){
+  var code = tr.getAttribute("data-code");
+  var mode = tr.querySelector(".f-mode").value;
+  var hakCostInput = tr.querySelector(".f-hak-c");
+  var giCostInput = tr.querySelector(".f-gi-c");
+  var doroCostInput = tr.querySelector(".f-doro-c");
+  if(mode === "manual"){
+    hakCostInput.disabled = false;
+    giCostInput.disabled = false;
+    doroCostInput.disabled = false;
+    return;
+  }
+  var type = typeOfCode(code);
+  var rates = currentRatesFromForm();
+  var tRate = rates.types[type] || { gi:null, doro:null, hak:null };
+  var hakHours = parseHourVal(tr.querySelector(".f-hak-h").value);
+  var giHours = parseHourVal(tr.querySelector(".f-gi-h").value);
+  var doroHours = parseHourVal(tr.querySelector(".f-doro-h").value);
+  var effHakRate = (tRate.hak===null||tRate.hak===undefined) ? rates.hak : tRate.hak;
+  hakCostInput.value = fmtCostForInput(calcCost(hakHours, effHakRate));
+  giCostInput.value = fmtCostForInput(calcCost(giHours, tRate.gi));
+  doroCostInput.value = fmtCostForInput(calcCost(doroHours, tRate.doro));
+  hakCostInput.disabled = true;
+  giCostInput.disabled = true;
+  doroCostInput.disabled = true;
+}
+function recomputeAll(){
+  document.querySelectorAll("#casesBody tr").forEach(recomputeRow);
+}
 
 function buildContactForm(){
   document.getElementById("f-contact-name").value = esc(DATA.contact.name);
@@ -144,10 +290,12 @@ function buildCasesTable(){
     var opts = STATUS_OPTIONS.map(function(o){
       return '<option value="'+o[0]+'"'+(c.status===o[0]?' selected':'')+'>'+o[1]+'</option>';
     }).join("");
+    var mode = c.costMode === "manual" ? "manual" : "auto";
     rows += '<tr data-code="'+code+'">'
       + '<td class="code-cell">'+code+'</td>'
       + '<td><input type="text" class="f-target" value="'+esc(c.target).replace(/"/g,"&quot;")+'"></td>'
       + '<td><select class="f-status">'+opts+'</select></td>'
+      + '<td><select class="f-mode"><option value="auto"'+(mode==="auto"?' selected':'')+'>자동</option><option value="manual"'+(mode==="manual"?' selected':'')+'>수동</option></select></td>'
       + '<td><input type="text" class="narrow f-hak-h" value="'+(h.hak?h.hak[0]:"")+'"></td>'
       + '<td><input type="text" class="narrow f-gi-h" value="'+(h.gi?h.gi[0]:"")+'"></td>'
       + '<td><input type="text" class="narrow f-doro-h" value="'+(h.doro?h.doro[0]:"")+'"></td>'
@@ -193,11 +341,14 @@ function collectData(){
     var v = el ? el.value.trim() : "";
     out.examFee[key] = v === "" ? null : v;
   });
+  out.rates = currentRatesFromForm();
+  recomputeAll();
   document.querySelectorAll("#casesBody tr").forEach(function(tr){
     var code = tr.getAttribute("data-code");
     out.cases[code] = {
       status: tr.querySelector(".f-status").value,
       target: tr.querySelector(".f-target").value.trim(),
+      costMode: tr.querySelector(".f-mode").value,
       hours: {
         hak: parseHour(tr.querySelector(".f-hak-h").value),
         gi: parseHour(tr.querySelector(".f-gi-h").value),
@@ -248,14 +399,31 @@ fetch("api/auth.php").then(function(r){ return r.json(); }).then(function(res){
   }
   return fetch("api/license-data.php").then(function(r){ return r.json(); }).then(function(res2){
     DATA = (res2 && res2.data) || { contact: {}, examFee: {}, cases: {} };
+    ensureRatesAndModes();
     buildContactForm();
     buildFeeGrid();
+    buildRatesForm();
     buildCasesTable();
+    recomputeAll();
     loadingMsg.style.display = "none";
     mainArea.style.display = "block";
   });
 }).catch(function(){
   loadingMsg.textContent = "서버(api)에 접속할 수 없습니다. DB 연동 배포 전(정적 미리보기)에는 이 페이지가 동작하지 않아요.";
+});
+
+document.getElementById("rateTable").addEventListener("input", recomputeAll);
+document.getElementById("rate-hak").addEventListener("input", recomputeAll);
+
+document.getElementById("casesBody").addEventListener("change", function(e){
+  if(e.target.classList.contains("f-mode")){
+    recomputeRow(e.target.closest("tr"));
+  }
+});
+document.getElementById("casesBody").addEventListener("input", function(e){
+  if(e.target.classList.contains("f-hak-h") || e.target.classList.contains("f-gi-h") || e.target.classList.contains("f-doro-h")){
+    recomputeRow(e.target.closest("tr"));
+  }
 });
 
 })();

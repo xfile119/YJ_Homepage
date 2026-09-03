@@ -17,6 +17,20 @@
     "DG": "장내검정 7만원 (별도)",
     "GN": null
   },
+  "rates": {
+    "hak": 10000,
+    "types": {
+      "B2": { "gi": 55000, "doro": 55000, "hak": null },
+      "B1": { "gi": 55000, "doro": 55000, "hak": null },
+      "TM": { "gi": 55000, "doro": 55000, "hak": null },
+      "S2": { "gi": 40000, "doro": null, "hak": 0 },
+      "WD": { "gi": 42500, "doro": null, "hak": null },
+      "DH": { "gi": 68000, "doro": null, "hak": 11000 },
+      "SG": { "gi": 70000, "doro": null, "hak": null },
+      "DG": { "gi": 80000, "doro": null, "hak": null },
+      "GN": { "gi": null, "doro": null, "hak": null }
+    }
+  },
   "cases": {
     "B2-01": {
       "status": "ok",
@@ -212,6 +226,7 @@
     },
     "TM-01": {
       "status": "ok",
+      "costMode": "manual",
       "target": "제1종 보통면허(수동)",
       "hours": {
         "hak": [
@@ -236,6 +251,7 @@
     },
     "TM-02": {
       "status": "warn",
+      "costMode": "manual",
       "target": "제1종 보통면허(자동)",
       "hours": {
         "hak": [
@@ -260,6 +276,7 @@
     },
     "TM-03": {
       "status": "ok",
+      "costMode": "manual",
       "target": "제1종 보통면허(자동)",
       "hours": {
         "hak": [
@@ -284,6 +301,7 @@
     },
     "TM-04": {
       "status": "ok",
+      "costMode": "manual",
       "target": "제1종 보통면허(수동)",
       "hours": {
         "hak": [
@@ -338,6 +356,7 @@
     },
     "B1-06": {
       "status": "ok",
+      "costMode": "manual",
       "target": "제1종 보통면허",
       "hours": {
         "hak": [
