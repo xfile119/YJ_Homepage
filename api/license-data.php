@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 require __DIR__ . '/_db.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -17,7 +16,7 @@ if ($method !== 'POST') {
 
 yj_require_login();
 $body = yj_input();
-$data = $body['data'] ?? null;
+$data = isset($body['data']) ? $body['data'] : null;
 
 if (!is_array($data)) {
     yj_json(['error' => '잘못된 데이터입니다.'], 400);

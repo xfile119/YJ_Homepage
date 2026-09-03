@@ -6,8 +6,8 @@
  * 3) 아래 폼으로 관리자 계정(아이디/비밀번호)을 만듭니다.
  *
  * 완료 후에는 보안을 위해 이 파일(db/setup.php)을 서버에서 삭제해주세요.
+ * PHP 5.5 이상에서 동작하도록 구형 문법으로 작성했습니다.
  */
-declare(strict_types=1);
 
 $configPath = __DIR__ . '/../config.php';
 if (!file_exists($configPath)) {
@@ -16,14 +16,14 @@ if (!file_exists($configPath)) {
     exit;
 }
 $config = require $configPath;
-$prefix = $config['table_prefix'] ?? 'yj_';
+$prefix = isset($config['table_prefix']) ? $config['table_prefix'] : 'yj_';
 
 try {
     $dsn = "mysql:host={$config['db_host']};dbname={$config['db_name']};charset=utf8mb4";
     $pdo = new PDO($dsn, $config['db_user'], $config['db_pass'], [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     ]);
-} catch (Throwable $e) {
+} catch (Exception $e) {
     http_response_code(500);
     echo '<p style="font-family:sans-serif;color:#c00;">DB 연결 실패: ' . htmlspecialchars($e->getMessage()) . '</p>';
     exit;
@@ -55,16 +55,29 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}license_data (
 
 $noticeCount = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}notices")->fetchColumn();
 if ($noticeCount === 0) {
-    $seed = json_decode(file_get_contents(__DIR__ . '/notice_default_data.json'), true) ?: [];
+    $seedJson = file_get_contents(__DIR__ . '/notice_default_data.json');
+    $seed = json_decode($seedJson, true);
+    if (!is_array($seed)) { $seed = []; }
     $stmt = $pdo->prepare("INSERT INTO {$prefix}notices (display_no, title, link, badge, posted_date, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
-    foreach (array_values($seed) as $i => $r) {
-        $stmt->execute([$r['no'] ?? '', $r['title'] ?? '', $r['link'] ?? '#', $r['badge'] ?? '없음', $r['date'] ?? '', $i]);
+    $i = 0;
+    foreach (array_values($seed) as $r) {
+        $stmt->execute([
+            isset($r['no']) ? $r['no'] : '',
+            isset($r['title']) ? $r['title'] : '',
+            isset($r['link']) ? $r['link'] : '#',
+            isset($r['badge']) ? $r['badge'] : '없음',
+            isset($r['date']) ? $r['date'] : '',
+            $i,
+        ]);
+        $i++;
     }
 }
 
 $licenseCount = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}license_data WHERE id = 1")->fetchColumn();
 if ($licenseCount === 0) {
-    $seed = json_decode(file_get_contents(__DIR__ . '/license_default_data.json'), true) ?: [];
+    $seedJson = file_get_contents(__DIR__ . '/license_default_data.json');
+    $seed = json_decode($seedJson, true);
+    if (!is_array($seed)) { $seed = []; }
     $stmt = $pdo->prepare("INSERT INTO {$prefix}license_data (id, data_json) VALUES (1, ?)");
     $stmt->execute([json_encode($seed, JSON_UNESCAPED_UNICODE)]);
 }
@@ -73,9 +86,9 @@ $message = '';
 $done = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim((string)($_POST['username'] ?? ''));
-    $password = (string)($_POST['password'] ?? '');
-    $password2 = (string)($_POST['password2'] ?? '');
+    $username = trim((string)(isset($_POST['username']) ? $_POST['username'] : ''));
+    $password = (string)(isset($_POST['password']) ? $_POST['password'] : '');
+    $password2 = (string)(isset($_POST['password2']) ? $_POST['password2'] : '');
 
     if ($username === '' || $password === '') {
         $message = '아이디와 비밀번호를 모두 입력해주세요.';

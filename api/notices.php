@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 require __DIR__ . '/_db.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -26,13 +25,13 @@ if ($method !== 'POST') {
 
 yj_require_login();
 $body = yj_input();
-$action = $body['action'] ?? '';
+$action = isset($body['action']) ? $body['action'] : '';
 
 if ($action !== 'save_all') {
     yj_json(['error' => 'Bad request'], 400);
 }
 
-$rows = $body['notices'] ?? [];
+$rows = isset($body['notices']) ? $body['notices'] : [];
 if (!is_array($rows)) {
     yj_json(['error' => '잘못된 데이터입니다.'], 400);
 }
@@ -42,18 +41,20 @@ $db->beginTransaction();
 try {
     $db->exec("DELETE FROM $table");
     $stmt = $db->prepare("INSERT INTO $table (display_no, title, link, badge, posted_date, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
-    foreach (array_values($rows) as $i => $r) {
+    $i = 0;
+    foreach (array_values($rows) as $r) {
         $stmt->execute([
-            (string)($r['no'] ?? ''),
-            (string)($r['title'] ?? ''),
-            (string)($r['link'] ?? '#'),
-            (string)($r['badge'] ?? '없음'),
-            (string)($r['date'] ?? ''),
+            (string)(isset($r['no']) ? $r['no'] : ''),
+            (string)(isset($r['title']) ? $r['title'] : ''),
+            (string)(isset($r['link']) ? $r['link'] : '#'),
+            (string)(isset($r['badge']) ? $r['badge'] : '없음'),
+            (string)(isset($r['date']) ? $r['date'] : ''),
             $i,
         ]);
+        $i++;
     }
     $db->commit();
-} catch (Throwable $e) {
+} catch (Exception $e) {
     $db->rollBack();
     yj_json(['error' => '저장 실패: ' . $e->getMessage()], 500);
 }

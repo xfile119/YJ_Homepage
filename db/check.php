@@ -16,7 +16,7 @@ header('Content-Type: text/html; charset=utf-8');
 <body>
 <h1>서버 진단 결과</h1>
 <table>
-  <tr><th>PHP 버전</th><td><?= htmlspecialchars(PHP_VERSION) ?> <?= version_compare(PHP_VERSION, '7.4.0', '>=') ? '<span class="ok">(OK, 7.4 이상)</span>' : '<span class="bad">(7.4 미만 - 문제 가능성 높음)</span>' ?></td></tr>
+  <tr><th>PHP 버전</th><td><?= htmlspecialchars(PHP_VERSION) ?> <?= version_compare(PHP_VERSION, '5.5.0', '>=') ? '<span class="ok">(OK, 5.5 이상)</span>' : '<span class="bad">(5.5 미만 - 문제 가능성 높음)</span>' ?></td></tr>
   <tr><th>PDO 확장</th><td><?= extension_loaded('pdo') ? '<span class="ok">사용 가능</span>' : '<span class="bad">사용 불가</span>' ?></td></tr>
   <tr><th>PDO MySQL 드라이버</th><td><?= extension_loaded('pdo_mysql') ? '<span class="ok">사용 가능</span>' : '<span class="bad">사용 불가 - 이게 원인일 수 있어요</span>' ?></td></tr>
   <tr><th>session 확장</th><td><?= extension_loaded('session') ? '<span class="ok">사용 가능</span>' : '<span class="bad">사용 불가</span>' ?></td></tr>
@@ -25,7 +25,7 @@ header('Content-Type: text/html; charset=utf-8');
   <tr><th>config.php 문법</th><td>
     <?php
       $ok = true;
-      try { $c = require __DIR__ . '/../config.php'; } catch (Throwable $e) { $ok = false; }
+      try { $c = require __DIR__ . '/../config.php'; } catch (Exception $e) { $ok = false; }
       echo $ok && is_array($c) ? '<span class="ok">정상 (배열 반환됨)</span>' : '<span class="bad">문제 있음</span>';
     ?>
   </td></tr>
@@ -36,7 +36,7 @@ header('Content-Type: text/html; charset=utf-8');
         $dsn = "mysql:host={$c['db_host']};dbname={$c['db_name']};charset=utf8mb4";
         $pdo = new PDO($dsn, $c['db_user'], $c['db_pass']);
         echo '<span class="ok">연결 성공!</span>';
-      } catch (Throwable $e) {
+      } catch (Exception $e) {
         echo '<span class="bad">연결 실패: ' . htmlspecialchars($e->getMessage()) . '</span>';
       }
     ?>

@@ -1,11 +1,12 @@
 <?php
-declare(strict_types=1);
+/* PHP 5.5 이상에서 동작하도록 구형 문법으로 작성했습니다 (return type 선언, ??,
+   Throwable 등 PHP 7+ 전용 문법을 쓰지 않습니다). */
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-function yj_config(): array {
+function yj_config() {
     static $config = null;
     if ($config === null) {
         $path = __DIR__ . '/../config.php';
@@ -17,7 +18,7 @@ function yj_config(): array {
     return $config;
 }
 
-function yj_db(): PDO {
+function yj_db() {
     static $pdo = null;
     if ($pdo === null) {
         $c = yj_config();
@@ -27,31 +28,32 @@ function yj_db(): PDO {
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             ]);
-        } catch (Throwable $e) {
+        } catch (Exception $e) {
             yj_json(['error' => 'DB 연결 실패: ' . $e->getMessage()], 500);
         }
     }
     return $pdo;
 }
 
-function yj_table(string $name): string {
-    return yj_config()['table_prefix'] . $name;
+function yj_table($name) {
+    $c = yj_config();
+    return $c['table_prefix'] . $name;
 }
 
-function yj_json(array $data, int $status = 200): void {
+function yj_json($data, $status = 200) {
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-function yj_require_login(): void {
+function yj_require_login() {
     if (empty($_SESSION['yj_admin'])) {
         yj_json(['error' => '로그인이 필요합니다.'], 401);
     }
 }
 
-function yj_input(): array {
+function yj_input() {
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true);
     return is_array($data) ? $data : [];

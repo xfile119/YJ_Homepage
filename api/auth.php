@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 require __DIR__ . '/_db.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -13,15 +12,15 @@ if ($method !== 'POST') {
 }
 
 $body = yj_input();
-$action = $body['action'] ?? 'login';
+$action = isset($body['action']) ? $body['action'] : 'login';
 
 if ($action === 'logout') {
     unset($_SESSION['yj_admin']);
     yj_json(['ok' => true]);
 }
 
-$username = trim((string)($body['username'] ?? ''));
-$password = (string)($body['password'] ?? '');
+$username = trim((string)(isset($body['username']) ? $body['username'] : ''));
+$password = (string)(isset($body['password']) ? $body['password'] : '');
 
 if ($username === '' || $password === '') {
     yj_json(['error' => '아이디와 비밀번호를 입력해주세요.'], 400);
