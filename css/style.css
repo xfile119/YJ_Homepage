@@ -259,6 +259,7 @@ button { font-family: inherit; cursor: pointer; }
 .hero-stats div span { font-size: 13px; color: rgba(255,255,255,0.8); }
 
 .hero-visual {
+  position: relative;
   width: 100%;
   max-width: 460px;
   margin-left: auto;
@@ -267,13 +268,29 @@ button { font-family: inherit; cursor: pointer; }
   align-items: flex-start;
   gap: 20px;
 }
+.hero-visual::before {
+  content: "";
+  position: absolute;
+  left: -10%;
+  right: -25%;
+  top: -20%;
+  bottom: -10%;
+  background: radial-gradient(ellipse 60% 60% at 62% 42%, rgba(255,238,214,0.4), rgba(255,238,214,0) 70%);
+  filter: blur(46px);
+  pointer-events: none;
+  z-index: 0;
+}
 .hero-cutout {
+  position: relative;
+  z-index: 1;
   display: block;
   width: 100%;
   height: auto;
-  filter: drop-shadow(0 22px 34px rgba(30, 20, 10, 0.35));
+  filter: drop-shadow(0 18px 28px rgba(30, 20, 10, 0.22));
 }
 .hero-badge {
+  position: relative;
+  z-index: 1;
   background: #fff;
   color: var(--color-ink);
   padding: 14px 18px;
