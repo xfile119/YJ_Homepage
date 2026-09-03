@@ -19,7 +19,7 @@ $config = require $configPath;
 $prefix = isset($config['table_prefix']) ? $config['table_prefix'] : 'yj_';
 
 try {
-    $dsn = "mysql:host={$config['db_host']};dbname={$config['db_name']};charset=utf8mb4";
+    $dsn = "mysql:host={$config['db_host']};dbname={$config['db_name']};charset=utf8";
     $pdo = new PDO($dsn, $config['db_user'], $config['db_pass'], [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     ]);
@@ -34,7 +34,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}admin_users (
   username VARCHAR(50) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
 $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}notices (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -45,13 +45,13 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}notices (
   posted_date VARCHAR(20) NOT NULL DEFAULT '',
   sort_order INT NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
 $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}license_data (
   id INT PRIMARY KEY,
   data_json LONGTEXT NOT NULL,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
 $noticeCount = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}notices")->fetchColumn();
 if ($noticeCount === 0) {

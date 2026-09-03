@@ -33,7 +33,7 @@ header('Content-Type: text/html; charset=utf-8');
   <tr><th>DB 연결 테스트</th><td>
     <?php
       try {
-        $dsn = "mysql:host={$c['db_host']};dbname={$c['db_name']};charset=utf8mb4";
+        $dsn = "mysql:host={$c['db_host']};dbname={$c['db_name']};charset=utf8";
         $pdo = new PDO($dsn, $c['db_user'], $c['db_pass']);
         echo '<span class="ok">연결 성공!</span>';
       } catch (Exception $e) {

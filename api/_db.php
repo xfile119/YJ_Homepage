@@ -22,7 +22,7 @@ function yj_db() {
     static $pdo = null;
     if ($pdo === null) {
         $c = yj_config();
-        $dsn = "mysql:host={$c['db_host']};dbname={$c['db_name']};charset=utf8mb4";
+        $dsn = "mysql:host={$c['db_host']};dbname={$c['db_name']};charset=utf8";
         try {
             $pdo = new PDO($dsn, $c['db_user'], $c['db_pass'], [
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
