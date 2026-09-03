@@ -43,6 +43,8 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}notices (
   link VARCHAR(255) NOT NULL DEFAULT '#',
   badge VARCHAR(10) NOT NULL DEFAULT '없음',
   posted_date VARCHAR(20) NOT NULL DEFAULT '',
+  content MEDIUMTEXT NULL,
+  image VARCHAR(255) NULL,
   sort_order INT NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
@@ -52,6 +54,18 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}license_data (
   data_json LONGTEXT NOT NULL,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+/* 이미 만들어진 notices 테이블에 content/image 컬럼이 없으면 추가합니다.
+   (기존에 db/setup.php를 이미 한 번 실행한 사이트를 위한 안전한 마이그레이션 — 여러 번 실행해도 안전합니다.) */
+function yj_ensure_column($pdo, $table, $column, $definition) {
+    $check = $pdo->prepare("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?");
+    $check->execute([$table, $column]);
+    if ((int)$check->fetchColumn() === 0) {
+        $pdo->exec("ALTER TABLE {$table} ADD COLUMN {$column} {$definition}");
+    }
+}
+yj_ensure_column($pdo, $prefix . 'notices', 'content', 'MEDIUMTEXT NULL');
+yj_ensure_column($pdo, $prefix . 'notices', 'image', 'VARCHAR(255) NULL');
 
 $noticeCount = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}notices")->fetchColumn();
 if ($noticeCount === 0) {

@@ -1,0 +1,10 @@
+# 업로드된 파일은 이미지만 저장되지만, 혹시 모를 상황에 대비해 이 폴더에서는 스크립트 실행을 막습니다.
+<IfModule mod_php7.c>
+  php_flag engine off
+</IfModule>
+<IfModule mod_php5.c>
+  php_flag engine off
+</IfModule>
+<FilesMatch "\.ph(p[3-8]?|t|tml)$">
+  Require all denied
+</FilesMatch>

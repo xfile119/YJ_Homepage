@@ -4,11 +4,20 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>공지사항 | 영진자동차운전전문학원</title>
-<meta name="description" content="영진자동차운전전문학원의 공지사항과 안내사항을 확인하세요." />
+<meta name="robots" content="noindex" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css" />
+<style>
+  .notice-article { max-width: 760px; margin: 0 auto; }
+  .notice-article .na-meta { display: flex; align-items: center; gap: 10px; color: var(--color-muted); font-size: 13.5px; margin-bottom: 10px; }
+  .notice-article h1 { font-size: 24px; font-weight: 800; color: var(--color-ink); line-height: 1.4; margin-bottom: 14px; }
+  .notice-article .na-image { width: 100%; border-radius: var(--radius-lg); margin-bottom: 24px; display: block; }
+  .notice-article .na-body { font-size: 15.5px; line-height: 1.9; color: var(--color-ink); white-space: pre-wrap; word-break: break-word; }
+  .notice-article .na-empty { color: var(--color-muted); }
+  .notice-article .na-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--color-line); }
+</style>
 </head>
 <body>
 
@@ -49,109 +58,16 @@
 
 <div class="page-header">
   <div class="container">
-    <div class="breadcrumb"><a href="index.html">홈</a> / 공지사항</div>
+    <div class="breadcrumb"><a href="index.html">홈</a> / <a href="notice.html">공지사항</a> / 상세보기</div>
     <h1>공지사항</h1>
-    <p>영진자동차운전전문학원의 새로운 소식과 안내사항을 확인하세요.</p>
   </div>
 </div>
 
 <main>
   <section class="section">
     <div class="container">
-      <p class="data-flag mt-8" style="margin-bottom:20px;display:inline-flex;">예시 데이터입니다. 실제 게시글로 교체해주세요.</p>
-      <div class="table-scroll">
-      <table class="notice-table">
-        <thead>
-          <tr>
-            <th class="col-no">번호</th>
-            <th class="col-title">제목</th>
-            <th class="col-date">등록일</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- NOTICE_ROWS_START -->
-          <tr>
-            <td class="col-no">공지</td>
-            <td class="col-title"><a href="#">2026년 하반기 학과교육 시간표 변경 안내</a> <span class="notice-badge">필독</span></td>
-            <td class="col-date">2026.08.20</td>
-          </tr>
-          <tr>
-            <td class="col-no">공지</td>
-            <td class="col-title"><a href="#">개인정보처리방침 개정 안내</a> <span class="notice-badge">필독</span></td>
-            <td class="col-date">2026.08.10</td>
-          </tr>
-          <tr>
-            <td class="col-no">12</td>
-            <td class="col-title"><a href="#">여름 성수기 셔틀버스 임시 노선 운영 안내</a></td>
-            <td class="col-date">2026.08.05</td>
-          </tr>
-          <tr>
-            <td class="col-no">11</td>
-            <td class="col-title"><a href="#">기능시험장 정기 점검에 따른 임시 휴장 안내</a></td>
-            <td class="col-date">2026.07.22</td>
-          </tr>
-          <tr>
-            <td class="col-no">10</td>
-            <td class="col-title"><a href="#">2종소형(이륜) 교육과정 신설 안내</a></td>
-            <td class="col-date">2026.07.02</td>
-          </tr>
-          <tr>
-            <td class="col-no">9</td>
-            <td class="col-title"><a href="#">여름철 폭염 대비 실습 시간 조정 안내</a></td>
-            <td class="col-date">2026.06.18</td>
-          </tr>
-          <tr>
-            <td class="col-no">8</td>
-            <td class="col-title"><a href="#">1종대형면허 특별반 모집 안내</a></td>
-            <td class="col-date">2026.05.30</td>
-          </tr>
-          <tr>
-            <td class="col-no">7</td>
-            <td class="col-title"><a href="#">신규 실습 차량 도입 안내</a></td>
-            <td class="col-date">2026.05.14</td>
-          </tr>
-          <tr>
-            <td class="col-no">6</td>
-            <td class="col-title"><a href="#">근로자의 날 휴원 안내</a></td>
-            <td class="col-date">2026.04.28</td>
-          </tr>
-          <tr>
-            <td class="col-no">5</td>
-            <td class="col-title"><a href="#">봄맞이 수강료 할인 이벤트 안내</a></td>
-            <td class="col-date">2026.04.01</td>
-          </tr>
-          <!-- NOTICE_ROWS_END -->
-        </tbody>
-      </table>
-      </div>
-      <script>
-        (function () {
-          function esc(s) {
-            return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-          }
-          fetch("api/notices.php").then(function (r) { return r.ok ? r.json() : null; }).then(function (res) {
-            if (!res || !Array.isArray(res.notices)) return;
-            var tbody = document.querySelector(".notice-table tbody");
-            var flag = document.querySelector(".data-flag");
-            if (flag) flag.remove();
-            tbody.innerHTML = res.notices.map(function (n) {
-              var badgeHtml = n.badge && n.badge !== "없음"
-                ? ' <span class="notice-badge' + (n.badge === "안내" ? " info" : "") + '">' + esc(n.badge) + "</span>"
-                : "";
-              var href = (n.link && n.link !== "#") ? n.link : ("notice-detail.html?id=" + encodeURIComponent(n.id));
-              return '<tr><td class="col-no">' + esc(n.no) + '</td><td class="col-title"><a href="' + esc(href) + '">' + esc(n.title) + "</a>" + badgeHtml + '</td><td class="col-date">' + esc(n.date) + "</td></tr>";
-            }).join("");
-          }).catch(function () {});
-        })();
-      </script>
-
-      <div class="pagination">
-        <span class="is-current">1</span>
-        <a href="#">2</a>
-        <a href="#">3</a>
-        <a href="#">4</a>
-        <a href="#">5</a>
-        <a href="#" aria-label="다음 페이지">›</a>
+      <div class="notice-article" id="article">
+        <p>불러오는 중...</p>
       </div>
     </div>
   </section>
@@ -216,5 +132,45 @@
 </div>
 
 <script src="js/main.js"></script>
+<script>
+(function () {
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  var container = document.getElementById("article");
+  var params = new URLSearchParams(location.search);
+  var id = params.get("id");
+
+  if (!id) {
+    container.innerHTML = '<p class="na-empty">잘못된 주소입니다. <a href="notice.html">공지사항 목록으로 돌아가기</a></p>';
+    return;
+  }
+
+  fetch("api/notices.php").then(function (r) { return r.ok ? r.json() : null; }).then(function (res) {
+    var notices = (res && res.notices) || [];
+    var n = null;
+    for (var i = 0; i < notices.length; i++) {
+      if (String(notices[i].id) === String(id)) { n = notices[i]; break; }
+    }
+    if (!n) {
+      container.innerHTML = '<p class="na-empty">게시글을 찾을 수 없습니다. 삭제되었거나 주소가 잘못됐을 수 있어요.<br><a href="notice.html">공지사항 목록으로 돌아가기</a></p>';
+      return;
+    }
+    document.title = n.title + " | 영진자동차운전전문학원";
+    var badgeHtml = n.badge && n.badge !== "없음"
+      ? ' <span class="notice-badge' + (n.badge === "안내" ? " info" : "") + '">' + esc(n.badge) + "</span>"
+      : "";
+    var html = "";
+    html += '<div class="na-meta"><span>' + esc(n.date) + "</span>" + badgeHtml + "</div>";
+    html += "<h1>" + esc(n.title) + "</h1>";
+    if (n.image) html += '<img class="na-image" src="' + esc(n.image) + '" alt="">';
+    html += '<div class="na-body">' + (n.content ? esc(n.content) : '<span class="na-empty">등록된 본문 내용이 없습니다.</span>') + "</div>";
+    html += '<div class="na-footer"><a href="notice.html" class="btn btn-outline btn-sm">← 공지사항 목록으로</a></div>';
+    container.innerHTML = html;
+  }).catch(function () {
+    container.innerHTML = '<p class="na-empty">내용을 불러오지 못했습니다. <a href="notice.html">공지사항 목록으로 돌아가기</a></p>';
+  });
+})();
+</script>
 </body>
 </html>

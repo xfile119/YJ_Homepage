@@ -36,6 +36,19 @@
   }
   table.edit-table td.op-cell button:hover { background: var(--color-primary-light); border-color: var(--color-primary); }
   table.edit-table td.op-cell button.danger:hover { background: #fdeeee; border-color: #d64545; color: #d64545; }
+  .btn-toggle-content { border: 1px solid var(--color-line); background: #fff; border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  .btn-toggle-content:hover { background: var(--color-primary-light); border-color: var(--color-primary); }
+  .detail-row td { background: #faf7f2; padding: 16px !important; }
+  .detail-grid { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+  .detail-grid textarea {
+    width: 100%; box-sizing: border-box; border: 1px solid var(--color-line); border-radius: 8px;
+    padding: 10px; font-family: inherit; font-size: 13px; resize: vertical;
+  }
+  .detail-col-content { flex: 1; min-width: 280px; }
+  .detail-col-image { width: 220px; }
+  .detail-col-content label, .detail-col-image label { display: block; font-size: 12px; font-weight: 700; color: var(--color-muted); margin-bottom: 6px; }
+  .img-preview-wrap img { max-width: 100%; border-radius: 8px; border: 1px solid var(--color-line); margin-bottom: 8px; display: block; }
+  .upload-status { font-size: 11.5px; color: var(--color-muted); margin-top: 6px; min-height: 14px; }
   .admin-actions { position: sticky; bottom: 0; background: var(--color-surface); padding: 16px 0; display: flex; gap: 10px; flex-wrap: wrap; border-top: 1px solid var(--color-line); margin-top: 12px; }
   #statusMsg { align-self: center; font-size: 13px; font-weight: 700; }
   #mainArea { display: none; }
@@ -54,7 +67,8 @@
 
   <div class="admin-warning">
     <strong>이 페이지는 비공개 도구입니다.</strong> 홈페이지 메뉴 어디에도 연결되어 있지 않고 검색엔진에도 노출되지 않아요.<br>
-    저장 버튼을 누르면 <strong>DB에 바로 저장되어 실제 홈페이지에 즉시 반영</strong>됩니다. 홈 화면(index.html)에는 아래 표의 <strong>맨 위 3개 항목</strong>만 미리보기로 표시되니, 최신순으로 정렬해 주세요.
+    저장 버튼을 누르면 <strong>DB에 바로 저장되어 실제 홈페이지에 즉시 반영</strong>됩니다. 홈 화면(index.html)에는 아래 표의 <strong>맨 위 3개 항목</strong>만 미리보기로 표시되니, 최신순으로 정렬해 주세요.<br>
+    <strong>본문</strong> 칸의 "✎ 편집" 버튼을 누르면 본문 내용과 대표 이미지를 넣을 수 있어요 — 제목을 클릭하면 그 내용이 담긴 상세 페이지로 이동합니다. <strong>링크</strong> 칸을 비워두거나 "#"으로 두면 자동으로 이 상세 페이지로 연결되고, 다른 주소를 직접 입력하면 그 주소로 대신 연결돼요.
   </div>
 
   <p id="loadingMsg">불러오는 중...</p>
@@ -75,6 +89,7 @@
               <th style="width:140px;">링크(선택)</th>
               <th style="width:90px;">뱃지</th>
               <th style="width:120px;">날짜</th>
+              <th style="width:70px;">본문</th>
               <th style="width:80px;">순서/삭제</th>
             </tr>
           </thead>
@@ -106,6 +121,10 @@ function esc(str){
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+function imgPreviewHtml(url){
+  return url ? '<img src="' + esc(url) + '" />' : '';
+}
+
 function renderRows(){
   rowsBody.innerHTML = "";
   DATA.forEach(function(row, i){
@@ -120,6 +139,7 @@ function renderRows(){
         }).join("") +
       '</select></td>' +
       '<td><input class="f-date" value="' + esc(row.date) + '" /></td>' +
+      '<td><button type="button" class="btn-toggle-content">✎ 편집</button></td>' +
       '<td class="op-cell">' +
         '<button type="button" class="btn-up" title="위로">↑</button>' +
         '<button type="button" class="btn-down" title="아래로">↓</button>' +
@@ -127,11 +147,40 @@ function renderRows(){
       '</td>';
     rowsBody.appendChild(tr);
 
+    var detailTr = document.createElement("tr");
+    detailTr.className = "detail-row";
+    detailTr.style.display = "none";
+    detailTr.innerHTML =
+      '<td colspan="7">' +
+        '<div class="detail-grid">' +
+          '<div class="detail-col-content">' +
+            '<label>본문 내용 (클릭하면 상세 페이지에 표시돼요)</label>' +
+            '<textarea class="f-content" rows="7">' + esc(row.content) + '</textarea>' +
+          '</div>' +
+          '<div class="detail-col-image">' +
+            '<label>대표 이미지 (선택, 5MB 이하)</label>' +
+            '<div class="img-preview-wrap">' + imgPreviewHtml(row.image) + '</div>' +
+            '<input type="file" class="f-image-file" accept="image/*" />' +
+            '<div style="display:flex;gap:6px;margin-top:6px;">' +
+              '<button type="button" class="btn btn-outline btn-sm btn-upload-image">업로드</button>' +
+              '<button type="button" class="btn btn-outline btn-sm btn-remove-image">이미지 삭제</button>' +
+            '</div>' +
+            '<p class="upload-status"></p>' +
+          '</div>' +
+        '</div>' +
+      '</td>';
+    rowsBody.appendChild(detailTr);
+
     tr.querySelector(".f-no").addEventListener("input", function(){ row.no = this.value; });
     tr.querySelector(".f-title").addEventListener("input", function(){ row.title = this.value; });
     tr.querySelector(".f-link").addEventListener("input", function(){ row.link = this.value; });
     tr.querySelector(".f-badge").addEventListener("change", function(){ row.badge = this.value; });
     tr.querySelector(".f-date").addEventListener("input", function(){ row.date = this.value; });
+    tr.querySelector(".btn-toggle-content").addEventListener("click", function(){
+      var open = detailTr.style.display !== "none";
+      detailTr.style.display = open ? "none" : "";
+      this.textContent = open ? "✎ 편집" : "▲ 닫기";
+    });
     tr.querySelector(".btn-up").addEventListener("click", function(){
       if (i === 0) return;
       var tmp = DATA[i-1]; DATA[i-1] = DATA[i]; DATA[i] = tmp;
@@ -147,11 +196,37 @@ function renderRows(){
       DATA.splice(i, 1);
       renderRows();
     });
+
+    detailTr.querySelector(".f-content").addEventListener("input", function(){ row.content = this.value; });
+    detailTr.querySelector(".btn-upload-image").addEventListener("click", function(){
+      var fileInput = detailTr.querySelector(".f-image-file");
+      var statusEl = detailTr.querySelector(".upload-status");
+      if (!fileInput.files[0]) { statusEl.textContent = "파일을 선택해주세요."; return; }
+      var fd = new FormData();
+      fd.append("file", fileInput.files[0]);
+      statusEl.textContent = "업로드 중...";
+      fetch("api/upload.php", { method: "POST", body: fd })
+        .then(function(r){ return r.json().then(function(data){ return { ok: r.ok, data: data }; }); })
+        .then(function(res){
+          if (res.ok && res.data.url) {
+            row.image = res.data.url;
+            detailTr.querySelector(".img-preview-wrap").innerHTML = imgPreviewHtml(row.image);
+            statusEl.textContent = "업로드 완료!";
+          } else {
+            statusEl.textContent = "오류: " + (res.data.error || "업로드 실패");
+          }
+        }).catch(function(){ statusEl.textContent = "서버에 접속할 수 없습니다."; });
+    });
+    detailTr.querySelector(".btn-remove-image").addEventListener("click", function(){
+      row.image = "";
+      detailTr.querySelector(".img-preview-wrap").innerHTML = "";
+      detailTr.querySelector(".upload-status").textContent = "이미지를 삭제했어요. (저장 버튼을 눌러야 반영돼요)";
+    });
   });
 }
 
 document.getElementById("btnAddRow").addEventListener("click", function(){
-  DATA.unshift({ no:"공지", title:"새 공지사항 제목", link:"#", badge:"없음", date:"2026.01.01" });
+  DATA.unshift({ no:"공지", title:"새 공지사항 제목", link:"#", badge:"없음", date:"2026.01.01", content:"", image:"" });
   renderRows();
 });
 

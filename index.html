@@ -201,7 +201,8 @@
                 var badgeHtml = n.badge && n.badge !== "없음"
                   ? '<span class="notice-badge' + (n.badge === "안내" ? " info" : "") + '">' + esc(n.badge) + "</span>"
                   : "";
-                return '<div class="notice-row">' + badgeHtml + '<span class="notice-title">' + esc(n.title) + '</span><span class="notice-date">' + esc(n.date) + "</span></div>";
+                var href = (n.link && n.link !== "#") ? n.link : ("notice-detail.html?id=" + encodeURIComponent(n.id));
+                return '<a class="notice-row" href="' + esc(href) + '">' + badgeHtml + '<span class="notice-title">' + esc(n.title) + '</span><span class="notice-date">' + esc(n.date) + "</span></a>";
               }).join("");
             }).catch(function () {});
           })();
