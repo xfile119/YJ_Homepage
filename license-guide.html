@@ -194,8 +194,8 @@
       <span>&copy; 2026 (주)영진자동차운전전문학원. All rights reserved.</span>
       <div class="footer-legal">
         <a href="privacy.html">개인정보처리방침</a>
-        <span>사업자등록번호 [입력 필요]</span>
-        <span>대표 [입력 필요]</span>
+        <span>사업자등록번호 410-81-87858</span>
+        <span>대표 김성환</span>
       </div>
     </div>
   </div>
@@ -428,21 +428,23 @@ function costCell(v){
   if(v===0) return {text:"면제", dim:false};
   return {text:won(v), dim:false};
 }
-function calcTotal(cost){
-  if(!cost) return null;
-  var keys=["hak","gi","doro"], allUnknown=true, sum=0;
-  keys.forEach(function(k){ var v=cost[k]; if(typeof v==="number"){ sum+=v; allUnknown=false; } });
-  if(allUnknown) return "unknown";
+function calcTotalWithExam(cost, examGi, examDoro){
+  if(!cost) return "unknown";
+  var sum=0, any=false;
+  ["hak","gi","doro"].forEach(function(k){
+    var v=cost[k];
+    if(typeof v==="number"){ sum+=v; any=true; }
+  });
+  [examGi, examDoro].forEach(function(v){
+    if(typeof v==="number"){ sum+=v; any=true; }
+  });
+  if(!any) return "unknown";
   return sum;
 }
-function examFeeFor(code){
+function examFeeNumbers(code){
   var prefix=code.split("-")[0];
   var t = DATA.rates && DATA.rates.types && DATA.rates.types[prefix];
-  if(!t) return null;
-  var parts=[];
-  if(typeof t.examGi==="number") parts.push("장내검정 "+won(t.examGi));
-  if(typeof t.examDoro==="number") parts.push("도로주행검정 "+won(t.examDoro));
-  return parts.length ? parts.join(" + ") : null;
+  return t ? { examGi: t.examGi, examDoro: t.examDoro } : { examGi: null, examDoro: null };
 }
 
 /* =======================================================================
@@ -558,10 +560,22 @@ function renderResult(){
     });
     html+='</div>';
 
-    var total=calcTotal(c.cost);
+    var examNums=examFeeNumbers(code);
+    var hasExam=(typeof examNums.examGi==="number")||(typeof examNums.examDoro==="number");
+    if(hasExam){
+      html+='<div class="yjlg-section-label">시험 응시료(검정료)</div><div class="yjlg-stat-grid">';
+      if(typeof examNums.examGi==="number"){
+        html+='<div class="yjlg-stat"><div class="yjlg-k">장내검정료</div><div class="yjlg-v">'+won(examNums.examGi)+'</div></div>';
+      }
+      if(typeof examNums.examDoro==="number"){
+        html+='<div class="yjlg-stat"><div class="yjlg-k">도로주행검정료</div><div class="yjlg-v">'+won(examNums.examDoro)+'</div></div>';
+      }
+      html+='</div>';
+    }
+
+    var total=calcTotalWithExam(c.cost, examNums.examGi, examNums.examDoro);
     html+='<div class="yjlg-total-tile"><span class="yjlg-k">예상 합계</span><span class="yjlg-v">'+(total==="unknown"?"문의 필요":won(total))+'</span></div>';
-    var fee=examFeeFor(code);
-    html+='<p class="yjlg-fineprint">'+(total==="unknown"?"":"정확한 금액은 상담 시 확인해드려요. ")+(fee?"시험 응시료(검정료)는 별도이며 "+fee+"입니다.":"")+'</p>';
+    html+='<p class="yjlg-fineprint">'+(total==="unknown"?"":"정확한 금액은 상담 시 확인해드려요. 상기 수강료는 의무교육을 기준으로 산정되었으며, 시험은 각 1회씩 포함된 가격입니다.")+'</p>';
 
     if(c.note){ html+='<div class="yjlg-callout '+(c.status==="warn"?"yjlg-warn":"yjlg-ok")+'">'+c.note+'</div>'; }
     if(c.status==="warn"){ html+=contactBox(); }
