@@ -560,20 +560,26 @@ function renderResult(){
     });
     html+='</div>';
 
+    /* 해당 교육시간이 0시간(이미 이수/면제)이면 그 항목의 시험(검정)도 면제로 봅니다.
+       예: 기능교육 0시간인 케이스는 장내기능검정도 이미 통과했거나 면제된 경우예요. */
     var examNums=examFeeNumbers(code);
-    var hasExam=(typeof examNums.examGi==="number")||(typeof examNums.examDoro==="number");
+    var giHours=c.hours.gi?c.hours.gi[0]:null;
+    var doroHours=c.hours.doro?c.hours.doro[0]:null;
+    var effExamGi=(typeof examNums.examGi==="number" && giHours>0)?examNums.examGi:null;
+    var effExamDoro=(typeof examNums.examDoro==="number" && doroHours>0)?examNums.examDoro:null;
+    var hasExam=(effExamGi!==null)||(effExamDoro!==null);
     if(hasExam){
       html+='<div class="yjlg-section-label">시험 응시료(검정료)</div><div class="yjlg-stat-grid">';
-      if(typeof examNums.examGi==="number"){
-        html+='<div class="yjlg-stat"><div class="yjlg-k">장내검정료</div><div class="yjlg-v">'+won(examNums.examGi)+'</div></div>';
+      if(effExamGi!==null){
+        html+='<div class="yjlg-stat"><div class="yjlg-k">장내검정료</div><div class="yjlg-v">'+won(effExamGi)+'</div></div>';
       }
-      if(typeof examNums.examDoro==="number"){
-        html+='<div class="yjlg-stat"><div class="yjlg-k">도로주행검정료</div><div class="yjlg-v">'+won(examNums.examDoro)+'</div></div>';
+      if(effExamDoro!==null){
+        html+='<div class="yjlg-stat"><div class="yjlg-k">도로주행검정료</div><div class="yjlg-v">'+won(effExamDoro)+'</div></div>';
       }
       html+='</div>';
     }
 
-    var total=calcTotalWithExam(c.cost, examNums.examGi, examNums.examDoro);
+    var total=calcTotalWithExam(c.cost, effExamGi, effExamDoro);
     html+='<div class="yjlg-total-tile"><span class="yjlg-k">예상 합계</span><span class="yjlg-v">'+(total==="unknown"?"문의 필요":won(total))+'</span></div>';
     html+='<p class="yjlg-fineprint">'+(total==="unknown"?"":"정확한 금액은 상담 시 확인해드려요. 상기 수강료는 의무교육을 기준으로 산정되었으며, 시험은 각 1회씩 포함된 가격입니다.")+'</p>';
 
