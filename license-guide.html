@@ -65,6 +65,9 @@
 #yj-license-guide .yjlg-opt:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 #yj-license-guide .yjlg-opt svg{ flex:none; color:var(--muted); width:16px; height:16px; }
 #yj-license-guide .yjlg-opt:hover svg{ color:var(--accent-text); }
+#yj-license-guide .yjlg-opt-left{ display:flex; align-items:center; gap:12px; min-width:0; }
+#yj-license-guide .yjlg-opt .yjlg-opt-icon{ flex:none; width:26px; height:26px; color:var(--accent-text); }
+#yj-license-guide .yjlg-opt:hover .yjlg-opt-icon{ color:var(--accent-text); }
 #yj-license-guide .yjlg-pill{ display:inline-flex; align-items:center; gap:6px; font-family:'JetBrains Mono',monospace; font-size:0.76rem; font-weight:700; padding:6px 12px; border-radius:999px; margin-bottom:14px; }
 #yj-license-guide .yjlg-pill.yjlg-ok{ background:var(--success-bg); color:var(--success-text); }
 #yj-license-guide .yjlg-pill.yjlg-warn{ background:var(--warn-bg); color:var(--warn-text); }
@@ -493,13 +496,29 @@ function renderCrumbs(){
   el.innerHTML=parts.join('<span class="yjlg-crumb-sep">›</span>');
 }
 
+var VEHICLE_ICONS={
+  B2:'<path d="M5 11 6.5 6a2 2 0 0 1 2-1.5h7a2 2 0 0 1 2 1.5L19 11"/><rect x="2.5" y="11" width="19" height="6" rx="2"/><circle cx="7" cy="17" r="1.8"/><circle cx="17" cy="17" r="1.8"/>',
+  B1:'<path d="M4 11 5 7a2 2 0 0 1 2-1.5h10a2 2 0 0 1 2 1.5l1 4"/><rect x="2" y="11" width="20" height="6.5" rx="2"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
+  S2:'<circle cx="5.5" cy="17.5" r="3.2"/><circle cx="18.5" cy="17.5" r="3.2"/><path d="M8.5 17.5h6l3-6h3M11 11.5 13 6h3"/>',
+  WD:'<circle cx="5" cy="18" r="2.4"/><circle cx="17" cy="18" r="2.4"/><path d="M7 18h6l1.5-5h3.5M12 18l2-8h2"/>',
+  DH:'<rect x="1" y="8" width="13" height="9" rx="1"/><path d="M14 11h4l3 3v3h-7z"/><circle cx="6" cy="18" r="1.8"/><circle cx="17.5" cy="18" r="1.8"/>',
+  SG:'<path d="M2 12 3 8a1.8 1.8 0 0 1 1.8-1.3h5a1.8 1.8 0 0 1 1.8 1.3L13 12"/><rect x="1" y="12" width="13" height="5.5" rx="1.5"/><circle cx="4.5" cy="18.5" r="1.6"/><circle cx="10.5" cy="18.5" r="1.6"/><path d="M14 15h2"/><rect x="16" y="12.5" width="6" height="5" rx="1"/><circle cx="18.5" cy="18.5" r="1.4"/><circle cx="21" cy="18.5" r="1.4"/>',
+  DG:'<rect x="1" y="10" width="7" height="7" rx="1"/><circle cx="3.5" cy="18.5" r="1.6"/><circle cx="6.5" cy="18.5" r="1.6"/><path d="M8 13h1.5"/><rect x="10" y="9" width="12" height="8" rx="1"/><circle cx="13" cy="18.5" r="1.6"/><circle cx="19" cy="18.5" r="1.6"/>',
+  GN:'<rect x="1" y="9" width="6" height="7" rx="1"/><circle cx="4" cy="18.5" r="1.7"/><rect x="7" y="14" width="15" height="2.2" rx="0.6"/><circle cx="19" cy="18.5" r="1.7"/><path d="M9.5 14 10.3 11a1 1 0 0 1 1-.8h2.4a1 1 0 0 1 1 .8L15.5 14"/><rect x="9" y="14" width="7" height="2" rx="0.5"/>'
+};
+function vehicleIcon(key){
+  var inner=VEHICLE_ICONS[key];
+  if(!inner) return "";
+  return '<svg class="yjlg-opt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>';
+}
+
 function renderQuestion(nodeId){
   var node=NODES[nodeId];
   var html="";
   if(history.length){ html+='<button class="yjlg-backlink" onclick="__yjwiz.back()">'+svgBack()+' 이전으로</button>'; }
   html+='<h2 class="yjlg-question">'+node.q+'</h2><div class="yjlg-options">';
   node.opts.forEach(function(opt,i){
-    html+='<button class="yjlg-opt" onclick="__yjwiz.choose('+i+')"><span>'+opt.t+'</span>'+svgChevron()+'</button>';
+    html+='<button class="yjlg-opt" onclick="__yjwiz.choose('+i+')"><span class="yjlg-opt-left">'+(opt.go?vehicleIcon(opt.go):"")+'<span>'+opt.t+'</span></span>'+svgChevron()+'</button>';
   });
   html+='</div>';
   var card=document.getElementById("yjlg-card");
