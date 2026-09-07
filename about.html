@@ -13,6 +13,17 @@
 /* ============================================================================
    강사진 3D 드래그 캐러셀
    ============================================================================ */
+.staff-group-tabs{ display:flex; justify-content:center; gap:8px; margin-bottom:24px; }
+.staff-tab{
+  border:1px solid var(--color-line); background:#fff; color:var(--color-muted);
+  border-radius:999px; padding:8px 22px; font-size:13.5px; font-weight:700;
+  font-family:inherit; cursor:pointer; transition:background .15s, color .15s, border-color .15s;
+}
+.staff-tab:hover{ border-color:var(--color-primary); color:var(--color-primary); }
+.staff-tab.active{ background:var(--color-primary); border-color:var(--color-primary); color:#fff; }
+.staff-group-empty{ text-align:center; color:var(--color-muted); font-size:13.5px; padding:70px 0; margin:0; }
+/* display:flex를 지정한 요소는 [hidden] 기본 스타일보다 우리 규칙이 우선 적용되므로 명시적으로 덮어씁니다. */
+.staff-carousel-stage[hidden], .staff-drag-hint[hidden], .staff-dots[hidden], .staff-caption[hidden]{ display:none; }
 .staff-carousel-wrap{ position:relative; }
 .staff-carousel-stage{
   position:relative; height:280px; margin:0 auto;
@@ -207,11 +218,16 @@
         <p>친절하고 꼼꼼한 지도로 안전 운전 습관을 만들어드립니다.</p>
       </div>
 
+      <div class="staff-group-tabs" id="staffGroupTabs">
+        <button type="button" class="staff-tab active" data-group="강사">강사진</button>
+        <button type="button" class="staff-tab" data-group="사무실">사무실</button>
+      </div>
+
       <div class="staff-carousel-wrap">
         <div class="staff-carousel-stage" id="staffStage">
           <div class="staff-carousel-ring" id="staffRing"></div>
         </div>
-        <div class="staff-drag-hint">
+        <div class="staff-drag-hint" id="staffDragHint">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M2 12h20"/></svg>
           좌우로 드래그해서 임직원을 둘러보세요
         </div>
@@ -221,6 +237,7 @@
           <div class="staff-caption-course" id="staffCaptionCourse"></div>
           <div class="staff-caption-mbti" id="staffCaptionMbti"></div>
         </div>
+        <p class="staff-group-empty" id="staffGroupEmpty" hidden>아직 등록된 인원이 없습니다.</p>
       </div>
     </div>
   </section>
@@ -317,10 +334,14 @@ var PERSON_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 
 var stage = document.getElementById("staffStage");
 var ring = document.getElementById("staffRing");
+var dragHint = document.getElementById("staffDragHint");
 var dotsWrap = document.getElementById("staffDots");
+var capWrap = document.getElementById("staffCaption");
 var capName = document.getElementById("staffCaptionName");
 var capCourse = document.getElementById("staffCaptionCourse");
 var capMbti = document.getElementById("staffCaptionMbti");
+var groupTabsWrap = document.getElementById("staffGroupTabs");
+var groupEmptyMsg = document.getElementById("staffGroupEmpty");
 
 var staffData = [];
 var angle = 0;
@@ -504,15 +525,49 @@ stage.addEventListener("keydown", function(e){
   if (e.key === "ArrowRight") { e.preventDefault(); goToIndex((currentIndex + 1) % staffData.length); }
 });
 
-/* 학원소개 페이지 강사진 캐러셀에 표시할 근무형태입니다. "셔틀"은 제외하고
-   "강사"와 "사무실" 두 조직의 인원을 함께 보여줍니다. */
-var VISIBLE_WORK_TYPES = ["강사", "사무실"];
+/* 학원소개 페이지에는 "강사"와 "사무실" 두 조직을 탭으로 분리해서 보여주고,
+   방문자가 고른 조직의 인원만 캐러셀에 표시합니다 (셔틀은 대상에서 제외). */
+var groupData = { "강사": [], "사무실": [] };
+var currentGroup = "강사";
+var tabButtons = Array.prototype.slice.call(document.querySelectorAll(".staff-tab"));
+
+function showGroup(group){
+  currentGroup = group;
+  tabButtons.forEach(function(btn){
+    btn.classList.toggle("active", btn.getAttribute("data-group") === group);
+  });
+  var list = groupData[group] || [];
+  var hasPeople = list.length > 0;
+  stage.hidden = !hasPeople;
+  dragHint.hidden = !hasPeople;
+  dotsWrap.hidden = !hasPeople;
+  capWrap.hidden = !hasPeople;
+  groupEmptyMsg.hidden = hasPeople;
+  if (hasPeople) buildCarousel(list);
+}
+
+tabButtons.forEach(function(btn){
+  btn.addEventListener("click", function(){
+    var group = btn.getAttribute("data-group");
+    if (group !== currentGroup) showGroup(group);
+  });
+});
 
 fetch("api/staff.php").then(function(r){ return r.json(); }).then(function(res){
-  var list = (res && res.staff) ? res.staff.filter(function(p){ return VISIBLE_WORK_TYPES.indexOf(p.workType) >= 0; }) : [];
-  buildCarousel(list.length ? list : FALLBACK_STAFF);
+  var all = (res && res.staff) ? res.staff : [];
+  groupData["강사"] = all.filter(function(p){ return p.workType === "강사"; });
+  groupData["사무실"] = all.filter(function(p){ return p.workType === "사무실"; });
+  if (!groupData["강사"].length && !groupData["사무실"].length) {
+    /* 등록된 임직원이 아예 없는 경우(DB는 연동됐지만 아직 아무도 등록하지 않음)에만
+       예시 팀으로 대체하고, 탭은 의미가 없으니 숨깁니다. */
+    groupData["강사"] = FALLBACK_STAFF;
+    groupTabsWrap.hidden = true;
+  }
+  showGroup("강사");
 }).catch(function(){
-  buildCarousel(FALLBACK_STAFF);
+  groupData["강사"] = FALLBACK_STAFF;
+  groupTabsWrap.hidden = true;
+  showGroup("강사");
 });
 
 })();
