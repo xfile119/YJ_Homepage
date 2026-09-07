@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>임직원 관리 (비공개)</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<style>
+  body { background: var(--color-surface); }
+  .admin-shell { max-width: 900px; margin: 0 auto; padding: 32px 24px 80px; }
+  .admin-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+  .admin-header h1 { font-size: 22px; font-weight: 800; color: var(--color-ink); }
+  .admin-header-links { display: flex; gap: 8px; flex-wrap: wrap; }
+  .admin-warning {
+    background: #fff4e5; border: 1px solid #ffe1b3; color: #8a5910;
+    border-radius: var(--radius-md); padding: 16px 18px; font-size: 13.5px; line-height: 1.7; margin-bottom: 28px;
+  }
+  .staff-list { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
+  .staff-card {
+    background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-lg);
+    padding: 20px; display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start;
+  }
+  .staff-photo-col { width: 120px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .photo-preview {
+    width: 100px; height: 100px; border-radius: 50%; overflow: hidden;
+    background: var(--color-primary-light); border: 2px solid var(--color-line);
+    display: flex; align-items: center; justify-content: center; color: var(--color-muted); font-size: 11px; text-align: center;
+  }
+  .photo-preview img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .staff-fields { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: 12px; }
+  .field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .admin-field label { display: block; font-size: 12px; font-weight: 700; color: var(--color-muted); margin-bottom: 5px; }
+  .admin-field input, .admin-field select {
+    width: 100%; box-sizing: border-box; border: 1px solid var(--color-line); border-radius: var(--radius-sm);
+    padding: 9px 11px; font-size: 13.5px; font-family: inherit; color: var(--color-ink);
+  }
+  .course-checks { display: flex; flex-wrap: wrap; gap: 10px 16px; }
+  .course-checks label { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--color-ink); font-weight: 500; cursor: pointer; }
+  .course-checks input { width: auto; }
+  .staff-card-actions { display: flex; flex-direction: column; gap: 6px; flex: none; }
+  .staff-card-actions button {
+    border: 1px solid var(--color-line); background: #fff; border-radius: 6px; width: 30px; height: 30px;
+    font-size: 13px; cursor: pointer;
+  }
+  .staff-card-actions button:hover { background: var(--color-primary-light); border-color: var(--color-primary); }
+  .staff-card-actions button.danger:hover { background: #fdeeee; border-color: #d64545; color: #d64545; }
+  .upload-status { font-size: 11px; color: var(--color-muted); min-height: 14px; text-align: center; }
+  .admin-actions { position: sticky; bottom: 0; background: var(--color-surface); padding: 16px 0; display: flex; gap: 10px; flex-wrap: wrap; border-top: 1px solid var(--color-line); margin-top: 8px; }
+  #mainArea { display: none; }
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+  <div class="admin-header">
+    <h1>임직원 관리</h1>
+    <div class="admin-header-links">
+      <a href="admin.html" class="btn btn-outline btn-sm">← 관리자 메인</a>
+      <a href="about.html" class="btn btn-outline btn-sm">학원소개 페이지 보기</a>
+    </div>
+  </div>
+
+  <div class="admin-warning">
+    <strong>이 페이지는 비공개 도구입니다.</strong> 홈페이지 메뉴 어디에도 연결되어 있지 않고 검색엔진에도 노출되지 않아요.<br>
+    저장 버튼을 누르면 <strong>DB에 바로 저장되어 실제 홈페이지(학원소개 &gt; 전문 강사진)에 즉시 반영</strong>됩니다.
+    "근무형태"가 <strong>강사</strong>인 인원만 학원소개 페이지의 강사진 캐러셀에 표시돼요.
+  </div>
+
+  <p id="loadingMsg">불러오는 중...</p>
+
+  <div id="mainArea">
+    <div class="staff-list" id="staffList"></div>
+
+    <button type="button" id="btnAddRow" class="btn btn-outline btn-sm" style="margin-bottom:16px;">+ 임직원 추가</button>
+
+    <div class="admin-actions">
+      <button type="button" id="btnSave" class="btn btn-primary">💾 저장하기</button>
+      <span id="statusMsg" style="align-self:center;font-size:13px;font-weight:700;"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var DATA = [];
+var staffList = document.getElementById("staffList");
+var statusMsg = document.getElementById("statusMsg");
+var loadingMsg = document.getElementById("loadingMsg");
+var mainArea = document.getElementById("mainArea");
+
+var WORK_TYPES = ["강사", "사무실", "셔틀"];
+var COURSE_TYPES = ["학과교육", "기능교육", "도로주행", "대형·특수", "도로연수"];
+
+function esc(str){
+  return String(str == null ? "" : str)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function photoPreviewHtml(url){
+  if (url) return '<img src="' + esc(url) + '" alt="">';
+  return "사진 없음";
+}
+
+function renderList(){
+  staffList.innerHTML = "";
+  DATA.forEach(function(row, i){
+    if (!row.courseTypes) row.courseTypes = [];
+    var card = document.createElement("div");
+    card.className = "staff-card";
+
+    var workOptsHtml = WORK_TYPES.map(function(w){
+      return '<option value="' + w + '"' + (row.workType === w ? " selected" : "") + '>' + w + '</option>';
+    }).join("");
+    var courseChecksHtml = COURSE_TYPES.map(function(c, ci){
+      var checked = row.courseTypes.indexOf(c) >= 0 ? " checked" : "";
+      return '<label><input type="checkbox" class="f-course" value="' + esc(c) + '"' + checked + '> ' + esc(c) + '</label>';
+    }).join("");
+
+    card.innerHTML =
+      '<div class="staff-photo-col">' +
+        '<div class="photo-preview">' + photoPreviewHtml(row.photo) + '</div>' +
+        '<input type="file" class="f-photo-file" accept="image/*" style="display:none;">' +
+        '<button type="button" class="btn btn-outline btn-sm btn-upload-photo" style="width:100%;">사진 업로드</button>' +
+        '<p class="upload-status"></p>' +
+      '</div>' +
+      '<div class="staff-fields">' +
+        '<div class="field-grid">' +
+          '<div class="admin-field"><label>이름</label><input class="f-name" type="text" value="' + esc(row.name).replace(/"/g,"&quot;") + '"></div>' +
+          '<div class="admin-field"><label>성향 (MBTI)</label><input class="f-mbti" type="text" placeholder="예: ENFP" value="' + esc(row.mbti).replace(/"/g,"&quot;") + '"></div>' +
+          '<div class="admin-field"><label>근무형태</label><select class="f-worktype">' + workOptsHtml + '</select></div>' +
+        '</div>' +
+        '<div class="admin-field"><label>강의종별 (해당되는 항목 모두 선택)</label><div class="course-checks">' + courseChecksHtml + '</div></div>' +
+      '</div>' +
+      '<div class="staff-card-actions">' +
+        '<button type="button" class="btn-up" title="위로">↑</button>' +
+        '<button type="button" class="btn-down" title="아래로">↓</button>' +
+        '<button type="button" class="btn-del danger" title="삭제">✕</button>' +
+      '</div>';
+    staffList.appendChild(card);
+
+    card.querySelector(".f-name").addEventListener("input", function(){ row.name = this.value; });
+    card.querySelector(".f-mbti").addEventListener("input", function(){ row.mbti = this.value.toUpperCase(); });
+    card.querySelector(".f-worktype").addEventListener("change", function(){ row.workType = this.value; });
+    Array.prototype.forEach.call(card.querySelectorAll(".f-course"), function(cb){
+      cb.addEventListener("change", function(){
+        var v = this.value;
+        var idx = row.courseTypes.indexOf(v);
+        if (this.checked && idx < 0) row.courseTypes.push(v);
+        if (!this.checked && idx >= 0) row.courseTypes.splice(idx, 1);
+      });
+    });
+
+    card.querySelector(".btn-up").addEventListener("click", function(){
+      if (i === 0) return;
+      var tmp = DATA[i-1]; DATA[i-1] = DATA[i]; DATA[i] = tmp;
+      renderList();
+    });
+    card.querySelector(".btn-down").addEventListener("click", function(){
+      if (i === DATA.length - 1) return;
+      var tmp = DATA[i+1]; DATA[i+1] = DATA[i]; DATA[i] = tmp;
+      renderList();
+    });
+    card.querySelector(".btn-del").addEventListener("click", function(){
+      if (!confirm("이 임직원을 삭제할까요?")) return;
+      DATA.splice(i, 1);
+      renderList();
+    });
+
+    card.querySelector(".btn-upload-photo").addEventListener("click", function(){
+      card.querySelector(".f-photo-file").click();
+    });
+    card.querySelector(".f-photo-file").addEventListener("change", function(){
+      var file = this.files[0];
+      var statusEl = card.querySelector(".upload-status");
+      if (!file) return;
+      var fd = new FormData();
+      fd.append("file", file);
+      fd.append("folder", "staff");
+      statusEl.textContent = "업로드 중...";
+      fetch("api/upload.php", { method: "POST", body: fd })
+        .then(function(r){ return r.json().then(function(data){ return { ok: r.ok, data: data }; }); })
+        .then(function(res){
+          if (res.ok && res.data.url) {
+            row.photo = res.data.url;
+            card.querySelector(".photo-preview").innerHTML = photoPreviewHtml(row.photo);
+            statusEl.textContent = "업로드 완료!";
+          } else {
+            statusEl.textContent = "오류: " + (res.data.error || "업로드 실패");
+          }
+        }).catch(function(){ statusEl.textContent = "서버에 접속할 수 없습니다."; });
+    });
+  });
+}
+
+document.getElementById("btnAddRow").addEventListener("click", function(){
+  DATA.push({ name: "새 임직원", mbti: "", workType: "강사", courseTypes: [], photo: null });
+  renderList();
+});
+
+document.getElementById("btnSave").addEventListener("click", function(){
+  statusMsg.textContent = "저장 중...";
+  fetch("api/staff.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "save_all", staff: DATA })
+  }).then(function(r){ return r.json().then(function(data){ return { ok: r.ok, data: data }; }); })
+    .then(function(res){
+      statusMsg.textContent = res.ok ? "저장 완료! 홈페이지에 바로 반영됩니다." : "오류: " + (res.data.error || "저장 실패");
+    }).catch(function(){ statusMsg.textContent = "서버에 접속할 수 없습니다."; });
+});
+
+fetch("api/auth.php").then(function(r){ return r.json(); }).then(function(res){
+  if (!res || !res.loggedIn) {
+    location.href = "admin.html";
+    return;
+  }
+  return fetch("api/staff.php").then(function(r){ return r.json(); }).then(function(res2){
+    DATA = (res2 && res2.staff) || [];
+    renderList();
+    loadingMsg.style.display = "none";
+    mainArea.style.display = "block";
+  });
+}).catch(function(){
+  loadingMsg.textContent = "서버(api)에 접속할 수 없습니다. DB 연동 배포 전(정적 미리보기)에는 이 페이지가 동작하지 않아요.";
+});
+
+})();
+</script>
+</body>
+</html>

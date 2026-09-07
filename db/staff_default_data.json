@@ -1,0 +1,6 @@
+[
+  { "name": "기능 교육 강사팀", "mbti": "ISTJ", "workType": "강사", "courseTypes": ["기능교육"], "photo": null },
+  { "name": "도로주행 강사팀", "mbti": "ESFJ", "workType": "강사", "courseTypes": ["도로주행"], "photo": null },
+  { "name": "대형·특수 강사팀", "mbti": "ESTP", "workType": "강사", "courseTypes": ["대형·특수"], "photo": null },
+  { "name": "학과교육 강사팀", "mbti": "INFJ", "workType": "강사", "courseTypes": ["학과교육"], "photo": null }
+]

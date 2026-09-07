@@ -55,6 +55,17 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}license_data (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
+$pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}staff (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL,
+  mbti VARCHAR(10) NOT NULL DEFAULT '',
+  work_type VARCHAR(20) NOT NULL DEFAULT '강사',
+  course_types TEXT NULL,
+  photo VARCHAR(255) NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
 /* 이미 만들어진 notices 테이블에 content/image 컬럼이 없으면 추가합니다.
    (기존에 db/setup.php를 이미 한 번 실행한 사이트를 위한 안전한 마이그레이션 — 여러 번 실행해도 안전합니다.) */
 function yj_ensure_column($pdo, $table, $column, $definition) {
@@ -94,6 +105,26 @@ if ($licenseCount === 0) {
     if (!is_array($seed)) { $seed = []; }
     $stmt = $pdo->prepare("INSERT INTO {$prefix}license_data (id, data_json) VALUES (1, ?)");
     $stmt->execute([json_encode($seed, JSON_UNESCAPED_UNICODE)]);
+}
+
+$staffCount = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}staff")->fetchColumn();
+if ($staffCount === 0) {
+    $seedJson = file_get_contents(__DIR__ . '/staff_default_data.json');
+    $seed = json_decode($seedJson, true);
+    if (!is_array($seed)) { $seed = []; }
+    $stmt = $pdo->prepare("INSERT INTO {$prefix}staff (name, mbti, work_type, course_types, photo, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
+    $i = 0;
+    foreach (array_values($seed) as $r) {
+        $stmt->execute([
+            isset($r['name']) ? $r['name'] : '',
+            isset($r['mbti']) ? $r['mbti'] : '',
+            isset($r['workType']) ? $r['workType'] : '강사',
+            isset($r['courseTypes']) ? json_encode($r['courseTypes'], JSON_UNESCAPED_UNICODE) : '[]',
+            isset($r['photo']) ? $r['photo'] : null,
+            $i,
+        ]);
+        $i++;
+    }
 }
 
 $message = '';

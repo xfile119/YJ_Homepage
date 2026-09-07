@@ -17,7 +17,8 @@
 /admin.html          관리자 모드 진입 허브 (비공개, 메뉴에 없음)
 /admin-notice.html      공지사항 추가·수정·삭제 도구 (비공개, DB 연동)
 /admin-license.html      면허가이드 수강료·교육시간 편집 도구 (비공개, DB 연동)
-/api/              PHP API (notices.php, license-data.php, auth.php) — DB 있는 서버에서만 동작
+/admin-staff.html      임직원(강사진) 추가·수정·삭제 도구 (비공개, DB 연동)
+/api/              PHP API (notices.php, license-data.php, staff.php, upload.php, auth.php) — DB 있는 서버에서만 동작
 /db/               schema.sql, setup.php(최초 1회 설치 스크립트), 기본 데이터 시드 JSON
 /config.example.php     DB 접속정보 템플릿 (복사해서 config.php로 만들고 실제 값 입력, git에는 안 올라감)
 /css/style.css        전체 스타일시트
@@ -37,7 +38,7 @@
 3. ~~**사업자등록번호, 대표자명**~~ — 사업자등록번호 410-81-87858, 대표 김성환으로 모든 페이지 footer에 반영 완료.
 4. ~~**교육과정별 정확한 수강료**~~ — `license-guide.html`에 입력된 실제 데이터(처음 취득 기준)로 반영 완료. 장롱면허 클리닉 등 일부 항목은 여전히 "문의"로 남아 있음.
 5. **연혁(History)** — `about.html`의 타임라인 항목 전체가 예시입니다. 실제 설립연도와 주요 연혁으로 교체하세요.
-6. **강사진 정보** — `about.html`. 현재는 팀 단위 placeholder만 있습니다. 실제 강사 성함/약력/사진으로 교체 권장.
+6. ~~**강사진 정보**~~ — `about.html`. `admin-staff.html`(임직원 관리)에서 이름·성향(MBTI)·근무형태·강의종별·사진을 등록하면, "근무형태=강사"인 인원이 학원소개 페이지의 3D 드래그 캐러셀에 자동 반영됩니다(아래 "관리자 모드 (DB 연동)" 참고). DB 연동 전(정적 호스팅)에는 예시 팀 4개가 표시됩니다.
 7. **공지사항** — `notice.html`, `index.html`의 미리보기. DB 연동 후에는 `admin-notice.html`에서 추가·수정·삭제하면 저장 즉시 반영됩니다 (아래 "관리자 모드 (DB 연동)" 참고). DB 연동 전(GitHub Pages 등 정적 호스팅)에는 이 예시 데이터가 그대로 보입니다.
 8. **셔틀버스 노선 및 시간표** — `location.html`. 예시 노선이며, 기존 사이트의 실제 노선 이미지(`img/shuttle_info.png`)를 참고해 정확한 노선으로 교체가 필요합니다.
 9. ~~**오시는 길 지도**~~ — 기존 사이트의 2015년식 Daum 약도 위젯이 서비스 종료로 빈 화면이 되어, 카카오맵 최신 JavaScript API로 교체 완료 (`location.html`, `index.html`). 주소를 카카오 Geocoder로 좌표 변환해 마커를 표시합니다. **카카오 개발자 앱의 JavaScript 키가 코드에 들어가 있습니다** — 만약 지도가 다시 안 보이면 [Kakao Developers](https://developers.kakao.com) → 내 애플리케이션 → 앱 설정 → 일반 → 플랫폼에서 사이트 도메인(`https://xfile119.github.io`, 커스텀 도메인 사용 시 그 주소도 추가)이 등록되어 있는지 확인하세요.
@@ -49,13 +50,15 @@
 
 ## 관리자 모드 (DB 연동)
 
-`admin.html`(진입 허브) + `admin-notice.html`(공지사항) + `admin-license.html`(수강료·교육시간)은 서버의 PHP API(`api/*.php`)와 MySQL DB로 동작합니다. 세 파일 모두 메뉴·검색엔진에 노출되지 않는 비공개 페이지(`noindex`)입니다.
+`admin.html`(진입 허브) + `admin-notice.html`(공지사항) + `admin-license.html`(수강료·교육시간) + `admin-staff.html`(임직원)은 서버의 PHP API(`api/*.php`)와 MySQL DB로 동작합니다. 네 파일 모두 메뉴·검색엔진에 노출되지 않는 비공개 페이지(`noindex`)입니다.
 
 - **로그인**: `admin.html`에서 아이디/비밀번호를 입력하면 서버가 DB에 저장된 해시와 대조합니다(`password_hash`/`password_verify`, PHP 세션 기반). 계정은 `db/setup.php`에서 최초 1회 생성합니다.
-- **저장 방식**: 각 관리 화면에서 값을 수정하고 "저장하기"를 누르면 즉시 DB에 쓰고, 홈페이지(`notice.html`/`index.html`/`license-guide.html`)는 방문할 때마다 `api/notices.php`, `api/license-data.php`를 호출해 최신 데이터를 그려줍니다. 다운로드/재배포가 필요 없습니다.
+- **저장 방식**: 각 관리 화면에서 값을 수정하고 "저장하기"를 누르면 즉시 DB에 쓰고, 홈페이지(`notice.html`/`index.html`/`license-guide.html`/`about.html`)는 방문할 때마다 `api/notices.php`, `api/license-data.php`, `api/staff.php`를 호출해 최신 데이터를 그려줍니다. 다운로드/재배포가 필요 없습니다.
 - **PHP가 없는 곳(GitHub Pages 등)에서는?** `api/*.php`가 실행되지 않으니 `fetch`가 실패하고, 각 페이지는 자동으로 원래 있던 예시 데이터를 그대로 보여줍니다(정상 동작, 에러 아님). 관리자 화면도 "서버(api)에 접속할 수 없습니다" 메시지만 뜨고 조용히 멈춥니다.
 - `admin-notice.html`: 공지사항 목록을 표로 편집(추가/삭제/순서변경/뱃지)하고 저장하면, `notice.html`(전체 목록)과 `index.html`(상위 3개 미리보기)에 한 번에 반영됩니다.
 - `admin-license.html`: 학원 연락처, 응시료, 39개 케이스별 교육시간·수강료를 편집해 저장하면 `license-guide.html`에 바로 반영됩니다. 상단 "수강료 자동계산 요금표"에서 학과교육비(공통 단가)와 면허 종류별 기능/도로주행 단가를 설정하면, "자동" 모드로 설정된 케이스는 교육시간 × 단가로 수강료가 자동 계산됩니다. 요금표 공식으로 설명되지 않는 특수 케이스만 "수동"으로 표시해 직접 입력합니다.
+- `admin-staff.html`: 임직원을 카드 단위로 추가·삭제·순서변경하고, 사진·이름·성향(MBTI)·근무형태(강사/사무실/셔틀)·강의종별(학과교육/기능교육/도로주행/대형·특수/도로연수, 복수 선택 가능)을 입력해 저장합니다. "근무형태=강사"인 인원만 `about.html` 하단의 강사진 캐러셀에 표시됩니다(사무실·셔틀 인력은 내부 명단 관리용). 사진은 `api/upload.php`로 업로드되어 `uploads/staff/`에 저장됩니다.
+  - **about.html 캐러셀 사용법**: 원형 사진을 마우스/터치로 좌우 드래그하면 3D로 회전하며 다음 인물로 전환됩니다. 점(dot) 클릭이나 캐러셀에 포커스 후 방향키(←/→)로도 이동할 수 있고, 아래에 이름·강의종별·MBTI가 표시됩니다. 등록된 강사가 없거나 DB 연동 전(정적 호스팅)에는 예시 팀 4개로 자동 대체됩니다.
 
 ## 카페24 배포 가이드 (DB 연동해서 서버에서 동작시키기)
 

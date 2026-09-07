@@ -1,3 +1,5 @@
 config.php
 /uploads/notices/*
 !/uploads/notices/.gitkeep
+/uploads/staff/*
+!/uploads/staff/.gitkeep

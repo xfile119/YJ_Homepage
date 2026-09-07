@@ -35,7 +35,14 @@ if (!isset($extByType[$info[2]])) {
 }
 $ext = $extByType[$info[2]];
 
-$uploadDir = __DIR__ . '/../uploads/notices';
+/* 어느 용도로 올리는 파일인지는 화이트리스트로만 받습니다 (임의 경로 업로드 방지). */
+$allowedFolders = ['notices', 'staff'];
+$folder = isset($_POST['folder']) ? $_POST['folder'] : 'notices';
+if (!in_array($folder, $allowedFolders, true)) {
+    $folder = 'notices';
+}
+
+$uploadDir = __DIR__ . '/../uploads/' . $folder;
 if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0755, true);
 }
@@ -47,4 +54,4 @@ if (!move_uploaded_file($file['tmp_name'], $destPath)) {
     yj_json(['error' => '파일 저장에 실패했습니다.'], 500);
 }
 
-yj_json(['url' => 'uploads/notices/' . $filename]);
+yj_json(['url' => 'uploads/' . $folder . '/' . $filename]);

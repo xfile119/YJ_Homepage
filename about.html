@@ -9,6 +9,62 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css" />
+<style>
+/* ============================================================================
+   강사진 3D 드래그 캐러셀
+   ============================================================================ */
+.staff-carousel-wrap{ position:relative; }
+.staff-carousel-stage{
+  position:relative; height:280px; margin:0 auto;
+  perspective:1400px; perspective-origin:50% 50%;
+  display:flex; align-items:center; justify-content:center;
+  cursor:grab; -webkit-user-select:none; user-select:none; touch-action:pan-y;
+}
+.staff-carousel-stage.dragging{ cursor:grabbing; }
+.staff-carousel-ring{
+  position:relative; width:1px; height:1px;
+  transform-style:preserve-3d;
+  transform:rotateY(0deg);
+}
+.staff-carousel-ring.snapping{ transition:transform .55s cubic-bezier(.22,.9,.35,1); }
+.staff-carousel-item{
+  position:absolute; top:0; left:0; width:150px; height:150px;
+  margin:-75px 0 0 -75px;
+  transform-style:preserve-3d;
+}
+.staff-photo-frame{
+  width:100%; height:100%; border-radius:50%; overflow:hidden;
+  border:5px solid #fff;
+  box-shadow:var(--shadow-md), 0 0 0 1px var(--color-line);
+  background:var(--color-primary-light);
+  display:flex; align-items:center; justify-content:center; color:var(--color-primary);
+  transition:transform .15s ease-out, opacity .15s ease-out, box-shadow .2s ease-out;
+  transform-origin:center center;
+}
+.staff-photo-frame.is-front{ box-shadow:var(--shadow-lg), 0 0 0 3px var(--color-accent); }
+.staff-photo-frame img{ width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; }
+.staff-photo-frame svg{ width:44%; height:44%; pointer-events:none; }
+.staff-drag-hint{
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  margin-top:8px; font-size:12.5px; color:var(--color-muted);
+}
+.staff-drag-hint svg{ width:16px; height:16px; flex:none; }
+.staff-dots{ display:flex; align-items:center; justify-content:center; gap:9px; margin-top:20px; }
+.staff-dots .dot{
+  width:8px; height:8px; border-radius:50%; border:none; padding:0;
+  background:var(--color-line); cursor:pointer; transition:background .2s, transform .2s;
+}
+.staff-dots .dot.active{ background:var(--color-primary); transform:scale(1.35); }
+.staff-dots .dot:hover{ background:var(--color-accent); }
+.staff-caption{ text-align:center; margin-top:16px; min-height:64px; }
+.staff-caption-name{ font-size:17px; font-weight:800; color:var(--color-ink); }
+.staff-caption-course{ font-size:13px; color:var(--color-primary); font-weight:700; margin-top:4px; }
+.staff-caption-mbti{ font-size:12.5px; color:var(--color-muted); margin-top:2px; letter-spacing:.04em; }
+@media (prefers-reduced-motion: reduce){
+  .staff-carousel-ring.snapping{ transition:none; }
+  .staff-photo-frame{ transition:none; }
+}
+</style>
 </head>
 <body>
 
@@ -147,28 +203,22 @@
       <div class="section-head">
         <span class="eyebrow">INSTRUCTORS</span>
         <h2>믿을 수 있는 전문 강사진</h2>
-        <p>친절하고 꼼꼼한 지도로 안전 운전 습관을 만들어드립니다. <span class="data-flag">실제 강사진 정보로 교체 필요</span></p>
+        <p>친절하고 꼼꼼한 지도로 안전 운전 습관을 만들어드립니다.</p>
       </div>
-      <div class="grid-4">
-        <div class="instructor-card">
-          <div class="avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg></div>
-          <h4>기능 교육 강사팀</h4>
-          <span>1종·2종 기능 전담</span>
+
+      <div class="staff-carousel-wrap">
+        <div class="staff-carousel-stage" id="staffStage">
+          <div class="staff-carousel-ring" id="staffRing"></div>
         </div>
-        <div class="instructor-card">
-          <div class="avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg></div>
-          <h4>도로주행 강사팀</h4>
-          <span>실도로 주행 전담</span>
+        <div class="staff-drag-hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M2 12h20"/></svg>
+          좌우로 드래그해서 임직원을 둘러보세요
         </div>
-        <div class="instructor-card">
-          <div class="avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg></div>
-          <h4>대형·특수 강사팀</h4>
-          <span>1종대형 전담</span>
-        </div>
-        <div class="instructor-card">
-          <div class="avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg></div>
-          <h4>학과교육 강사팀</h4>
-          <span>교통법규·안전교육</span>
+        <div class="staff-dots" id="staffDots"></div>
+        <div class="staff-caption" id="staffCaption">
+          <div class="staff-caption-name" id="staffCaptionName"></div>
+          <div class="staff-caption-course" id="staffCaptionCourse"></div>
+          <div class="staff-caption-mbti" id="staffCaptionMbti"></div>
         </div>
       </div>
     </div>
@@ -251,5 +301,181 @@
 </div>
 
 <script src="js/main.js"></script>
+<script>
+(function(){
+"use strict";
+
+var FALLBACK_STAFF = [
+  { name: "기능교육 강사팀", mbti: "ISTJ", workType: "강사", courseTypes: ["기능교육"], photo: null },
+  { name: "도로주행 강사팀", mbti: "ESFJ", workType: "강사", courseTypes: ["도로주행"], photo: null },
+  { name: "대형·특수 강사팀", mbti: "ESTP", workType: "강사", courseTypes: ["대형·특수"], photo: null },
+  { name: "학과교육 강사팀", mbti: "INFJ", workType: "강사", courseTypes: ["학과교육"], photo: null }
+];
+
+var PERSON_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>';
+
+var stage = document.getElementById("staffStage");
+var ring = document.getElementById("staffRing");
+var dotsWrap = document.getElementById("staffDots");
+var capName = document.getElementById("staffCaptionName");
+var capCourse = document.getElementById("staffCaptionCourse");
+var capMbti = document.getElementById("staffCaptionMbti");
+
+var staffData = [];
+var angle = 0;
+var radius = 230;
+var rotation = 0;
+var currentIndex = 0;
+var isDragging = false;
+var startX = 0;
+var startRotation = 0;
+
+function esc(str){
+  return String(str == null ? "" : str)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function normalizeDelta(delta){
+  return ((delta % 360) + 540) % 360 - 180;
+}
+
+function buildCarousel(list){
+  staffData = list;
+  var n = staffData.length;
+  if (!n) return;
+  angle = 360 / n;
+  radius = Math.max(190, 190 + (n - 4) * 20);
+  ring.innerHTML = "";
+  dotsWrap.innerHTML = "";
+
+  staffData.forEach(function(person, i){
+    var item = document.createElement("div");
+    item.className = "staff-carousel-item";
+    item.style.transform = "rotateY(" + (i * angle) + "deg) translateZ(" + radius + "px)";
+
+    var frame = document.createElement("div");
+    frame.className = "staff-photo-frame";
+    if (person.photo) {
+      frame.innerHTML = '<img src="' + esc(person.photo) + '" alt="' + esc(person.name) + '">';
+    } else {
+      frame.innerHTML = PERSON_ICON;
+    }
+    item.appendChild(frame);
+    ring.appendChild(item);
+
+    var dot = document.createElement("button");
+    dot.type = "button";
+    dot.className = "dot";
+    dot.setAttribute("aria-label", person.name);
+    dot.addEventListener("click", function(){ goToIndex(i); });
+    dotsWrap.appendChild(dot);
+  });
+
+  rotation = 0;
+  currentIndex = 0;
+  applyRotation();
+}
+
+function updateFrames(){
+  var items = ring.querySelectorAll(".staff-carousel-item");
+  var dots = dotsWrap.querySelectorAll(".dot");
+  var bestDiff = 999;
+  var bestIndex = 0;
+
+  items.forEach(function(item, i){
+    var base = i * angle;
+    var eff = normalizeDelta(base + rotation);
+    var diff = Math.abs(eff);
+    var t = Math.min(diff / 100, 1);
+    var scale = 1 - t * 0.72;
+    var opacity = 1 - t * 0.88;
+    var frame = item.querySelector(".staff-photo-frame");
+    frame.style.transform = "scale(" + scale + ")";
+    frame.style.opacity = String(opacity);
+    var isFront = diff < angle / 2;
+    frame.classList.toggle("is-front", isFront);
+    if (diff < bestDiff) { bestDiff = diff; bestIndex = i; }
+  });
+
+  dots.forEach(function(dot, i){ dot.classList.toggle("active", i === bestIndex); });
+
+  currentIndex = bestIndex;
+  renderCaption(currentIndex);
+}
+
+function renderCaption(i){
+  var person = staffData[i];
+  if (!person) return;
+  capName.textContent = person.name;
+  capCourse.textContent = (person.courseTypes && person.courseTypes.length) ? person.courseTypes.join(" · ") : "";
+  capMbti.textContent = person.mbti || "";
+}
+
+function applyRotation(){
+  ring.style.transform = "rotateY(" + rotation + "deg)";
+  updateFrames();
+}
+
+function goToIndex(i){
+  if (!staffData.length) return;
+  var target = -i * angle;
+  var delta = normalizeDelta(target - rotation);
+  rotation += delta;
+  snapTo(rotation);
+}
+
+function snapTo(target){
+  ring.classList.add("snapping");
+  rotation = target;
+  applyRotation();
+  window.setTimeout(function(){ ring.classList.remove("snapping"); }, 560);
+}
+
+function onDragStart(clientX){
+  if (!staffData.length) return;
+  isDragging = true;
+  startX = clientX;
+  startRotation = rotation;
+  ring.classList.remove("snapping");
+  stage.classList.add("dragging");
+}
+function onDragMove(clientX){
+  if (!isDragging) return;
+  var dx = clientX - startX;
+  rotation = startRotation + dx * 0.45;
+  applyRotation();
+}
+function onDragEnd(){
+  if (!isDragging) return;
+  isDragging = false;
+  stage.classList.remove("dragging");
+  var snapped = Math.round(rotation / angle) * angle;
+  snapTo(snapped);
+}
+
+stage.addEventListener("mousedown", function(e){ onDragStart(e.clientX); e.preventDefault(); stage.focus(); });
+window.addEventListener("mousemove", function(e){ onDragMove(e.clientX); });
+window.addEventListener("mouseup", onDragEnd);
+
+stage.addEventListener("touchstart", function(e){ onDragStart(e.touches[0].clientX); }, { passive: true });
+stage.addEventListener("touchmove", function(e){ onDragMove(e.touches[0].clientX); }, { passive: true });
+stage.addEventListener("touchend", onDragEnd);
+
+stage.setAttribute("tabindex", "0");
+stage.addEventListener("keydown", function(e){
+  if (!staffData.length) return;
+  if (e.key === "ArrowLeft") { e.preventDefault(); goToIndex(currentIndex - 1 < 0 ? staffData.length - 1 : currentIndex - 1); }
+  if (e.key === "ArrowRight") { e.preventDefault(); goToIndex((currentIndex + 1) % staffData.length); }
+});
+
+fetch("api/staff.php").then(function(r){ return r.json(); }).then(function(res){
+  var list = (res && res.staff) ? res.staff.filter(function(p){ return p.workType === "강사"; }) : [];
+  buildCarousel(list.length ? list : FALLBACK_STAFF);
+}).catch(function(){
+  buildCarousel(FALLBACK_STAFF);
+});
+
+})();
+</script>
 </body>
 </html>
