@@ -21,6 +21,8 @@
   cursor:grab; -webkit-user-select:none; user-select:none; touch-action:pan-y;
 }
 .staff-carousel-stage.dragging{ cursor:grabbing; }
+.staff-carousel-stage:focus{ outline:none; }
+.staff-carousel-stage.kb-focus:focus{ outline:2px solid var(--color-primary); outline-offset:6px; border-radius:12px; }
 .staff-carousel-ring{
   position:relative; width:1px; height:1px;
   transform-style:preserve-3d;
@@ -389,8 +391,12 @@ function updateFrames(){
     var t = Math.min(diff / 100, 1);
     var scale = 1 - t * 0.72;
     var opacity = 1 - t * 0.88;
+    /* 인원 수가 짝수(특히 2명)일 때 정반대(180도) 위치의 사람이 화면상 앞사람과 완전히 같은
+       좌표에서 겹쳐 보이지 않도록, 뒤쪽(정면 기준 ±90도를 넘어선) 인물만 위/아래로 살짝 어긋나게 표시합니다. */
+    var backFactor = Math.max(0, -Math.cos(eff * Math.PI / 180));
+    var bobY = backFactor * 100;
     var frame = item.querySelector(".staff-photo-frame");
-    frame.style.transform = "scale(" + scale + ")";
+    frame.style.transform = "translateY(" + bobY + "px) scale(" + scale + ")";
     frame.style.opacity = String(opacity);
     var isFront = diff < angle / 2;
     frame.classList.toggle("is-front", isFront);
@@ -453,7 +459,19 @@ function onDragEnd(){
   snapTo(snapped);
 }
 
-stage.addEventListener("mousedown", function(e){ onDragStart(e.clientX); e.preventDefault(); stage.focus(); });
+var focusFromPointer = false;
+stage.addEventListener("mousedown", function(e){
+  onDragStart(e.clientX);
+  e.preventDefault();
+  focusFromPointer = true;
+  stage.focus();
+});
+stage.addEventListener("focus", function(){
+  /* 마우스 드래그로 인한 포커스에는 테두리를 표시하지 않고, 실제 Tab 키 이동으로
+     포커스됐을 때만(키보드 접근성용) 테두리를 보여줍니다. */
+  stage.classList.toggle("kb-focus", !focusFromPointer);
+  focusFromPointer = false;
+});
 window.addEventListener("mousemove", function(e){ onDragMove(e.clientX); });
 window.addEventListener("mouseup", onDragEnd);
 
