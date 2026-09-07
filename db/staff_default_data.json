@@ -1,6 +1,6 @@
 [
-  { "name": "기능 교육 강사팀", "mbti": "ISTJ", "workType": "강사", "courseTypes": ["기능교육"], "photo": null },
-  { "name": "도로주행 강사팀", "mbti": "ESFJ", "workType": "강사", "courseTypes": ["도로주행"], "photo": null },
-  { "name": "대형·특수 강사팀", "mbti": "ESTP", "workType": "강사", "courseTypes": ["대형·특수"], "photo": null },
-  { "name": "학과교육 강사팀", "mbti": "INFJ", "workType": "강사", "courseTypes": ["학과교육"], "photo": null }
+  { "name": "기능 교육 강사팀", "mbti": "ISTJ", "workType": "강사", "courseTypes": ["기능교육"], "photo": null, "greeting": "차근차근, 확실하게 알려드릴게요." },
+  { "name": "도로주행 강사팀", "mbti": "ESFJ", "workType": "강사", "courseTypes": ["도로주행"], "photo": null, "greeting": "실전 감각을 편안하게 익혀드려요." },
+  { "name": "대형·특수 강사팀", "mbti": "ESTP", "workType": "강사", "courseTypes": ["대형·특수"], "photo": null, "greeting": "믿고 맡겨주세요, 안전이 최우선입니다." },
+  { "name": "학과교육 강사팀", "mbti": "INFJ", "workType": "강사", "courseTypes": ["학과교육"], "photo": null, "greeting": "쉽고 재미있게 이론을 알려드립니다." }
 ]

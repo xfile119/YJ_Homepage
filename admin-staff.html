@@ -111,6 +111,7 @@ function renderList(){
   staffList.innerHTML = "";
   DATA.forEach(function(row, i){
     if (!row.courseTypes) row.courseTypes = [];
+    if (row.greeting == null) row.greeting = "";
     var card = document.createElement("div");
     card.className = "staff-card";
 
@@ -135,6 +136,7 @@ function renderList(){
           '<div class="admin-field"><label>성향 (MBTI)</label><input class="f-mbti" type="text" placeholder="예: ENFP" value="' + esc(row.mbti).replace(/"/g,"&quot;") + '"></div>' +
           '<div class="admin-field"><label>근무형태</label><select class="f-worktype">' + workOptsHtml + '</select></div>' +
         '</div>' +
+        '<div class="admin-field"><label>인사말 (선택, 캐러셀 MBTI 아래에 표시됩니다)</label><input class="f-greeting" type="text" maxlength="60" placeholder="예: 안전운전이 최우선입니다!" value="' + esc(row.greeting).replace(/"/g,"&quot;") + '"></div>' +
         '<div class="admin-field"><label>강의종별 (해당되는 항목 모두 선택)</label><div class="course-checks">' + courseChecksHtml + '</div></div>' +
       '</div>' +
       '<div class="staff-card-actions">' +
@@ -147,6 +149,7 @@ function renderList(){
     card.querySelector(".f-name").addEventListener("input", function(){ row.name = this.value; });
     card.querySelector(".f-mbti").addEventListener("input", function(){ row.mbti = this.value.toUpperCase(); });
     card.querySelector(".f-worktype").addEventListener("change", function(){ row.workType = this.value; });
+    card.querySelector(".f-greeting").addEventListener("input", function(){ row.greeting = this.value; });
     Array.prototype.forEach.call(card.querySelectorAll(".f-course"), function(cb){
       cb.addEventListener("change", function(){
         var v = this.value;
@@ -199,7 +202,7 @@ function renderList(){
 }
 
 document.getElementById("btnAddRow").addEventListener("click", function(){
-  DATA.push({ name: "새 임직원", mbti: "", workType: "강사", courseTypes: [], photo: null });
+  DATA.push({ name: "새 임직원", mbti: "", workType: "강사", courseTypes: [], photo: null, greeting: "" });
   renderList();
 });
 

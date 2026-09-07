@@ -68,10 +68,12 @@
 }
 .staff-dots .dot.active{ background:var(--color-primary); transform:scale(1.35); }
 .staff-dots .dot:hover{ background:var(--color-accent); }
-.staff-caption{ text-align:center; margin-top:16px; min-height:64px; }
+.staff-caption{ text-align:center; margin-top:16px; min-height:64px; max-width:360px; margin-left:auto; margin-right:auto; }
 .staff-caption-name{ font-size:17px; font-weight:800; color:var(--color-ink); }
 .staff-caption-course{ font-size:13px; color:var(--color-primary); font-weight:700; margin-top:4px; }
 .staff-caption-mbti{ font-size:12.5px; color:var(--color-muted); margin-top:2px; letter-spacing:.04em; }
+.staff-caption-greeting{ font-size:13px; color:var(--color-ink); margin-top:10px; line-height:1.5; }
+.staff-caption-greeting:empty{ display:none; }
 @media (prefers-reduced-motion: reduce){
   .staff-carousel-ring.snapping{ transition:none; }
   .staff-photo-frame{ transition:none; }
@@ -236,6 +238,7 @@
           <div class="staff-caption-name" id="staffCaptionName"></div>
           <div class="staff-caption-course" id="staffCaptionCourse"></div>
           <div class="staff-caption-mbti" id="staffCaptionMbti"></div>
+          <div class="staff-caption-greeting" id="staffCaptionGreeting"></div>
         </div>
         <p class="staff-group-empty" id="staffGroupEmpty" hidden>아직 등록된 인원이 없습니다.</p>
       </div>
@@ -324,10 +327,10 @@
 "use strict";
 
 var FALLBACK_STAFF = [
-  { name: "기능교육 강사팀", mbti: "ISTJ", workType: "강사", courseTypes: ["기능교육"], photo: null },
-  { name: "도로주행 강사팀", mbti: "ESFJ", workType: "강사", courseTypes: ["도로주행"], photo: null },
-  { name: "대형·특수 강사팀", mbti: "ESTP", workType: "강사", courseTypes: ["대형·특수"], photo: null },
-  { name: "학과교육 강사팀", mbti: "INFJ", workType: "강사", courseTypes: ["학과교육"], photo: null }
+  { name: "기능교육 강사팀", mbti: "ISTJ", workType: "강사", courseTypes: ["기능교육"], photo: null, greeting: "차근차근, 확실하게 알려드릴게요." },
+  { name: "도로주행 강사팀", mbti: "ESFJ", workType: "강사", courseTypes: ["도로주행"], photo: null, greeting: "실전 감각을 편안하게 익혀드려요." },
+  { name: "대형·특수 강사팀", mbti: "ESTP", workType: "강사", courseTypes: ["대형·특수"], photo: null, greeting: "믿고 맡겨주세요, 안전이 최우선입니다." },
+  { name: "학과교육 강사팀", mbti: "INFJ", workType: "강사", courseTypes: ["학과교육"], photo: null, greeting: "쉽고 재미있게 이론을 알려드립니다." }
 ];
 
 var PERSON_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>';
@@ -340,6 +343,7 @@ var capWrap = document.getElementById("staffCaption");
 var capName = document.getElementById("staffCaptionName");
 var capCourse = document.getElementById("staffCaptionCourse");
 var capMbti = document.getElementById("staffCaptionMbti");
+var capGreeting = document.getElementById("staffCaptionGreeting");
 var groupTabsWrap = document.getElementById("staffGroupTabs");
 var groupEmptyMsg = document.getElementById("staffGroupEmpty");
 
@@ -454,6 +458,7 @@ function renderCaption(i){
   capName.textContent = person.name;
   capCourse.textContent = (person.courseTypes && person.courseTypes.length) ? person.courseTypes.join(" · ") : "";
   capMbti.textContent = person.mbti || "";
+  capGreeting.textContent = person.greeting || "";
 }
 
 function applyRotation(){

@@ -5,7 +5,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 $table = yj_table('staff');
 
 if ($method === 'GET') {
-    $stmt = yj_db()->query("SELECT id, name, mbti, work_type, course_types, photo FROM $table ORDER BY sort_order ASC, id ASC");
+    $stmt = yj_db()->query("SELECT id, name, mbti, work_type, course_types, photo, greeting FROM $table ORDER BY sort_order ASC, id ASC");
     $rows = $stmt->fetchAll();
     $staff = array_map(function ($r) {
         $courseTypes = json_decode($r['course_types'], true);
@@ -17,6 +17,7 @@ if ($method === 'GET') {
             'workType' => $r['work_type'],
             'courseTypes' => $courseTypes,
             'photo' => $r['photo'],
+            'greeting' => $r['greeting'],
         ];
     }, $rows);
     yj_json(['staff' => $staff]);
@@ -48,8 +49,8 @@ try {
         $existingIds[(int)$row['id']] = true;
     }
 
-    $insert = $db->prepare("INSERT INTO $table (name, mbti, work_type, course_types, photo, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
-    $update = $db->prepare("UPDATE $table SET name=?, mbti=?, work_type=?, course_types=?, photo=?, sort_order=? WHERE id=?");
+    $insert = $db->prepare("INSERT INTO $table (name, mbti, work_type, course_types, photo, greeting, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $update = $db->prepare("UPDATE $table SET name=?, mbti=?, work_type=?, course_types=?, photo=?, greeting=?, sort_order=? WHERE id=?");
 
     $keepIds = [];
     $i = 0;
@@ -61,6 +62,7 @@ try {
             (string)(isset($r['workType']) ? $r['workType'] : '강사'),
             json_encode($courseTypes, JSON_UNESCAPED_UNICODE),
             isset($r['photo']) && $r['photo'] !== '' ? (string)$r['photo'] : null,
+            isset($r['greeting']) && $r['greeting'] !== '' ? (string)$r['greeting'] : null,
             $i,
         ];
         $id = isset($r['id']) ? (int)$r['id'] : 0;

@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS {prefix}staff (
   work_type VARCHAR(20) NOT NULL DEFAULT '강사',
   course_types TEXT NULL,
   photo VARCHAR(255) NULL,
+  greeting VARCHAR(200) NULL,
   sort_order INT NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

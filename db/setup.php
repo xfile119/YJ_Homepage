@@ -62,6 +62,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}staff (
   work_type VARCHAR(20) NOT NULL DEFAULT '강사',
   course_types TEXT NULL,
   photo VARCHAR(255) NULL,
+  greeting VARCHAR(200) NULL,
   sort_order INT NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
@@ -77,6 +78,7 @@ function yj_ensure_column($pdo, $table, $column, $definition) {
 }
 yj_ensure_column($pdo, $prefix . 'notices', 'content', 'MEDIUMTEXT NULL');
 yj_ensure_column($pdo, $prefix . 'notices', 'image', 'VARCHAR(255) NULL');
+yj_ensure_column($pdo, $prefix . 'staff', 'greeting', 'VARCHAR(200) NULL');
 
 $noticeCount = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}notices")->fetchColumn();
 if ($noticeCount === 0) {
@@ -112,7 +114,7 @@ if ($staffCount === 0) {
     $seedJson = file_get_contents(__DIR__ . '/staff_default_data.json');
     $seed = json_decode($seedJson, true);
     if (!is_array($seed)) { $seed = []; }
-    $stmt = $pdo->prepare("INSERT INTO {$prefix}staff (name, mbti, work_type, course_types, photo, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO {$prefix}staff (name, mbti, work_type, course_types, photo, greeting, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)");
     $i = 0;
     foreach (array_values($seed) as $r) {
         $stmt->execute([
@@ -121,6 +123,7 @@ if ($staffCount === 0) {
             isset($r['workType']) ? $r['workType'] : '강사',
             isset($r['courseTypes']) ? json_encode($r['courseTypes'], JSON_UNESCAPED_UNICODE) : '[]',
             isset($r['photo']) ? $r['photo'] : null,
+            isset($r['greeting']) ? $r['greeting'] : null,
             $i,
         ]);
         $i++;
