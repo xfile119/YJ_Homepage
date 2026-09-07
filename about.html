@@ -50,7 +50,7 @@
   box-shadow:var(--shadow-md), 0 0 0 1px var(--color-line);
   background:var(--color-primary-light);
   display:flex; align-items:center; justify-content:center; color:var(--color-primary);
-  transition:transform .15s ease-out, opacity .15s ease-out, box-shadow .2s ease-out;
+  transition:transform .15s ease-out, opacity .15s ease-out, filter .15s ease-out, box-shadow .2s ease-out;
   transform-origin:center center;
 }
 .staff-photo-frame.is-front{ box-shadow:var(--shadow-lg), 0 0 0 3px var(--color-accent); }
@@ -377,9 +377,12 @@ function updateFrames(){
        좌표에서 겹쳐 보이지 않도록, 뒤쪽(정면 기준 ±90도를 넘어선) 인물만 위/아래로 살짝 어긋나게 표시합니다. */
     var backFactor = Math.max(0, -Math.cos(eff * Math.PI / 180));
     var bobY = backFactor * 100;
+    /* 정면에서 멀어질수록(회전 중일 때도) 카메라 아웃포커싱처럼 점점 흐려지게 합니다. */
+    var blur = t * 4;
     var frame = item.querySelector(".staff-photo-frame");
     frame.style.transform = "translateY(" + bobY + "px) scale(" + scale + ")";
     frame.style.opacity = String(opacity);
+    frame.style.filter = blur > 0.05 ? "blur(" + blur.toFixed(2) + "px)" : "none";
     var isFront = diff < angle / 2;
     frame.classList.toggle("is-front", isFront);
     if (diff < bestDiff) { bestDiff = diff; bestIndex = i; }
