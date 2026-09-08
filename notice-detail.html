@@ -135,6 +135,11 @@
   function esc(s) {
     return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
+  function linkify(escapedText) {
+    return escapedText.replace(/(https?:\/\/[^\s<]+)/g, function (url) {
+      return '<a href="' + url + '" target="_blank" rel="noopener">' + url + '</a>';
+    });
+  }
   var container = document.getElementById("article");
   var params = new URLSearchParams(location.search);
   var id = params.get("id");
@@ -162,7 +167,7 @@
     html += '<div class="na-meta"><span>' + esc(n.date) + "</span>" + badgeHtml + "</div>";
     html += "<h1>" + esc(n.title) + "</h1>";
     if (n.image) html += '<img class="na-image" src="' + esc(n.image) + '" alt="">';
-    html += '<div class="na-body">' + (n.content ? esc(n.content) : '<span class="na-empty">등록된 본문 내용이 없습니다.</span>') + "</div>";
+    html += '<div class="na-body">' + (n.content ? linkify(esc(n.content)) : '<span class="na-empty">등록된 본문 내용이 없습니다.</span>') + "</div>";
     html += '<div class="na-footer"><a href="notice.html" class="btn btn-outline btn-sm">← 공지사항 목록으로</a></div>';
     container.innerHTML = html;
   }).catch(function () {
