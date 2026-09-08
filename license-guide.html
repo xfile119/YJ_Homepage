@@ -93,6 +93,19 @@
 #yj-license-guide .yjlg-callout.yjlg-warn{ background:var(--warn-bg); color:var(--warn-text); }
 #yj-license-guide .yjlg-callout.yjlg-danger{ background:var(--danger-bg); color:var(--danger-text); }
 #yj-license-guide .yjlg-callout.yjlg-info{ background:var(--info-bg); color:var(--info-text); }
+#yj-license-guide .yjlg-flow{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:22px; }
+#yj-license-guide .yjlg-flow-step{ display:flex; align-items:center; gap:7px; background:var(--surface-2); border:1px solid var(--line); border-radius:999px; padding:8px 14px 8px 8px; font-size:0.82rem; font-weight:700; color:var(--ink); }
+#yj-license-guide .yjlg-flow-step.yjlg-dim{ opacity:.5; }
+#yj-license-guide .yjlg-flow-step .yjlg-flow-n{ display:inline-flex; align-items:center; justify-content:center; width:19px; height:19px; border-radius:50%; background:var(--accent); color:#fff; font-size:0.68rem; font-weight:800; flex:none; }
+#yj-license-guide .yjlg-flow-arrow{ color:var(--line-strong); font-size:0.85rem; }
+#yj-license-guide .yjlg-info-block{ background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius-md); padding:15px 17px; margin-bottom:14px; }
+#yj-license-guide .yjlg-info-block .yjlg-info-head{ display:flex; align-items:center; gap:8px; font-weight:800; font-size:0.9rem; margin-bottom:8px; color:var(--ink); }
+#yj-license-guide .yjlg-info-block .yjlg-info-head svg{ width:16px; height:16px; color:var(--accent-text); flex:none; }
+#yj-license-guide .yjlg-info-block p{ margin:0 0 6px; font-size:0.86rem; color:var(--muted); line-height:1.6; }
+#yj-license-guide .yjlg-info-block p:last-child{ margin-bottom:0; }
+#yj-license-guide .yjlg-info-block ul{ margin:0; padding:0 0 0 1.1em; font-size:0.86rem; color:var(--muted); line-height:1.75; }
+#yj-license-guide .yjlg-info-block a.yjlg-link{ color:var(--info-text); font-weight:700; text-decoration:none; }
+#yj-license-guide .yjlg-info-block a.yjlg-link:hover{ text-decoration:underline; }
 #yj-license-guide .yjlg-contact-box{ display:flex; flex-direction:column; gap:10px; background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius-md); padding:16px 18px; margin-bottom:18px; }
 #yj-license-guide .yjlg-contact-box .yjlg-head{ font-weight:700; font-size:0.92rem; }
 #yj-license-guide .yjlg-contact-row{ display:flex; align-items:center; gap:8px; font-size:0.88rem; color:var(--muted); }
@@ -136,12 +149,8 @@
     </a>
     <nav class="main-nav" id="main-nav">
       <a href="index.html" data-page="index.html">홈</a>
-      <a href="about.html" data-page="about.html">학원소개</a>
-      <a href="license-guide.html" data-page="license-guide.html">면허가이드</a>
+      <a href="license-guide.html" data-page="license-guide.html">면허안내</a>
       <a href="education-hours.html" data-page="education-hours.html">교육시간</a>
-      <a href="driving-lessons.html" data-page="driving-lessons.html">도로연수</a>
-      <a href="notice.html" data-page="notice.html">공지사항</a>
-      <a href="location.html" data-page="location.html">오시는길</a>
       <a href="contact.html" data-page="contact.html">상담문의</a>
     </nav>
     <div class="header-cta">
@@ -152,9 +161,9 @@
 
 <div class="page-header">
   <div class="container">
-    <div class="breadcrumb"><a href="index.html">홈</a> / 면허가이드</div>
+    <div class="breadcrumb"><a href="index.html">홈</a> / 면허안내</div>
     <h1>면허취득 안내</h1>
-    <p>지금 갖고 계신 면허와 새로 취득하려는 면허를 선택하면, 필요한 의무교육시간과 예상 수강료를 바로 확인할 수 있어요.</p>
+    <p>취득하려는 면허를 선택하면, 과정·비용·기간·교육시간·준비물·시험일정까지 한 번에 확인할 수 있어요.</p>
   </div>
 </div>
 
@@ -183,7 +192,7 @@
         <h5>바로가기</h5>
         <ul>
           <li><a href="about.html">학원소개</a></li>
-          <li><a href="license-guide.html">면허가이드</a></li>
+          <li><a href="license-guide.html">면허안내</a></li>
           <li><a href="education-hours.html">교육시간</a></li>
           <li><a href="driving-lessons.html">도로연수</a></li>
           <li><a href="notice.html">공지사항</a></li>
@@ -423,6 +432,10 @@ function svgReset(){return '<svg viewBox="0 0 24 24" fill="none" stroke="current
 function svgPhone(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.68 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.32 1.85.55 2.81.68A2 2 0 0 1 22 16.92z"/></svg>';}
 function svgPin(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>';}
 function svgCar(){return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="12" rx="2"/><path d="M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/><circle cx="8" cy="15" r="1.2"/><circle cx="16" cy="15" r="1.2"/></svg>';}
+function svgCalendar(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';}
+function svgClock(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>';}
+function svgChecklist(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l2 2 4-4"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>';}
+function svgFlag(){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V3"/><path d="M4 4h13l-2.5 4L17 12H4"/></svg>';}
 
 /* =======================================================================
    표기 형식 헬퍼
@@ -455,6 +468,98 @@ function examFeeNumbers(code){
   var prefix=code.split("-")[0];
   var t = DATA.rates && DATA.rates.types && DATA.rates.types[prefix];
   return t ? { examGi: t.examGi, examDoro: t.examDoro } : { examGi: null, examDoro: null };
+}
+
+/* =======================================================================
+   과정 · 기간 · 교육시간 · 준비물 · 시험일정 — 수강생이 가장 궁금해하는 6가지 중
+   비용(교육시간·수강료·시험료)을 제외한 나머지를 기존 hours 데이터로부터 구성
+   ======================================================================= */
+var SCHEDULE_BY_PREFIX = {
+  B2:{ label:"1·2종 보통면허 · 2종소형면허", lines:["화·수·토 10:00 ~ 12:50","목요일 13:30 ~ 16:20"] },
+  B1:{ label:"1·2종 보통면허 · 2종소형면허", lines:["화·수·토 10:00 ~ 12:50","목요일 13:30 ~ 16:20"] },
+  TM:{ label:"1·2종 보통면허 · 2종소형면허", lines:["화·수·토 10:00 ~ 12:50","목요일 13:30 ~ 16:20"] },
+  CD:{ label:"1·2종 보통면허 · 2종소형면허", lines:["화·수·토 10:00 ~ 12:50","목요일 13:30 ~ 16:20"] },
+  S2:{ label:"1·2종 보통면허 · 2종소형면허", lines:["화·수·토 10:00 ~ 12:50","목요일 13:30 ~ 16:20"] },
+  DH:{ label:"대형·특수면허", lines:["화·수·토 09:00 ~ 11:50","목요일 14:30 ~ 17:20"] },
+  SG:{ label:"대형·특수면허", lines:["화·수·토 09:00 ~ 11:50","목요일 14:30 ~ 17:20"] },
+  DG:{ label:"대형·특수면허", lines:["화·수·토 09:00 ~ 11:50","목요일 14:30 ~ 17:20"] },
+  GN:{ label:"대형·특수면허", lines:["화·수·토 09:00 ~ 11:50","목요일 14:30 ~ 17:20"] }
+};
+
+function renderFlow(c){
+  var steps=[];
+  var hakOn = c.hours.hak && c.hours.hak[0]>0;
+  var giOn = c.hours.gi && c.hours.gi[0]>0;
+  var doroOn = c.hours.doro && c.hours.doro[0]>0;
+  steps.push({t:"학과교육", on:hakOn});
+  steps.push({t:"장내기능교육·시험", on:giOn});
+  steps.push({t:"도로주행교육·시험", on:doroOn});
+  steps.push({t:"면허증 발급", on:true, always:true});
+  var html='<div class="yjlg-section-label">취득 과정</div><div class="yjlg-flow">';
+  steps.forEach(function(s,i){
+    if(i>0) html+='<span class="yjlg-flow-arrow">→</span>';
+    html+='<span class="yjlg-flow-step'+(s.on?"":" yjlg-dim")+'"><span class="yjlg-flow-n">'+(i+1)+'</span>'+s.t+(s.on?"":" (면제)")+'</span>';
+  });
+  html+='</div>';
+  return html;
+}
+
+function estimateDuration(c){
+  var total=0;
+  ["hak","gi","doro"].forEach(function(k){
+    if(c.hours[k] && typeof c.hours[k][0]==="number") total+=c.hours[k][0];
+  });
+  var text;
+  if(total<=0) text="바로 신청 가능 (별도 의무교육 없음)";
+  else if(total<=3) text="최短 1~2일";
+  else if(total<=9) text="약 3~6일";
+  else if(total<=19) text="약 1~2주";
+  else text="약 2~3주";
+  return ""
+    +'<div class="yjlg-info-block"><div class="yjlg-info-head">'+svgCalendar()+'예상 소요기간</div>'
+    +'<p><b style="color:var(--ink)">'+text+'</b> (교육시간 합계 '+total+'시간 기준)</p>'
+    +'<p>실제 소요기간은 학원 스케줄과 개인 진도, 시험 재응시 여부에 따라 달라질 수 있어요.</p></div>';
+}
+
+function renderScheduleBlock(code, c){
+  var prefix=code.split("-")[0];
+  var hakOn = c.hours.hak && c.hours.hak[0]>0;
+  var sch = SCHEDULE_BY_PREFIX[prefix];
+  var html='<div class="yjlg-info-block"><div class="yjlg-info-head">'+svgClock()+'교육 가능 시간</div>';
+  if(!hakOn){
+    html+='<p>학과교육이 면제되어 별도 시간표 확인이 필요 없어요.</p>';
+  } else if(sch){
+    html+='<p>'+sch.lines.join("<br>")+' (학과교육 기준)</p>';
+    html+='<p>매달 첫째 주 일요일은 토요일과 동일하게 수업을 진행해요.</p>';
+  } else {
+    html+='<p>정확한 학과교육 시간은 학원에 문의해주세요.</p>';
+  }
+  html+='<p><a class="yjlg-link" href="education-hours.html" target="_blank" rel="noopener">전체 교육시간표 보기 →</a></p></div>';
+  return html;
+}
+
+function renderPrepBlock(){
+  return ""
+    +'<div class="yjlg-info-block"><div class="yjlg-info-head">'+svgChecklist()+'준비물</div><ul>'
+    +'<li>신분증 (주민등록증·운전면허증 등)</li>'
+    +'<li>규격 증명사진 (정확한 매수는 접수 시 안내해드려요)</li>'
+    +'<li>수강료 결제수단 (현금·카드)</li>'
+    +'<li>신체검사 대상자는 병원에서 미리 받은 신체검사 결과 (학원에서는 진행하지 않아요)</li>'
+    +'</ul></div>';
+}
+
+function renderExamScheduleBlock(effExamGi, effExamDoro){
+  var names=[];
+  if(effExamGi!==null) names.push("장내기능시험");
+  if(effExamDoro!==null) names.push("도로주행시험");
+  var html='<div class="yjlg-info-block"><div class="yjlg-info-head">'+svgFlag()+'시험 일정</div>';
+  if(names.length){
+    html+='<p>'+names.join('·')+'은(는) 학원에서 정기적으로 진행돼요. 정확한 일정은 접수 시 상담을 통해 안내해드려요.</p>';
+  } else {
+    html+='<p>이 과정은 별도의 실기 시험이 없어요.</p>';
+  }
+  html+='</div>';
+  return html;
 }
 
 /* =======================================================================
@@ -576,6 +681,8 @@ function renderResult(){
   html+='<div class="yjlg-result-title">'+titleText+'</div>';
   html+='<p class="yjlg-result-sub">선택하신 조건 기준 예상 결과예요</p>';
 
+  if(c.status!=="doc" && c.status!=="unknown" && c.hours){ html+=renderFlow(c); }
+
   if(c.status==="doc"){
     html+='<div class="yjlg-callout yjlg-info">'+c.note+'</div>'+contactBox();
   } else if(c.status==="unknown"){
@@ -621,6 +728,12 @@ function renderResult(){
     html+='<p class="yjlg-fineprint">'+(total==="unknown"?"":"정확한 금액은 상담 시 확인해드려요. 상기 수강료는 의무교육을 기준으로 산정되었으며, 시험은 각 1회씩 포함된 가격입니다.")+'</p>';
 
     if(c.note){ html+='<div class="yjlg-callout '+(c.status==="warn"?"yjlg-warn":"yjlg-ok")+'">'+c.note+'</div>'; }
+
+    html+=estimateDuration(c);
+    html+=renderScheduleBlock(code, c);
+    html+=renderPrepBlock();
+    html+=renderExamScheduleBlock(effExamGi, effExamDoro);
+
     if(c.status==="warn"){ html+=contactBox(); }
   }
 

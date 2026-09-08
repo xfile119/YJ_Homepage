@@ -3,8 +3,8 @@
    ========================================================================== */
 
 :root {
-  --color-primary: #8f6f52;
-  --color-primary-dark: #664e37;
+  --color-primary: #96775a;
+  --color-primary-dark: #7a5c42;
   --color-primary-light: #f8f3ea;
   --color-accent: #e8ad52;
   --color-accent-dark: #d29a3d;
@@ -199,7 +199,7 @@ button { font-family: inherit; cursor: pointer; }
 .hero {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(120deg, var(--color-primary-dark) 0%, var(--color-primary) 60%, #c89b6e 100%);
+  background: linear-gradient(120deg, var(--color-primary) 0%, #c89b6e 65%, #e0b98c 100%);
   color: #fff;
 }
 .hero::after {
@@ -503,7 +503,7 @@ button { font-family: inherit; cursor: pointer; }
 
 /* ---------- Page header (inner pages) ---------- */
 .page-header {
-  background: linear-gradient(120deg, var(--color-primary-dark), var(--color-primary));
+  background: linear-gradient(120deg, var(--color-primary), #c89b6e);
   color: #fff;
   padding: 56px 0 42px;
 }
@@ -721,7 +721,7 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
 .instructor-card span { font-size: 13px; color: var(--color-muted); }
 
 /* ---------- Footer ---------- */
-.site-footer { background: #362a1e; color: rgba(255,255,255,0.75); padding: 56px 0 0; }
+.site-footer { background: var(--color-primary-dark); color: rgba(255,255,255,0.8); padding: 56px 0 0; }
 .footer-top { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.1); }
 .footer-brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 800; font-size: 18px; margin-bottom: 14px; }
 .footer-brand .mark { width: 34px; height: 34px; border-radius: 9px; background: var(--color-primary); display: flex; align-items: center; justify-content: center; }
