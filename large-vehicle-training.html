@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>대형연수 | 영진자동차운전전문학원</title>
+<meta name="description" content="대형면허는 있지만 실제 대형버스·화물차 운행이 처음이신가요? 영진자동차운전전문학원은 실제 대형차량과 전용 교육장을 갖추고 1:1 맞춤 대형연수를 진행합니다. 광주 대형버스 연수, 대형화물 연수 상담 062-951-5100." />
+<meta property="og:title" content="대형연수 | 영진자동차운전전문학원" />
+<meta property="og:description" content="대형면허 합격과 실제 운행은 다릅니다. 실제 대형차량으로 1:1 맞춤 연수를 진행합니다." />
+<meta property="og:type" content="website" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<style>
+/* ============================================================================
+   대형연수 홍보 페이지 전용 스타일 (.lvt- = large vehicle training)
+   ============================================================================ */
+
+/* --- 히어로 --- */
+.lvt-hero { position: relative; overflow: hidden; background: linear-gradient(125deg, #6d5540 0%, #96775a 45%, #c89b6e 100%); color: #fff; }
+.lvt-hero::after {
+  content: ""; position: absolute; right: -140px; top: -180px; width: 560px; height: 560px; border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(232,173,82,0.30), rgba(232,173,82,0) 70%);
+}
+.lvt-hero .container { position: relative; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 44px; padding-top: 72px; padding-bottom: 72px; }
+.lvt-badge {
+  display: inline-flex; align-items: center; gap: 8px; background: var(--color-accent); color: #4a3722;
+  border-radius: 999px; padding: 7px 16px; font-size: 13px; font-weight: 800; letter-spacing: 0.01em; margin-bottom: 20px;
+}
+.lvt-badge svg { width: 15px; height: 15px; }
+.lvt-hero h1 { font-size: clamp(28px, 3.2vw + 14px, 46px); font-weight: 900; line-height: 1.28; letter-spacing: -0.02em; text-wrap: balance; }
+.lvt-hero h1 em { font-style: normal; color: var(--color-accent); }
+.lvt-hero .lvt-lead { margin-top: 20px; font-size: clamp(15px, 0.5vw + 14px, 17px); line-height: 1.8; color: rgba(255,255,255,0.9); max-width: 34em; }
+.lvt-hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
+.lvt-hero-points { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 34px; padding-top: 26px; border-top: 1px solid rgba(255,255,255,0.22); }
+.lvt-hero-points div strong { display: block; font-size: 15px; font-weight: 800; color: var(--color-accent); }
+.lvt-hero-points div span { font-size: 13px; color: rgba(255,255,255,0.82); }
+.lvt-hero-art { width: 100%; height: auto; display: block; filter: drop-shadow(0 24px 40px rgba(40,26,12,0.35)); }
+
+/* --- 공감(문제 제기) 섹션 --- */
+.lvt-pain-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+.lvt-pain {
+  display: flex; gap: 16px; align-items: flex-start; background: #fff; border: 1px solid var(--color-line);
+  border-left: 4px solid var(--color-accent); border-radius: var(--radius-md); padding: 24px 26px;
+}
+.lvt-pain .q { flex: none; width: 30px; height: 30px; border-radius: 50%; background: var(--color-primary-light); color: var(--color-primary-dark); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 15px; }
+.lvt-pain h4 { font-size: 16px; font-weight: 800; color: var(--color-ink); line-height: 1.5; }
+.lvt-pain p { margin-top: 7px; font-size: 14px; color: var(--color-muted); line-height: 1.7; }
+.lvt-pain-answer { margin-top: 30px; text-align: center; font-size: clamp(17px, 1vw + 14px, 21px); font-weight: 800; color: var(--color-ink); line-height: 1.6; text-wrap: balance; }
+.lvt-pain-answer em { font-style: normal; color: var(--color-primary); border-bottom: 3px solid var(--color-accent); padding-bottom: 2px; }
+
+/* --- 희소성(왜 드문가) 섹션 --- */
+.lvt-rare { display: grid; grid-template-columns: 0.95fr 1.05fr; gap: 48px; align-items: center; }
+.lvt-rare-art { width: 100%; height: auto; display: block; }
+.lvt-rare h2 { font-size: clamp(22px, 1.6vw + 15px, 30px); font-weight: 900; color: var(--color-ink); line-height: 1.4; text-wrap: balance; }
+.lvt-rare > div > p { margin-top: 16px; font-size: 15px; line-height: 1.85; color: var(--color-body); }
+.lvt-req-list { display: flex; flex-direction: column; gap: 12px; margin-top: 26px; }
+.lvt-req {
+  display: flex; gap: 14px; align-items: center; background: #fff; border: 1px solid var(--color-line);
+  border-radius: var(--radius-md); padding: 16px 18px;
+}
+.lvt-req .ico { flex: none; width: 40px; height: 40px; border-radius: 11px; background: var(--color-primary-light); color: var(--color-primary); display: flex; align-items: center; justify-content: center; }
+.lvt-req .ico svg { width: 21px; height: 21px; }
+.lvt-req strong { display: block; font-size: 14.5px; font-weight: 800; color: var(--color-ink); }
+.lvt-req span { font-size: 13px; color: var(--color-muted); }
+.lvt-req .check { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 800; color: #1f8a5f; background: #e4f5ec; border-radius: 999px; padding: 5px 11px; white-space: nowrap; }
+
+/* --- 커리큘럼 --- */
+.lvt-curri { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.lvt-curri-item { background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: 24px; }
+.lvt-curri-item .n { font-size: 12px; font-weight: 900; color: var(--color-accent-dark); letter-spacing: 0.08em; }
+.lvt-curri-item h4 { margin-top: 8px; font-size: 16px; font-weight: 800; color: var(--color-ink); }
+.lvt-curri-item p { margin-top: 8px; font-size: 13.8px; line-height: 1.7; color: var(--color-muted); }
+
+/* --- 사진 슬롯 (실제 사진으로 교체 예정) --- */
+.lvt-photo-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 34px; }
+.lvt-photo {
+  position: relative; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--color-line);
+  background: linear-gradient(140deg, var(--color-primary-light), #fff);
+  aspect-ratio: 4 / 3; display: flex; align-items: center; justify-content: center;
+}
+.lvt-photo svg { width: 62%; height: auto; }
+.lvt-photo figcaption {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 14px;
+  background: linear-gradient(to top, rgba(58,44,30,0.82), rgba(58,44,30,0));
+  color: #fff; font-size: 12.5px; font-weight: 700;
+}
+.lvt-photo img { width: 100%; height: 100%; object-fit: cover; }
+
+/* --- 대상별 카드 --- */
+.lvt-target-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.lvt-target { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
+.lvt-target-head { background: linear-gradient(130deg, var(--color-primary), #b98f68); color: #fff; padding: 22px 24px; }
+.lvt-target-head .tag { font-size: 11.5px; font-weight: 900; letter-spacing: 0.1em; color: rgba(255,255,255,0.75); }
+.lvt-target-head h3 { margin-top: 5px; font-size: 19px; font-weight: 900; }
+.lvt-target-body { padding: 22px 24px; flex: 1; }
+.lvt-target-body > p { font-size: 14px; line-height: 1.75; color: var(--color-body); }
+.lvt-target-body ul { margin-top: 16px; display: flex; flex-direction: column; gap: 9px; }
+.lvt-target-body li { display: flex; gap: 9px; font-size: 13.5px; color: var(--color-muted); line-height: 1.6; }
+.lvt-target-body li svg { flex: none; width: 17px; height: 17px; color: var(--color-accent-dark); margin-top: 2px; }
+.lvt-target-foot { padding: 0 24px 24px; }
+
+/* --- FAQ --- */
+.lvt-faq { max-width: 780px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+.lvt-faq details { background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-md); overflow: hidden; }
+.lvt-faq summary {
+  list-style: none; cursor: pointer; padding: 18px 22px; font-size: 15px; font-weight: 700; color: var(--color-ink);
+  display: flex; align-items: center; gap: 12px;
+}
+.lvt-faq summary::-webkit-details-marker { display: none; }
+.lvt-faq summary::before { content: "Q"; flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--color-primary-light); color: var(--color-primary-dark); display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 900; }
+.lvt-faq summary::after { content: "+"; margin-left: auto; font-size: 20px; font-weight: 400; color: var(--color-muted); line-height: 1; }
+.lvt-faq details[open] summary::after { content: "−"; }
+.lvt-faq details[open] summary { border-bottom: 1px solid var(--color-line); }
+.lvt-faq .a { padding: 16px 22px 20px 58px; font-size: 14px; line-height: 1.8; color: var(--color-body); }
+
+/* --- 최종 CTA --- */
+.lvt-final { background: linear-gradient(125deg, #6d5540, #96775a 60%, #c89b6e); border-radius: var(--radius-lg); padding: 52px 48px; color: #fff; text-align: center; }
+.lvt-final h2 { font-size: clamp(22px, 1.8vw + 15px, 30px); font-weight: 900; line-height: 1.45; text-wrap: balance; }
+.lvt-final p { margin-top: 14px; font-size: 15px; line-height: 1.8; color: rgba(255,255,255,0.88); }
+.lvt-final-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }
+
+@media (max-width: 900px) {
+  .lvt-hero .container { grid-template-columns: 1fr; gap: 32px; padding-top: 52px; padding-bottom: 52px; }
+  .lvt-rare { grid-template-columns: 1fr; gap: 30px; }
+  .lvt-curri, .lvt-target-grid, .lvt-photo-row { grid-template-columns: 1fr; }
+  .lvt-pain-grid { grid-template-columns: 1fr; }
+  .lvt-final { padding: 40px 26px; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="container">
+    <div class="topbar-links">
+      <a href="location.html">오시는 길</a>
+      <a href="notice.html">공지사항</a>
+    </div>
+    <a class="topbar-tel" href="tel:062-951-5100">☎ 062-951-5100</a>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <span class="mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M12 3v4M12 17v4M4.2 7.8l3 2M16.8 14.2l3 2M4.2 16.2l3-2M16.8 9.8l3-2"/></svg>
+      </span>
+      <span>
+        영진자동차운전전문학원
+        <span class="brand-sub">YEONGJIN DRIVING SCHOOL</span>
+      </span>
+    </a>
+    <nav class="main-nav" id="main-nav">
+      <a href="index.html" data-page="index.html">홈</a>
+      <a href="license-guide.html" data-page="license-guide.html">면허 탐색기</a>
+      <a href="large-vehicle-training.html" data-page="large-vehicle-training.html">대형연수</a>
+      <a href="contact.html" data-page="contact.html">상담문의</a>
+    </nav>
+    <div class="header-cta">
+      <button class="nav-toggle" aria-label="메뉴 열기" aria-expanded="false"><span></span></button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ================= 히어로 ================= -->
+  <section class="lvt-hero">
+    <div class="container">
+      <div>
+        <span class="lvt-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.6 6.3 6.8.5-5.2 4.4 1.6 6.6L12 16.3 6.2 19.8l1.6-6.6L2.6 8.8l6.8-.5z"/></svg>
+          찾기 힘든 과정, 대형연수
+        </span>
+        <h1>대형면허는 땄는데,<br><em>버스는 못 몰겠다면</em></h1>
+        <p class="lvt-lead">
+          시험 합격과 실제 운행은 전혀 다른 이야기입니다.
+          차폭 감각도, 내륜차도, 정류장에 정확히 대는 것도 실제 대형차를 잡아봐야 늘어요.
+          영진은 <strong>실제 대형차량과 전용 교육장</strong>을 갖추고, 처음 핸들을 잡는 순간부터 1:1로 함께합니다.
+        </p>
+        <div class="lvt-hero-actions">
+          <a href="contact.html" class="btn btn-accent">대형연수 상담 신청</a>
+          <a href="tel:062-951-5100" class="btn btn-ghost-light">☎ 062-951-5100</a>
+        </div>
+        <div class="lvt-hero-points">
+          <div><strong>실제 대형차량</strong><span>학원 보유 차량으로 연수</span></div>
+          <div><strong>1:1 맞춤</strong><span>숙련도에 맞춰 진행</span></div>
+          <div><strong>전담 강사</strong><span>대형·특수 전문 강사진</span></div>
+        </div>
+      </div>
+      <div>
+        <!-- 대형버스 일러스트 (실제 차량 사진이 준비되면 <img>로 교체 가능) -->
+        <svg class="lvt-hero-art" viewBox="0 0 640 380" role="img" aria-label="영진자동차운전전문학원 대형버스 일러스트">
+          <defs>
+            <linearGradient id="lvtBody" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#fffdf8"/><stop offset="1" stop-color="#ece0cd"/>
+            </linearGradient>
+            <linearGradient id="lvtGlass" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#9fc4d8"/><stop offset="1" stop-color="#5d8ba5"/>
+            </linearGradient>
+          </defs>
+
+          <!-- 노면 -->
+          <ellipse cx="320" cy="318" rx="278" ry="17" fill="rgba(40,26,12,0.26)"/>
+          <path d="M46 348 H594" stroke="rgba(255,255,255,0.35)" stroke-width="3" stroke-dasharray="26 20" stroke-linecap="round"/>
+
+          <!-- 사이드미러 (차체 뒤쪽에 먼저 그림) -->
+          <path d="M594 124 L616 113" stroke="#6f5b47" stroke-width="5" stroke-linecap="round"/>
+          <rect x="608" y="98" width="14" height="26" rx="4" fill="#6f5b47"/>
+
+          <!-- 차체 -->
+          <rect x="40" y="88" width="560" height="182" rx="26" fill="url(#lvtBody)"/>
+
+          <!-- 행선판 -->
+          <rect x="492" y="96" width="96" height="8" rx="4" fill="#8a7259" opacity=".45"/>
+
+          <!-- 측면 창문 -->
+          <g fill="url(#lvtGlass)">
+            <rect x="64" y="110" width="94" height="74" rx="10"/>
+            <rect x="168" y="110" width="94" height="74" rx="10"/>
+            <rect x="272" y="110" width="94" height="74" rx="10"/>
+            <rect x="376" y="110" width="94" height="74" rx="10"/>
+            <rect x="486" y="110" width="106" height="74" rx="12"/>
+          </g>
+          <g fill="rgba(255,255,255,0.26)">
+            <path d="M64 120a10 10 0 0 1 10-10h60l-70 40z"/>
+            <path d="M168 120a10 10 0 0 1 10-10h60l-70 40z"/>
+            <path d="M272 120a10 10 0 0 1 10-10h60l-70 40z"/>
+            <path d="M376 120a10 10 0 0 1 10-10h60l-70 40z"/>
+            <path d="M486 122a12 12 0 0 1 12-12h70l-82 46z"/>
+          </g>
+
+          <!-- 로고 -->
+          <text x="290" y="216" text-anchor="middle" font-family="'Noto Sans KR',sans-serif" font-size="25" font-weight="900" fill="#7a5c42">영진 대형연수</text>
+
+          <!-- 골드 스트라이프 -->
+          <rect x="40" y="228" width="560" height="14" fill="#e8ad52"/>
+
+          <!-- 하단 스커트 -->
+          <path d="M40 242 H600 V244 A26 26 0 0 1 574 270 H66 A26 26 0 0 1 40 244 Z" fill="#8a7259"/>
+
+          <!-- 출입문 -->
+          <rect x="396" y="184" width="54" height="86" rx="6" fill="#6f7d88"/>
+          <rect x="402" y="192" width="19" height="50" rx="4" fill="url(#lvtGlass)"/>
+          <rect x="425" y="192" width="19" height="50" rx="4" fill="url(#lvtGlass)"/>
+
+          <!-- 헤드라이트 -->
+          <rect x="556" y="248" width="32" height="14" rx="7" fill="#ffe6a8"/>
+
+          <!-- 바퀴 -->
+          <g>
+            <circle cx="152" cy="272" r="38" fill="#3a3129"/>
+            <circle cx="152" cy="272" r="19" fill="#cfd6db"/>
+            <circle cx="152" cy="272" r="8" fill="#8a949c"/>
+            <circle cx="498" cy="272" r="38" fill="#3a3129"/>
+            <circle cx="498" cy="272" r="19" fill="#cfd6db"/>
+            <circle cx="498" cy="272" r="8" fill="#8a949c"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 공감: 이런 상황이신가요 ================= -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">WHY</span>
+        <h2>혹시, 이런 상황이신가요?</h2>
+        <p>대형면허를 가진 분들이 저희에게 가장 많이 하시는 이야기입니다.</p>
+      </div>
+
+      <div class="lvt-pain-grid">
+        <div class="lvt-pain">
+          <span class="q">?</span>
+          <div>
+            <h4>면허는 있는데, 실제로 몰아본 적이 없어요</h4>
+            <p>시험장 코스는 통과했지만 실제 도로에서 대형차를 운전해 본 경험은 없는 경우가 대부분입니다.</p>
+          </div>
+        </div>
+        <div class="lvt-pain">
+          <span class="q">?</span>
+          <div>
+            <h4>연습하고 싶어도 차도, 장소도 없어요</h4>
+            <p>대형차를 개인이 빌려 연습하는 건 사실상 불가능합니다. 넓은 교육장 없이는 연습 자체가 어렵습니다.</p>
+          </div>
+        </div>
+        <div class="lvt-pain">
+          <span class="q">?</span>
+          <div>
+            <h4>면접에서 "운행 경험 있으세요?"가 두려워요</h4>
+            <p>노선·전세버스, 화물 운송 취업에서 가장 많이 받는 질문입니다. 경험이 없으면 답이 막힙니다.</p>
+          </div>
+        </div>
+        <div class="lvt-pain">
+          <span class="q">?</span>
+          <div>
+            <h4>첫 출근에 바로 실전 투입이 무서워요</h4>
+            <p>승객이나 화물을 실은 채로 처음 운전대를 잡는 것만큼 부담되는 일은 없습니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <p class="lvt-pain-answer">
+        그래서 필요한 게 <em>대형연수</em>입니다.<br>
+        면허와 실전 사이의 간격을, 안전한 환경에서 미리 좁혀두는 과정이에요.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= 희소성: 왜 찾기 어려운가 ================= -->
+  <section class="section section-alt">
+    <div class="container">
+      <div class="lvt-rare">
+        <div>
+          <!-- 세 가지 조건이 모두 겹쳐야 대형연수가 가능하다는 것을 보여주는 도식 -->
+          <svg class="lvt-rare-art" viewBox="0 0 460 400" role="img"
+               aria-label="대형 차량, 교육장, 전담 강사 세 조건이 모두 겹쳐야 대형연수가 가능함을 나타낸 도식">
+            <circle cx="175" cy="150" r="95" fill="#96775a" opacity="0.34"/>
+            <circle cx="285" cy="150" r="95" fill="#e8ad52" opacity="0.46"/>
+            <circle cx="230" cy="245" r="95" fill="#7a5c42" opacity="0.30"/>
+
+            <text x="124" y="112" text-anchor="middle" font-family="'Noto Sans KR',sans-serif" font-size="15" font-weight="800" fill="#4a3722">대형 차량</text>
+            <text x="336" y="112" text-anchor="middle" font-family="'Noto Sans KR',sans-serif" font-size="15" font-weight="800" fill="#4a3722">교육장</text>
+            <text x="230" y="312" text-anchor="middle" font-family="'Noto Sans KR',sans-serif" font-size="15" font-weight="800" fill="#4a3722">전담 강사</text>
+
+            <rect x="156" y="164" width="148" height="40" rx="20" fill="#fff"/>
+            <text x="230" y="190" text-anchor="middle" font-family="'Noto Sans KR',sans-serif" font-size="15.5" font-weight="900" fill="#7a5c42">대형연수 가능</text>
+
+            <text x="230" y="368" text-anchor="middle" font-family="'Noto Sans KR',sans-serif" font-size="13" font-weight="600" fill="#87796a">세 가지가 모두 겹치는 곳에서만 가능합니다</text>
+          </svg>
+        </div>
+        <div>
+          <span class="eyebrow" style="color:var(--color-primary-dark);">RARE</span>
+          <h2>대형연수, 왜 이렇게 찾기 어려울까요?</h2>
+          <p>
+            운전연수는 많지만, <strong>대형</strong>연수를 하는 곳은 드뭅니다.
+            승용차 연수와 달리 대형연수는 세 가지가 <strong>동시에</strong> 갖춰져야 하기 때문입니다.
+          </p>
+
+          <div class="lvt-req-list">
+            <div class="lvt-req">
+              <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="14" height="10"/><path d="M15 9h4l3 3v4h-7z"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg></span>
+              <div><strong>실제 대형 차량</strong><span>대형버스·대형화물차 보유</span></div>
+              <span class="check">보유</span>
+            </div>
+            <div class="lvt-req">
+              <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V7l9-4 9 4v14"/><path d="M3 21h18M9 21v-6h6v6"/></svg></span>
+              <div><strong>대형차가 들어가는 교육장</strong><span>회전·후진이 가능한 넓은 부지</span></div>
+              <span class="check">보유</span>
+            </div>
+            <div class="lvt-req">
+              <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg></span>
+              <div><strong>대형·특수 전담 강사</strong><span>대형차를 가르쳐 본 경험</span></div>
+              <span class="check">보유</span>
+            </div>
+          </div>
+
+          <p style="margin-top:22px;">
+            이 셋 중 하나만 없어도 대형연수는 운영할 수 없습니다.
+            그래서 대형연수를 찾는 분들이 <strong>먼 지역까지 이동</strong>하시는 경우가 많습니다.
+            영진자동차운전전문학원은 세 가지를 모두 갖추고 대형연수를 정식으로 운영합니다.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 커리큘럼 ================= -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">CURRICULUM</span>
+        <h2>무엇을 배우게 되나요?</h2>
+        <p>대형차를 처음 잡는 분도 실제 운행이 가능한 수준까지, 순서대로 익힙니다.</p>
+      </div>
+
+      <div class="lvt-curri">
+        <div class="lvt-curri-item">
+          <div class="n">STEP 01</div>
+          <h4>차폭·전장 감각</h4>
+          <p>승용차와 완전히 다른 차의 크기를 몸으로 익힙니다. 좌우 여유, 앞뒤 길이 감각부터 시작합니다.</p>
+        </div>
+        <div class="lvt-curri-item">
+          <div class="n">STEP 02</div>
+          <h4>내륜차와 코너링</h4>
+          <p>대형차 사고의 대부분은 뒷바퀴 궤적에서 시작됩니다. 회전 반경을 눈으로 익히고 몸에 붙입니다.</p>
+        </div>
+        <div class="lvt-curri-item">
+          <div class="n">STEP 03</div>
+          <h4>후진·주차</h4>
+          <p>사이드미러만으로 판단해야 하는 대형차 후진, 좁은 공간 진입과 정차를 반복 연습합니다.</p>
+        </div>
+        <div class="lvt-curri-item">
+          <div class="n">STEP 04</div>
+          <h4>정류장 정차 · 승하차</h4>
+          <p>노선·전세버스 운행에 꼭 필요한 정위치 정차, 승객 승하차를 고려한 부드러운 제동을 익힙니다.</p>
+        </div>
+        <div class="lvt-curri-item">
+          <div class="n">STEP 05</div>
+          <h4>실제 도로 주행</h4>
+          <p>교육장을 벗어나 실제 도로에서 차선 변경, 신호 대응, 좁은 길 통과까지 실전 감각을 만듭니다.</p>
+        </div>
+        <div class="lvt-curri-item">
+          <div class="n">STEP 06</div>
+          <h4>운행 전 점검 습관</h4>
+          <p>출차 전 확인, 사각지대 점검 등 실제 현장에서 매일 하게 될 안전 습관을 함께 몸에 익힙니다.</p>
+        </div>
+      </div>
+
+      <!-- ─────────────────────────────────────────────────────────────────
+           실제 사진 자리 (사진이 준비되면 아래 주석을 풀고 파일명만 바꾸세요)
+           images/ 폴더에 사진 3장을 넣은 뒤 src만 교체하면 됩니다.
+
+      <div class="lvt-photo-row">
+        <figure class="lvt-photo">
+          <img src="images/lvt-bus.jpg" alt="영진자동차운전전문학원 대형버스 교육 차량">
+          <figcaption>실제 대형버스 교육 차량</figcaption>
+        </figure>
+        <figure class="lvt-photo">
+          <img src="images/lvt-field.jpg" alt="대형차 전용 교육장">
+          <figcaption>대형차 전용 교육장</figcaption>
+        </figure>
+        <figure class="lvt-photo">
+          <img src="images/lvt-lesson.jpg" alt="1:1 밀착 지도 현장">
+          <figcaption>1:1 밀착 지도 현장</figcaption>
+        </figure>
+      </div>
+           ───────────────────────────────────────────────────────────────── -->
+    </div>
+  </section>
+
+  <!-- ================= 대상별 과정 ================= -->
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">COURSES</span>
+        <h2>이런 분들이 찾으십니다</h2>
+        <p>목적에 따라 연습 내용과 시간을 다르게 구성해드립니다.</p>
+      </div>
+
+      <div class="lvt-target-grid">
+        <div class="lvt-target">
+          <div class="lvt-target-head">
+            <div class="tag">BUS</div>
+            <h3>노선·전세버스 취업</h3>
+          </div>
+          <div class="lvt-target-body">
+            <p>버스 회사 입사를 준비 중이거나, 합격 후 첫 운행을 앞두신 분을 위한 과정입니다.</p>
+            <ul>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>정류장 정위치 정차 집중 연습</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>승객을 고려한 부드러운 가감속</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>좁은 길·커브 구간 주행</span></li>
+            </ul>
+          </div>
+          <div class="lvt-target-foot"><a href="contact.html" class="btn btn-outline btn-block">상담 신청</a></div>
+        </div>
+
+        <div class="lvt-target">
+          <div class="lvt-target-head">
+            <div class="tag">CARGO</div>
+            <h3>대형화물 운송</h3>
+          </div>
+          <div class="lvt-target-body">
+            <p>화물 운송으로 취업·창업을 준비하시는 분, 차량을 키워 이직하시는 분을 위한 과정입니다.</p>
+            <ul>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>적재 상태를 고려한 제동 감각</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>사각지대·후진 진입 집중 연습</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>물류창고 진입로 상황 대응</span></li>
+            </ul>
+          </div>
+          <div class="lvt-target-foot"><a href="contact.html" class="btn btn-outline btn-block">상담 신청</a></div>
+        </div>
+
+        <div class="lvt-target">
+          <div class="lvt-target-head">
+            <div class="tag">REFRESH</div>
+            <h3>장롱 대형면허</h3>
+          </div>
+          <div class="lvt-target-body">
+            <p>오래전에 대형면허를 취득했지만 실제로 운행해 본 지 오래되신 분을 위한 과정입니다.</p>
+            <ul>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>기초 조작부터 천천히 다시</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>바뀐 도로 환경·법규 안내</span></li>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>본인 속도에 맞춘 시간 조절</span></li>
+            </ul>
+          </div>
+          <div class="lvt-target-foot"><a href="contact.html" class="btn btn-outline btn-block">상담 신청</a></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 진행 방식 ================= -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">PROCESS</span>
+        <h2>이렇게 진행됩니다</h2>
+        <p>정해진 커리큘럼에 맞추는 게 아니라, 수강생 상태에 맞춰 진행합니다.</p>
+      </div>
+      <div class="steps">
+        <div class="step"><h4>상담 · 일정 협의</h4><p>목적(취업/복귀)과 가능한 시간을 확인하고 일정을 잡습니다.</p></div>
+        <div class="step"><h4>숙련도 확인</h4><p>첫 시간에 현재 상태를 함께 확인하고 필요한 시간을 안내드립니다.</p></div>
+        <div class="step"><h4>1:1 맞춤 연수</h4><p>교육장에서 기본기를 다진 뒤 실제 도로 주행으로 넘어갑니다.</p></div>
+        <div class="step"><h4>실전 적응</h4><p>실제 운행에서 마주칠 상황 위주로 마무리 점검을 합니다.</p></div>
+      </div>
+      <p style="text-align:center;margin-top:24px;font-size:13.5px;color:var(--color-muted);">
+        ※ 필요한 시간과 비용은 차종·현재 숙련도에 따라 달라집니다. 상담 시 정확히 안내해드려요.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= FAQ ================= -->
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">FAQ</span>
+        <h2>자주 묻는 질문</h2>
+      </div>
+      <div class="lvt-faq">
+        <details open>
+          <summary>대형면허가 없어도 연수를 받을 수 있나요?</summary>
+          <div class="a">대형연수는 이미 대형면허를 보유하신 분을 위한 과정입니다. 아직 면허가 없으시다면 <a href="license-guide.html" style="color:var(--color-primary);font-weight:700;">면허 탐색기</a>에서 대형면허 취득 과정(조건·비용·기간)을 먼저 확인해보세요.</div>
+        </details>
+        <details>
+          <summary>몇 시간 정도 받아야 하나요?</summary>
+          <div class="a">현재 숙련도와 목표에 따라 다릅니다. 대형차를 처음 잡는 분과, 예전에 몰아본 경험이 있는 분은 필요한 시간이 크게 차이 납니다. 첫 시간에 상태를 확인한 뒤 필요한 시간을 솔직하게 말씀드립니다.</div>
+        </details>
+        <details>
+          <summary>연수 차량은 준비해야 하나요?</summary>
+          <div class="a">아닙니다. 학원이 보유한 대형 차량으로 진행합니다. 개인 차량이 있으시면 상담 시 말씀해주세요.</div>
+        </details>
+        <details>
+          <summary>비용은 얼마인가요?</summary>
+          <div class="a">차종과 진행 시간에 따라 달라져 일률적으로 안내드리기 어렵습니다. 전화(062-951-5100) 또는 상담문의로 목적과 상황을 말씀해주시면 정확한 금액을 안내해드립니다.</div>
+        </details>
+        <details>
+          <summary>평일에 시간을 내기 어려운데 가능한가요?</summary>
+          <div class="a">가능한 시간대를 말씀해주시면 일정을 조율해드립니다. 대형연수는 1:1로 진행되기 때문에 정규 학과 시간표와 별개로 일정을 잡습니다.</div>
+        </details>
+        <details>
+          <summary>다른 지역에서 와도 되나요?</summary>
+          <div class="a">네. 대형연수를 운영하는 곳이 많지 않아 인근 지역에서 찾아오시는 분들이 있습니다. 이동 시간을 고려해 하루에 집중적으로 진행하는 일정도 협의 가능합니다.</div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 최종 CTA ================= -->
+  <section class="section">
+    <div class="container">
+      <div class="lvt-final">
+        <h2>대형면허, 이제 실제로 운전할 차례입니다</h2>
+        <p>
+          지금 상태가 어떤지, 얼마나 걸릴지 전화 한 통이면 바로 안내해드립니다.<br>
+          부담 없이 물어보세요. 상담은 무료입니다.
+        </p>
+        <div class="lvt-final-actions">
+          <a href="tel:062-951-5100" class="btn btn-accent">☎ 062-951-5100 전화 상담</a>
+          <a href="contact.html" class="btn btn-ghost-light">온라인 상담 신청</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand">
+          <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M12 3v4M12 17v4M4.2 7.8l3 2M16.8 14.2l3 2M4.2 16.2l3-2M16.8 9.8l3-2"/></svg></span>
+          영진자동차운전전문학원
+        </div>
+        <p class="footer-desc">
+          광주광역시 광산구 목련로 372-19<br>
+          전화 062-951-5100 · 안전운전의 시작, 영진자동차운전전문학원이 함께합니다.
+        </p>
+      </div>
+      <div class="footer-col">
+        <h5>바로가기</h5>
+        <ul>
+          <li><a href="about.html">학원소개</a></li>
+          <li><a href="license-guide.html">면허 탐색기</a></li>
+          <li><a href="large-vehicle-training.html">대형연수</a></li>
+          <li><a href="driving-lessons.html">도로연수</a></li>
+          <li><a href="notice.html">공지사항</a></li>
+          <li><a href="location.html">오시는길</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>고객센터</h5>
+        <ul>
+          <li><span>전화 062-951-5100</span></li>
+          <li><span>평일 09:00 - 18:00</span></li>
+          <li><span>팩스 [입력 필요]</span></li>
+          <li><a href="contact.html#naver-talktalk">네이버 톡톡 상담</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 영진자동차운전전문학원. All rights reserved.</span>
+      <div class="footer-legal">
+        <a href="privacy.html">개인정보처리방침</a>
+        <span>사업자등록번호 410-81-87858</span>
+        <span>대표 김성환</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="floating-actions">
+  <a class="fa-call" href="tel:062-951-5100" aria-label="전화 상담">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8 9.7a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2Z"/></svg>
+  </a>
+  <a class="fa-kakao" href="http://pf.kakao.com/_UftKG/chat" target="_blank" rel="noopener" aria-label="카카오톡 상담">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+  </a>
+  <a class="fa-naver" href="contact.html#naver-talktalk" aria-label="네이버 톡톡 상담">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+  </a>
+  <button class="fa-top" aria-label="맨 위로">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+  </button>
+</div>
+
+<script src="js/main.js"></script>
+</body>
+</html>
