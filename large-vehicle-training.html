@@ -4,9 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>대형연수 | 영진자동차운전전문학원</title>
-<meta name="description" content="대형면허는 있지만 실제 대형버스·화물차 운행이 처음이신가요? 영진자동차운전전문학원은 실제 대형차량과 전용 교육장을 갖추고 1:1 맞춤 대형연수를 진행합니다. 광주 대형버스 연수, 대형화물 연수 상담 062-951-5100." />
+<meta name="description" content="대형면허가 있지만 실제 대형버스·화물차 운행이 처음이신가요? 버스회사 채용 시험 코스를 미리 연습할 수 있습니다. 실제 대형차량과 전용 교육장을 갖춘 1:1 맞춤 대형연수. 광주 대형버스·대형화물 연수 상담 062-951-5100." />
 <meta property="og:title" content="대형연수 | 영진자동차운전전문학원" />
-<meta property="og:description" content="대형면허 합격과 실제 운행은 다릅니다. 실제 대형차량으로 1:1 맞춤 연수를 진행합니다." />
+<meta property="og:description" content="버스회사 채용 시험 코스를 미리 연습하세요. 실제 대형차량으로 1:1 맞춤 대형연수를 진행합니다." />
 <meta property="og:type" content="website" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -66,6 +66,25 @@
 .lvt-req span { font-size: 13px; color: var(--color-muted); }
 .lvt-req .check { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 800; color: #1f8a5f; background: #e4f5ec; border-radius: 999px; padding: 5px 11px; white-space: nowrap; }
 
+/* --- 핵심 차별점: 채용 시험 코스 --- */
+.lvt-course {
+  display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 44px; align-items: center;
+  background: linear-gradient(125deg, #6d5540 0%, #96775a 55%, #b98f68 100%);
+  border-radius: var(--radius-lg); padding: 52px 52px; color: #fff; box-shadow: var(--shadow-md);
+}
+.lvt-course-eyebrow {
+  display: inline-block; background: var(--color-accent); color: #4a3722; border-radius: 999px;
+  padding: 6px 15px; font-size: 12.5px; font-weight: 900; margin-bottom: 16px;
+}
+.lvt-course h2 { font-size: clamp(23px, 1.9vw + 15px, 32px); font-weight: 900; line-height: 1.35; text-wrap: balance; }
+.lvt-course-copy > p { margin-top: 18px; font-size: 15px; line-height: 1.85; color: rgba(255,255,255,0.9); }
+.lvt-course-copy > p strong { color: var(--color-accent); }
+.lvt-course-list { display: flex; flex-direction: column; gap: 11px; margin-top: 24px; }
+.lvt-course-list li { display: flex; gap: 11px; align-items: flex-start; font-size: 14.5px; line-height: 1.65; color: rgba(255,255,255,0.95); }
+.lvt-course-list li svg { flex: none; width: 19px; height: 19px; color: var(--color-accent); margin-top: 2px; }
+.lvt-course-note { margin-top: 24px; font-size: 12.8px; line-height: 1.7; color: rgba(255,255,255,0.72); }
+.lvt-course-art { width: 100%; height: auto; display: block; }
+
 /* --- 커리큘럼 --- */
 .lvt-curri { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .lvt-curri-item { background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: 24px; }
@@ -124,6 +143,7 @@
 @media (max-width: 900px) {
   .lvt-hero .container { grid-template-columns: 1fr; gap: 32px; padding-top: 52px; padding-bottom: 52px; }
   .lvt-rare { grid-template-columns: 1fr; gap: 30px; }
+  .lvt-course { grid-template-columns: 1fr; gap: 30px; padding: 34px 26px; }
   .lvt-curri, .lvt-target-grid, .lvt-photo-row { grid-template-columns: 1fr; }
   .lvt-pain-grid { grid-template-columns: 1fr; }
   .lvt-final { padding: 40px 26px; }
@@ -175,7 +195,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.6 6.3 6.8.5-5.2 4.4 1.6 6.6L12 16.3 6.2 19.8l1.6-6.6L2.6 8.8l6.8-.5z"/></svg>
           찾기 힘든 과정, 대형연수
         </span>
-        <h1>대형면허는 땄는데,<br><em>버스는 못 몰겠다면</em></h1>
+        <h1>대형면허가 있지만,<br><em>버스는 못 몰겠다면</em></h1>
         <p class="lvt-lead">
           시험 합격과 실제 운행은 전혀 다른 이야기입니다.
           차폭 감각도, 내륜차도, 정류장에 정확히 대는 것도 실제 대형차를 잡아봐야 늘어요.
@@ -186,9 +206,9 @@
           <a href="tel:062-951-5100" class="btn btn-ghost-light">☎ 062-951-5100</a>
         </div>
         <div class="lvt-hero-points">
+          <div><strong>채용 시험 코스</strong><span>시험 전에 미리 연습</span></div>
           <div><strong>실제 대형차량</strong><span>학원 보유 차량으로 연수</span></div>
           <div><strong>1:1 맞춤</strong><span>숙련도에 맞춰 진행</span></div>
-          <div><strong>전담 강사</strong><span>대형·특수 전문 강사진</span></div>
         </div>
       </div>
       <div>
@@ -291,8 +311,8 @@
         <div class="lvt-pain">
           <span class="q">?</span>
           <div>
-            <h4>면접에서 "운행 경험 있으세요?"가 두려워요</h4>
-            <p>노선·전세버스, 화물 운송 취업에서 가장 많이 받는 질문입니다. 경험이 없으면 답이 막힙니다.</p>
+            <h4>채용 시험을, 코스도 모른 채 봐야 해요</h4>
+            <p>버스회사 채용은 대부분 실기 시험을 봅니다. 처음 가보는 코스에서 처음 몰아보는 차로 시험을 치르는 셈입니다.</p>
           </div>
         </div>
         <div class="lvt-pain">
@@ -308,6 +328,74 @@
         그래서 필요한 게 <em>대형연수</em>입니다.<br>
         면허와 실전 사이의 간격을, 안전한 환경에서 미리 좁혀두는 과정이에요.
       </p>
+    </div>
+  </section>
+
+  <!-- ================= 핵심 차별점: 채용 시험 코스 ================= -->
+  <section class="section">
+    <div class="container">
+      <div class="lvt-course">
+        <div class="lvt-course-copy">
+          <span class="lvt-course-eyebrow">영진만의 강점</span>
+          <h2>채용 시험 코스,<br>시험 전에 미리 달려봅니다</h2>
+          <p>
+            버스회사 채용 실기 시험은 회사마다 사용하는 코스가 정해져 있습니다.
+            영진은 주요 버스회사가 채용 시험에 사용하는 코스를 파악하고 있어,
+            <strong>시험을 보기 전에 그 코스를 미리 연습</strong>해보실 수 있습니다.
+          </p>
+          <ul class="lvt-course-list">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>어느 지점에서 무엇을 보는지 알고 준비합니다</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>까다로운 구간은 될 때까지 반복해서 연습합니다</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>처음 가보는 길이 아니라는 것만으로 긴장이 줄어듭니다</span>
+            </li>
+          </ul>
+          <p class="lvt-course-note">
+            ※ 채용 코스는 회사·시기에 따라 달라질 수 있습니다.
+            지원하시려는 회사를 말씀해주시면 상담 시 확인해 안내해드립니다.
+          </p>
+          <a href="contact.html" class="btn btn-accent" style="margin-top:26px;">지원 회사 알려주고 상담받기</a>
+        </div>
+
+        <svg class="lvt-course-art" viewBox="0 0 460 320" role="img" aria-label="채용 시험 코스를 미리 주행해보는 모습을 나타낸 도식">
+          <!-- 코스 트랙 -->
+          <path d="M92 74 H330 a56 56 0 0 1 0 112 H150 a56 56 0 0 0 0 112 H360"
+                fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M92 74 H330 a56 56 0 0 1 0 112 H150 a56 56 0 0 0 0 112 H360"
+                fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="2.5" stroke-dasharray="12 12" stroke-linecap="round"/>
+
+          <!-- 출발 -->
+          <circle cx="92" cy="74" r="17" fill="#e8ad52"/>
+          <text x="92" y="74" text-anchor="middle" dominant-baseline="central" font-family="'Noto Sans KR',sans-serif" font-size="13" font-weight="900" fill="#4a3722">1</text>
+          <text x="92" y="36" text-anchor="middle" font-family="'Noto Sans KR',sans-serif" font-size="13.5" font-weight="800" fill="#fff">출발</text>
+
+          <!-- 중간 체크포인트 -->
+          <circle cx="386" cy="130" r="14" fill="#fff"/>
+          <text x="386" y="130" text-anchor="middle" dominant-baseline="central" font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="900" fill="#7a5c42">2</text>
+          <text x="386" y="98" text-anchor="middle" font-family="'Noto Sans KR',sans-serif" font-size="12.5" font-weight="700" fill="rgba(255,255,255,0.9)">회전 구간</text>
+
+          <circle cx="94" cy="242" r="14" fill="#fff"/>
+          <text x="94" y="242" text-anchor="middle" dominant-baseline="central" font-family="'Noto Sans KR',sans-serif" font-size="12" font-weight="900" fill="#7a5c42">3</text>
+          <text x="94" y="284" text-anchor="middle" font-family="'Noto Sans KR',sans-serif" font-size="12.5" font-weight="700" fill="rgba(255,255,255,0.9)">정차 지점</text>
+
+          <!-- 도착 -->
+          <circle cx="360" cy="298" r="17" fill="#e8ad52"/>
+          <text x="360" y="298" text-anchor="middle" dominant-baseline="central" font-family="'Noto Sans KR',sans-serif" font-size="13" font-weight="900" fill="#4a3722">4</text>
+          <text x="360" y="266" text-anchor="middle" font-family="'Noto Sans KR',sans-serif" font-size="13.5" font-weight="800" fill="#fff">도착</text>
+
+          <!-- 진행 방향 화살표 -->
+          <path d="M206 66 L218 74 L206 82" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>
+          <path d="M252 178 L240 186 L252 194" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>
+          <path d="M258 290 L270 298 L258 306" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>
+        </svg>
+      </div>
     </div>
   </section>
 
@@ -451,6 +539,7 @@
           <div class="lvt-target-body">
             <p>버스 회사 입사를 준비 중이거나, 합격 후 첫 운행을 앞두신 분을 위한 과정입니다.</p>
             <ul>
+              <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span><strong style="color:var(--color-ink);">채용 시험 코스 미리 연습</strong></span></li>
               <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>정류장 정위치 정차 집중 연습</span></li>
               <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>승객을 고려한 부드러운 가감속</span></li>
               <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span>좁은 길·커브 구간 주행</span></li>
@@ -525,6 +614,10 @@
         <details open>
           <summary>대형면허가 없어도 연수를 받을 수 있나요?</summary>
           <div class="a">대형연수는 이미 대형면허를 보유하신 분을 위한 과정입니다. 아직 면허가 없으시다면 <a href="license-guide.html" style="color:var(--color-primary);font-weight:700;">면허 탐색기</a>에서 대형면허 취득 과정(조건·비용·기간)을 먼저 확인해보세요.</div>
+        </details>
+        <details>
+          <summary>버스회사 채용 시험 코스도 연습할 수 있나요?</summary>
+          <div class="a">네. 주요 버스회사가 채용 실기 시험에 사용하는 코스를 파악하고 있어, 시험 전에 해당 코스를 미리 주행해보실 수 있습니다. 다만 코스는 회사와 시기에 따라 달라질 수 있으니, 지원하시려는 회사를 말씀해주시면 상담 시 확인해 안내해드립니다.</div>
         </details>
         <details>
           <summary>몇 시간 정도 받아야 하나요?</summary>
