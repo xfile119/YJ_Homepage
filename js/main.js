@@ -15,11 +15,24 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // 모바일 메뉴 토글
   if (navToggle && mainNav) {
+    // 메뉴 패널이 항상 헤더(상단 유틸리티바 포함) 바로 아래에서 시작하도록,
+    // 열 때마다 헤더의 실제 화면상 하단 위치를 측정해 top 값으로 지정합니다.
+    // (top: var(--header-h) 고정값만 쓰면 스크롤 전에는 상단바 높이만큼
+    // 메뉴가 헤더 위로 파고들어 로고·버튼을 가리는 문제가 있었습니다.)
+    function positionMobileNav() {
+      if (header) mainNav.style.top = header.getBoundingClientRect().bottom + "px";
+    }
+
     navToggle.addEventListener("click", function () {
       var isOpen = mainNav.classList.toggle("is-open");
+      if (isOpen) positionMobileNav();
       navToggle.classList.toggle("is-open", isOpen);
       navToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
       document.body.style.overflow = isOpen ? "hidden" : "";
+    });
+
+    window.addEventListener("resize", function () {
+      if (mainNav.classList.contains("is-open")) positionMobileNav();
     });
 
     mainNav.querySelectorAll("a").forEach(function (link) {
