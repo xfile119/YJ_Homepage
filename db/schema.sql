@@ -54,3 +54,11 @@ CREATE TABLE IF NOT EXISTS {prefix}shuttle_riders (
   INDEX idx_ride_date (ride_date),
   INDEX idx_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS {prefix}shuttle_slots (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ride_date VARCHAR(10) NOT NULL,
+  depart_time VARCHAR(10) NOT NULL DEFAULT '',
+  sort_order INT NOT NULL DEFAULT 0,
+  INDEX idx_slot_date (ride_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

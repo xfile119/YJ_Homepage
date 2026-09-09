@@ -1,7 +1,8 @@
 <?php
 /* 셔틀(차량 운행) 명단 API
    - GET  ?date=YYYY-MM-DD  : 해당 날짜 전체 명단 (관리자 로그인 필요)
-   - POST action=save_all   : 해당 날짜 명단 통째로 저장 (관리자 로그인 필요)
+   - POST action=save_all   : 해당 날짜의 시간대+명단 통째로 저장 (관리자 로그인 필요)
+     시간대(slots)를 따로 저장하므로, 탑승자가 없는 시간대도 유지됩니다.
    - POST action=lookup     : 수강생 본인 조회 (로그인 불필요, 본인 것만 반환)
 
    개인정보(이름·연락처)를 다루므로 lookup은 아래 원칙을 지킵니다.
@@ -15,6 +16,7 @@ require __DIR__ . '/_db.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 $table = yj_table('shuttle_riders');
+$slotTable = yj_table('shuttle_slots');
 
 /* 전화번호에서 숫자만 남깁니다 (010-1234-5678 → 01012345678) */
 function yj_digits($s) {
@@ -27,23 +29,41 @@ if ($method === 'GET') {
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
         yj_json(['error' => '날짜 형식이 올바르지 않습니다 (YYYY-MM-DD).'], 400);
     }
-    $stmt = yj_db()->prepare("SELECT id, depart_time, name, place, phone, updated_by FROM $table WHERE ride_date = ? ORDER BY depart_time ASC, sort_order ASC, id ASC");
+    $stmt = yj_db()->prepare("SELECT depart_time, name, place, phone, updated_by FROM $table WHERE ride_date = ? ORDER BY sort_order ASC, id ASC");
     $stmt->execute([$date]);
-    $riders = array_map(function ($r) {
-        return [
-            'id' => (int)$r['id'],
-            'time' => $r['depart_time'],
-            'name' => $r['name'],
-            'place' => $r['place'],
-            'phone' => $r['phone'],
-        ];
-    }, $rows = $stmt->fetchAll());
+    $rows = $stmt->fetchAll();
+
     /* 이 날짜 명단을 마지막으로 저장한 사람 (여러 직원이 함께 쓰므로 표시해줍니다) */
     $updatedBy = '';
     foreach ($rows as $r) {
         if ($r['updated_by'] !== '') { $updatedBy = $r['updated_by']; }
     }
-    yj_json(['date' => $date, 'riders' => $riders, 'updatedBy' => $updatedBy]);
+
+    /* 저장된 시간대 목록. 탑승자가 없는 시간대도 여기에 남아 있습니다. */
+    $slotStmt = yj_db()->prepare("SELECT depart_time FROM $slotTable WHERE ride_date = ? ORDER BY sort_order ASC, id ASC");
+    $slotStmt->execute([$date]);
+    $times = [];
+    foreach ($slotStmt->fetchAll() as $s) { $times[] = $s['depart_time']; }
+
+    /* 옛 데이터(시간대 표가 생기기 전)를 위해, 시간대 기록이 없으면 탑승자에게서 뽑아냅니다 */
+    if (empty($times)) {
+        foreach ($rows as $r) {
+            if (!in_array($r['depart_time'], $times, true)) { $times[] = $r['depart_time']; }
+        }
+    }
+
+    $slots = [];
+    foreach ($times as $t) {
+        $list = [];
+        foreach ($rows as $r) {
+            if ($r['depart_time'] === $t) {
+                $list[] = ['name' => $r['name'], 'place' => $r['place'], 'phone' => $r['phone']];
+            }
+        }
+        $slots[] = ['time' => $t, 'riders' => $list];
+    }
+
+    yj_json(['date' => $date, 'slots' => $slots, 'updatedBy' => $updatedBy]);
 }
 
 if ($method !== 'POST') {
@@ -113,27 +133,44 @@ $date = isset($body['date']) ? (string)$body['date'] : '';
 if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
     yj_json(['error' => '날짜 형식이 올바르지 않습니다 (YYYY-MM-DD).'], 400);
 }
-$rows = isset($body['riders']) && is_array($body['riders']) ? $body['riders'] : [];
+$slots = isset($body['slots']) && is_array($body['slots']) ? $body['slots'] : [];
 
 $db = yj_db();
 $db->beginTransaction();
 try {
-    /* 해당 날짜 명단을 통째로 교체합니다 */
-    $del = $db->prepare("DELETE FROM $table WHERE ride_date = ?");
-    $del->execute([$date]);
+    /* 해당 날짜의 시간대와 명단을 통째로 교체합니다 */
+    $db->prepare("DELETE FROM $table WHERE ride_date = ?")->execute([$date]);
+    $db->prepare("DELETE FROM $slotTable WHERE ride_date = ?")->execute([$date]);
 
+    $slotIns = $db->prepare("INSERT INTO $slotTable (ride_date, depart_time, sort_order) VALUES (?, ?, ?)");
     $insert = $db->prepare("INSERT INTO $table (ride_date, depart_time, name, place, phone, sort_order, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $i = 0;
-    foreach (array_values($rows) as $r) {
-        $time = trim((string)(isset($r['time']) ? $r['time'] : ''));
-        $name = trim((string)(isset($r['name']) ? $r['name'] : ''));
-        $place = trim((string)(isset($r['place']) ? $r['place'] : ''));
-        $phone = trim((string)(isset($r['phone']) ? $r['phone'] : ''));
-        /* 이름이 비어 있는 줄(빈 칸)은 저장하지 않습니다 */
-        if ($name === '') { $i++; continue; }
+
+    $slotIndex = 0;
+    $rowIndex = 0;
+    foreach (array_values($slots) as $slot) {
+        $time = trim((string)(isset($slot['time']) ? $slot['time'] : ''));
+        $riders = isset($slot['riders']) && is_array($slot['riders']) ? $slot['riders'] : [];
+
+        /* 시간도 안 적고 사람도 없는 빈 시간대는 버립니다 */
+        $hasRider = false;
+        foreach ($riders as $r) {
+            if (trim((string)(isset($r['name']) ? $r['name'] : '')) !== '') { $hasRider = true; break; }
+        }
+        if ($time === '' && !$hasRider) { continue; }
         if ($time === '') { $time = '미정'; }
-        $insert->execute([$date, $time, $name, $place, $phone, $i, $_SESSION['yj_admin']]);
-        $i++;
+
+        /* 탑승자가 없어도 시간대 자체는 남깁니다 (다음에 열었을 때 그대로 보이도록) */
+        $slotIns->execute([$date, $time, $slotIndex]);
+        $slotIndex++;
+
+        foreach (array_values($riders) as $r) {
+            $name = trim((string)(isset($r['name']) ? $r['name'] : ''));
+            if ($name === '') { continue; }
+            $place = trim((string)(isset($r['place']) ? $r['place'] : ''));
+            $phone = trim((string)(isset($r['phone']) ? $r['phone'] : ''));
+            $insert->execute([$date, $time, $name, $place, $phone, $rowIndex, $_SESSION['yj_admin']]);
+            $rowIndex++;
+        }
     }
     $db->commit();
 } catch (Exception $e) {

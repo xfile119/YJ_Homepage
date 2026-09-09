@@ -82,6 +82,15 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}shuttle_riders (
   INDEX idx_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
+/* 탑승자가 아직 없는 시간대도 남겨두기 위해 시간대를 따로 저장합니다 */
+$pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}shuttle_slots (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ride_date VARCHAR(10) NOT NULL,
+  depart_time VARCHAR(10) NOT NULL DEFAULT '',
+  sort_order INT NOT NULL DEFAULT 0,
+  INDEX idx_slot_date (ride_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
 /* 이미 만들어진 notices 테이블에 content/image 컬럼이 없으면 추가합니다.
    (기존에 db/setup.php를 이미 한 번 실행한 사이트를 위한 안전한 마이그레이션 — 여러 번 실행해도 안전합니다.) */
 function yj_ensure_column($pdo, $table, $column, $definition) {

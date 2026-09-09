@@ -221,21 +221,28 @@ gridEl.addEventListener("input", function (e) {
 
 /* ---------- 수집 ---------- */
 function collect() {
-  var out = [];
+  var slots = [];
   [].forEach.call(gridEl.querySelectorAll(".slot"), function (slot) {
-    var time = slot.querySelector(".slot-time").value.trim();
+    var riders = [];
     [].forEach.call(slot.querySelectorAll("tbody tr"), function (tr) {
       var name = tr.querySelector(".f-name").value.trim();
       if (name === "") { return; }
-      out.push({
-        time: time,
+      riders.push({
         name: name,
         place: tr.querySelector(".f-place").value.trim(),
         phone: tr.querySelector(".f-phone").value.trim()
       });
     });
+    /* 탑승자가 없어도 시간대는 함께 보냅니다 (서버가 시간대를 따로 저장) */
+    slots.push({ time: slot.querySelector(".slot-time").value.trim(), riders: riders });
   });
-  return out;
+  return slots;
+}
+
+function countRiders(slots) {
+  var n = 0;
+  slots.forEach(function (s) { n += s.riders.length; });
+  return n;
 }
 
 /* ---------- 서버 연동 ---------- */
@@ -251,15 +258,13 @@ function load() {
       return r.json();
     })
     .then(function (res) {
-      var byTime = {};
-      var order = [];
-      (res.riders || []).forEach(function (r) {
-        if (!byTime[r.time]) { byTime[r.time] = []; order.push(r.time); }
-        byTime[r.time].push(r);
-      });
-      if (order.length === 0) { order = DEFAULT_TIMES.slice(); order.forEach(function (t) { byTime[t] = []; }); }
-      render(order.map(function (t) { return { time: t, riders: byTime[t] }; }));
-      setStatus(order.length + "개 시간대, 총 " + (res.riders || []).length + "명을 불러왔습니다.", "ok");
+      var slots = res.slots || [];
+      if (slots.length === 0) {
+        slots = DEFAULT_TIMES.map(function (t) { return { time: t, riders: [] }; });
+      }
+      render(slots);
+      var by = res.updatedBy ? " (마지막 저장: " + res.updatedBy + ")" : "";
+      setStatus(slots.length + "개 시간대, 총 " + countRiders(slots) + "명을 불러왔습니다." + by, "ok");
     })
     .catch(function (err) {
       render(DEFAULT_TIMES.map(function (t) { return { time: t, riders: [] }; }));
@@ -278,13 +283,13 @@ document.getElementById("btnAddSlot").addEventListener("click", function () {
 document.getElementById("btnSave").addEventListener("click", function () {
   var date = dateEl.value;
   if (!date) { setStatus("날짜를 선택해주세요.", "err"); return; }
-  var riders = collect();
+  var slots = collect();
   setStatus("저장 중...");
   fetch("api/shuttle.php", {
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "save_all", date: date, riders: riders })
+    body: JSON.stringify({ action: "save_all", date: date, slots: slots })
   })
     .then(function (r) {
       if (r.status === 401) { throw new Error("로그인이 만료됐습니다. 관리자 홈에서 다시 로그인해주세요."); }
@@ -292,7 +297,7 @@ document.getElementById("btnSave").addEventListener("click", function () {
     })
     .then(function (res) {
       if (res.error) { throw new Error(res.error); }
-      setStatus(date + " 명단 " + riders.length + "명을 저장했습니다.", "ok");
+      setStatus(date + " 명단을 저장했습니다 (" + slots.length + "개 시간대, " + countRiders(slots) + "명).", "ok");
     })
     .catch(function (err) { setStatus(err.message, "err"); });
 });
