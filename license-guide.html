@@ -251,8 +251,7 @@ var NODES = {
     {t:"원동기장치자전거면허", go:"WD"},
     {t:"제1종 대형면허", go:"DH"},
     {t:"소형견인차면허", go:"SG"},
-    {t:"대형견인차면허", go:"DG"},
-    {t:"구난차면허", go:"GN"}
+    {t:"대형견인차면허", go:"DG"}
   ]},
   B2: { q:"현재 어떤 상태이신가요?", opts:[
     {t:"운전면허가 전혀 없어요 (처음 취득)", code:"B2-01"},
@@ -343,12 +342,6 @@ var NODES = {
     {t:"제1종 특수면허가 있어요", code:"DG-03"},
     {t:"소형견인차면허가 있어요", code:"DG-04"},
     {t:"대형견인차면허가 취소되어 다시 따려고 해요", code:"DG-05"}
-  ]},
-  GN: { q:"현재 어떤 상태이신가요?", opts:[
-    {t:"운전면허가 전혀 없어요", blocked:"구난차면허는 1종 대형면허 또는 특수면허를 먼저 보유해야 취득할 수 있어요."},
-    {t:"제1종 대형면허가 있어요", code:"GN-02"},
-    {t:"제1종 특수면허가 있어요", code:"GN-03"},
-    {t:"구난차면허가 취소되어 다시 따려고 해요", code:"GN-04"}
   ]}
 };
 
@@ -376,8 +369,7 @@ var DATA = {
       WD:{ gi:42500, doro:null, hak:null, examGi:40000, examDoro:null },
       DH:{ gi:68000, doro:null, hak:11000, examGi:68000, examDoro:null },
       SG:{ gi:70000, doro:null, hak:null, examGi:70000, examDoro:null },
-      DG:{ gi:80000, doro:null, hak:null, examGi:70000, examDoro:null },
-      GN:{ gi:null, doro:null, hak:null, examGi:null, examDoro:null }
+      DG:{ gi:80000, doro:null, hak:null, examGi:70000, examDoro:null }
     }
   },
   cases:{
@@ -389,13 +381,13 @@ var DATA = {
     "B1-01":{status:"ok", target:"제1종 보통면허", hours:{hak:[3,3],gi:[4,4],doro:[6,6]}, cost:{hak:30000,gi:220000,doro:330000}, note:"처음 취득하시는 표준 과정이에요."},
     "B1-02":{status:"ok", target:"제1종 보통면허", hours:{hak:[2,2],gi:[4,4],doro:[6,6]}, cost:{hak:20000,gi:220000,doro:330000}, note:"원동기면허가 있어 학과교육이 2시간으로 줄어들어요."},
     "B1-03":{status:"ok", target:"제1종 보통면허", hours:{hak:[2,2],gi:[4,4],doro:[6,6]}, cost:{hak:20000,gi:220000,doro:330000}, note:"2종소형면허가 있어 학과교육이 2시간으로 줄어들어요."},
-    "TM-01":{status:"ok", target:"제1종 보통면허(수동)", hours:{hak:[0,0],gi:[0,0],doro:[3,3]}, cost:{hak:0,gi:0,doro:330000}, note:"2종보통(수동) 보유자의 표준 전환 과정이에요. 기능교육은 면제돼요."},
-    "TM-02":{status:"warn", target:"제1종 보통면허(자동)", hours:{hak:[0,0],gi:[0,0],doro:[3,3]}, cost:{hak:0,gi:0,doro:330000}, note:"실제 사례가 드문 조합이라 상담을 통해 한 번 더 확인해드려요."},
-    "TM-03":{status:"ok", target:"제1종 보통면허(자동)", hours:{hak:[0,0],gi:[0,0],doro:[3,3]}, cost:{hak:0,gi:0,doro:330000}, note:"자동↔자동 전환이라 기능교육이 면제돼요."},
+    "TM-01":{status:"ok", target:"제1종 보통면허(수동)", hours:{hak:[0,0],gi:[0,0],doro:[3,3]}, cost:{hak:0,gi:0,doro:165000}, note:"2종보통(수동) 보유자의 표준 전환 과정이에요. 기능교육은 면제돼요."},
+    "TM-02":{status:"warn", target:"제1종 보통면허(자동)", hours:{hak:[0,0],gi:[0,0],doro:[3,3]}, cost:{hak:0,gi:0,doro:165000}, note:"실제 사례가 드문 조합이라 상담을 통해 한 번 더 확인해드려요."},
+    "TM-03":{status:"ok", target:"제1종 보통면허(자동)", hours:{hak:[0,0],gi:[0,0],doro:[3,3]}, cost:{hak:0,gi:0,doro:165000}, note:"자동↔자동 전환이라 기능교육이 면제돼요."},
     "TM-04":{status:"ok", target:"제1종 보통면허(수동)", hours:{hak:[0,0],gi:[0,0],doro:[6,6]}, cost:{hak:0,gi:0,doro:330000}, note:"학과·장내기능 교육이 모두 면제되고, 도로주행 6시간 이수 후 도로주행 시험만 보시면 돼요."},
     "CD-01":{status:"ok", target:"제1종 보통면허(수동)", hours:{hak:[0,0],gi:[4,4],doro:[0,0]}, cost:{hak:0,gi:220000,doro:0}, note:"1종보통(자동) 보유자가 수동으로 전환하는 과정이에요. 학과·도로주행은 면제되고, 장내기능 4시간 이수 후 장내기능 시험만 보시면 돼요."},
     "B1-05":{status:"doc", target:"제1종 보통면허", note:"학과·기능·도로주행 시험 없이 서류(운전경력증명서 등)로 전환할 수 있어요. 정확한 절차와 수수료는 상담 시 안내해드려요."},
-    "B1-06":{status:"ok", target:"제1종 보통면허", hours:{hak:[0,0],gi:[0,0],doro:[6,6]}, cost:{hak:0,gi:0,doro:330000}, note:"대형·특수·소형면허 보유자에게 적용되는 학원 자율 과정이에요."},
+    "B1-06":{status:"ok", target:"제1종 보통면허", hours:{hak:[3,3],gi:[4,4],doro:[6,6]}, cost:{hak:30000,gi:220000,doro:330000}, note:"대형·특수·소형면허 보유자에게 별도 감면 규정이 없어, 처음 취득하시는 경우와 동일한 기준이 적용돼요."},
     "B1-07":{status:"ok", target:"제1종 보통면허", hours:{hak:[1,1],gi:[2,2],doro:[6,6]}, cost:{hak:10000,gi:110000,doro:330000}, note:"취소 후 재취득 할인 과정이 적용돼요."},
     "B1-08":{status:"ok", target:"제1종 보통면허", hours:{hak:[0,0],gi:[0,0],doro:[6,6]}, cost:{hak:0,gi:0,doro:330000}, note:"학과·기능 교육을 이미 마치셨어요. 도로주행만 남았어요."},
     "S2-01":{status:"ok", target:"제2종 소형면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:0,gi:400000,doro:null}, note:"학과교육 비용은 별도로 받지 않아요."},
@@ -416,10 +408,7 @@ var DATA = {
     "DG-02":{status:"ok", target:"대형견인차면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:30000,gi:800000,doro:null}, note:"감면 조항이 없어 표준 기준이 그대로 적용돼요."},
     "DG-03":{status:"ok", target:"대형견인차면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:30000,gi:800000,doro:null}, note:"감면 조항이 없어 표준 기준이 그대로 적용돼요."},
     "DG-04":{status:"ok", target:"대형견인차면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:30000,gi:800000,doro:null}, note:"감면 조항이 없어 표준 기준이 그대로 적용돼요."},
-    "DG-05":{status:"ok", target:"대형견인차면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:30000,gi:800000,doro:null}, note:"취소 후 재취득도 동일한 요금이 적용돼요."},
-    "GN-02":{status:"warn", target:"구난차면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:"unknown",gi:"unknown",doro:null}, note:"교육시간은 확정됐지만 정확한 수강료는 학원에 문의해주세요."},
-    "GN-03":{status:"warn", target:"구난차면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:"unknown",gi:"unknown",doro:null}, note:"교육시간은 확정됐지만 정확한 수강료는 학원에 문의해주세요."},
-    "GN-04":{status:"warn", target:"구난차면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:"unknown",gi:"unknown",doro:null}, note:"교육시간은 확정됐지만 정확한 수강료는 학원에 문의해주세요."}
+    "DG-05":{status:"ok", target:"대형견인차면허", hours:{hak:[3,3],gi:[10,10],doro:null}, cost:{hak:30000,gi:800000,doro:null}, note:"취소 후 재취득도 동일한 요금이 적용돼요."}
   }
 };
 /* DATA_END */
@@ -483,8 +472,7 @@ var SCHEDULE_BY_PREFIX = {
   S2:{ label:"1·2종 보통면허 · 2종소형면허", lines:["화·수·토 10:00 ~ 12:50","목요일 13:30 ~ 16:20"] },
   DH:{ label:"대형·특수면허", lines:["화·수·토 09:00 ~ 11:50","목요일 14:30 ~ 17:20"] },
   SG:{ label:"대형·특수면허", lines:["화·수·토 09:00 ~ 11:50","목요일 14:30 ~ 17:20"] },
-  DG:{ label:"대형·특수면허", lines:["화·수·토 09:00 ~ 11:50","목요일 14:30 ~ 17:20"] },
-  GN:{ label:"대형·특수면허", lines:["화·수·토 09:00 ~ 11:50","목요일 14:30 ~ 17:20"] }
+  DG:{ label:"대형·특수면허", lines:["화·수·토 09:00 ~ 11:50","목요일 14:30 ~ 17:20"] }
 };
 
 function renderFlow(c){
@@ -614,8 +602,7 @@ var VEHICLE_ICONS={
   WD:'<circle cx="5" cy="18" r="2.4"/><circle cx="17" cy="18" r="2.4"/><path d="M7 18h6l1.5-5h3.5M12 18l2-8h2"/>',
   DH:'<rect x="1" y="7" width="20" height="9" rx="1.5"/><path d="M1 11h20"/><path d="M4.5 7v4M18 7v4"/><circle cx="5.5" cy="18.5" r="1.8"/><circle cx="16.5" cy="18.5" r="1.8"/>',
   SG:'<path d="M1 12 2 9a1.5 1.5 0 0 1 1.5-1h3a1.5 1.5 0 0 1 1.5 1L9 12"/><rect x="0.5" y="12" width="10" height="5" rx="1.5"/><circle cx="3" cy="18" r="1.6"/><circle cx="8" cy="18" r="1.6"/><path d="M11 15h2"/><rect x="14" y="12" width="9" height="5" rx="2.2"/><circle cx="17" cy="18" r="1.4"/><circle cx="21" cy="18" r="1.4"/><path d="M17.5 14.2h2.4"/>',
-  DG:'<rect x="1" y="10" width="7" height="7" rx="1"/><circle cx="3.5" cy="18.5" r="1.6"/><circle cx="6.5" cy="18.5" r="1.6"/><path d="M8 13h1.5"/><rect x="10" y="9" width="12" height="8" rx="1"/><circle cx="13" cy="18.5" r="1.6"/><circle cx="19" cy="18.5" r="1.6"/>',
-  GN:'<rect x="1" y="9" width="6" height="7" rx="1"/><circle cx="4" cy="18.5" r="1.7"/><rect x="7" y="14" width="15" height="2.2" rx="0.6"/><circle cx="19" cy="18.5" r="1.7"/><path d="M9.5 14 10.3 11a1 1 0 0 1 1-.8h2.4a1 1 0 0 1 1 .8L15.5 14"/><rect x="9" y="14" width="7" height="2" rx="0.5"/>'
+  DG:'<rect x="1" y="10" width="7" height="7" rx="1"/><circle cx="3.5" cy="18.5" r="1.6"/><circle cx="6.5" cy="18.5" r="1.6"/><path d="M8 13h1.5"/><rect x="10" y="9" width="12" height="8" rx="1"/><circle cx="13" cy="18.5" r="1.6"/><circle cx="19" cy="18.5" r="1.6"/>'
 };
 var VEHICLE_COND={
   B2:"승용차·10인승 이하 승합차 운전 가능",
@@ -624,8 +611,7 @@ var VEHICLE_COND={
   WD:"125cc 이하 이륜차 운전 가능",
   DH:"대형버스·대형화물차 운전 가능",
   SG:"카라반 등 소형 트레일러 견인 가능",
-  DG:"대형 트레일러(10톤 초과) 견인 가능",
-  GN:"구난차(렉카) 운전 가능"
+  DG:"대형 트레일러(10톤 초과) 견인 가능"
 };
 function vehicleIcon(key){
   var inner=VEHICLE_ICONS[key];
