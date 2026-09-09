@@ -191,6 +191,33 @@
 .lvt-req span { font-size: 13px; color: var(--color-muted); }
 .lvt-req .check { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 800; color: #1f8a5f; background: #e4f5ec; border-radius: 999px; padding: 5px 11px; white-space: nowrap; }
 
+/* --- 핵심 차별점: 1교시 50분 온전한 1:1 --- */
+.lvt-solo-lead { max-width: 62ch; margin: 0 auto; text-align: center; font-size: 15px; line-height: 1.85; color: var(--color-body); }
+.lvt-compare { display: flex; flex-direction: column; gap: 16px; margin-top: 34px; }
+.lvt-cmp {
+  background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: 22px 24px;
+}
+.lvt-cmp.mine { border-color: var(--color-primary); border-width: 2px; }
+.lvt-cmp-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.lvt-cmp-head b { font-size: 15.5px; font-weight: 800; color: var(--color-ink); }
+.lvt-cmp-head span { font-size: 13px; color: var(--color-muted); }
+.lvt-cmp.mine .lvt-cmp-head b { color: var(--color-primary-dark); }
+.lvt-bar { display: flex; gap: 4px; height: 46px; }
+.lvt-bar > span {
+  flex: 1; background: var(--color-line); border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11.5px; font-weight: 800; color: var(--color-muted);
+}
+.lvt-bar > span.on { background: var(--color-accent); color: #1f2a44; }
+.lvt-bar.full > span { background: linear-gradient(120deg, var(--color-primary), #ffb43d); color: #fff; font-size: 14px; }
+.lvt-cmp-foot { margin-top: 12px; font-size: 13px; color: var(--color-muted); line-height: 1.7; }
+.lvt-cmp.mine .lvt-cmp-foot { color: var(--color-body); }
+.lvt-ask {
+  margin-top: 30px; text-align: center; background: var(--color-primary-light);
+  border-radius: var(--radius-md); padding: 20px 24px; font-size: 14.5px; line-height: 1.8; color: var(--color-ink);
+}
+.lvt-ask strong { color: var(--color-primary-dark); }
+
 /* --- 핵심 차별점: 채용 시험 코스 --- */
 .lvt-course {
   display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 44px; align-items: center;
@@ -269,6 +296,8 @@
   .lvt-hero .container { grid-template-columns: 1fr; gap: 32px; padding-top: 52px; padding-bottom: 52px; }
   .lvt-rare { grid-template-columns: 1fr; gap: 30px; }
   .lvt-course { grid-template-columns: 1fr; gap: 30px; padding: 34px 26px; }
+  .lvt-bar > span { font-size: 10.5px; }
+  .lvt-bar.full > span { font-size: 13px; }
   .lvt-curri, .lvt-target-grid, .lvt-photo-row { grid-template-columns: 1fr; }
   .lvt-pain-grid { grid-template-columns: 1fr; }
   .lvt-final { padding: 40px 26px; }
@@ -316,43 +345,16 @@
   <!-- ================= 히어로 ================= -->
   <section class="lvt-hero">
     <div class="container">
-/* --- 핵심 차별점: 1교시 50분 온전한 1:1 --- */
-.lvt-solo-lead { max-width: 62ch; margin: 0 auto; text-align: center; font-size: 15px; line-height: 1.85; color: var(--color-body); }
-.lvt-compare { display: flex; flex-direction: column; gap: 16px; margin-top: 34px; }
-.lvt-cmp {
-  background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: 22px 24px;
-}
-.lvt-cmp.mine { border-color: var(--color-primary); border-width: 2px; }
-.lvt-cmp-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
-.lvt-cmp-head b { font-size: 15.5px; font-weight: 800; color: var(--color-ink); }
-.lvt-cmp-head span { font-size: 13px; color: var(--color-muted); }
-.lvt-cmp.mine .lvt-cmp-head b { color: var(--color-primary-dark); }
-.lvt-bar { display: flex; gap: 4px; height: 46px; }
-.lvt-bar > span {
-  flex: 1; background: var(--color-line); border-radius: 6px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11.5px; font-weight: 800; color: var(--color-muted);
-}
-.lvt-bar > span.on { background: var(--color-accent); color: #1f2a44; }
-.lvt-bar.full > span { background: linear-gradient(120deg, var(--color-primary), #ffb43d); color: #fff; font-size: 14px; }
-.lvt-cmp-foot { margin-top: 12px; font-size: 13px; color: var(--color-muted); line-height: 1.7; }
-.lvt-cmp.mine .lvt-cmp-foot { color: var(--color-body); }
-.lvt-ask {
-  margin-top: 30px; text-align: center; background: var(--color-primary-light);
-  border-radius: var(--radius-md); padding: 20px 24px; font-size: 14.5px; line-height: 1.8; color: var(--color-ink);
-}
-.lvt-ask strong { color: var(--color-primary-dark); }
-
       <div>
         <span class="lvt-badge">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.6 6.3 6.8.5-5.2 4.4 1.6 6.6L12 16.3 6.2 19.8l1.6-6.6L2.6 8.8l6.8-.5z"/></svg>
-          찾기 힘든 과정, 대형연수
+          찾기 힘든 과정, 광주 대형연수
         </span>
         <h1>대형면허가 있지만,<br><em>버스는 못 몰겠다면</em></h1>
         <p class="lvt-lead">
           시험 합격과 실제 운행은 전혀 다른 이야기입니다.
           차폭 감각도, 내륜차도, 정류장에 정확히 대는 것도 실제 대형차를 잡아봐야 늘어요.
-          영진은 <strong>실제 대형차량으로 실제 도로에서</strong>, 처음 핸들을 잡는 순간부터 1:1로 함께합니다.
+          영진자동차운전전문학원은 <strong>실제 대형차량으로 실제 도로에서</strong>, 대형버스·대형화물 핸들을 처음 잡는 순간부터 1:1로 함께합니다.
         </p>
         <div class="lvt-hero-actions">
           <a href="contact.html" class="btn btn-accent">대형연수 상담 신청</a>
@@ -421,8 +423,6 @@
           <rect x="425" y="192" width="19" height="50" rx="4" fill="url(#lvtGlass)"/>
 
           <!-- 헤드라이트 -->
-  .lvt-bar > span { font-size: 10.5px; }
-  .lvt-bar.full > span { font-size: 13px; }
           <rect x="556" y="248" width="32" height="14" rx="7" fill="#ffe6a8"/>
 
           <!-- 바퀴 -->
@@ -482,6 +482,49 @@
       <p class="lvt-pain-answer">
         그래서 필요한 게 <em>대형연수</em>입니다.<br>
         면허와 실전 사이의 간격을, 안전한 환경에서 미리 좁혀두는 과정이에요.
+      </p>
+    </div>
+  </section>
+
+  <!-- ================= 핵심 차별점: 온전한 1:1 50분 ================= -->
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">1:1 원칙</span>
+        <h2>1교시 50분, 온전히 한 분만 태웁니다</h2>
+      </div>
+
+      <p class="lvt-solo-lead">
+        대형연수는 <strong>한 대에 여러 명이 함께 타고 돌아가며</strong> 잠깐씩 운전하는 방식으로 진행되기도 합니다.
+        이 경우 함께 타는 인원이 많을수록 내가 실제로 핸들을 잡는 시간은 짧아집니다.
+        영진은 <strong>1교시 50분을 한 분만을 위해</strong> 씁니다. 차에는 수강생 한 분과 강사만 탑니다.
+      </p>
+
+      <div class="lvt-compare">
+        <div class="lvt-cmp">
+          <div class="lvt-cmp-head">
+            <b>여러 명이 함께 타는 경우</b><span>같은 50분을 나눠 씁니다</span>
+          </div>
+          <div class="lvt-bar">
+            <span class="on">내 차례</span><span>대기</span><span>대기</span><span>대기</span><span>대기</span>
+          </div>
+          <p class="lvt-cmp-foot">나머지 시간은 뒷자리에서 다른 분의 주행을 봅니다. 인원이 늘수록 내 차례는 더 짧아집니다.</p>
+        </div>
+
+        <div class="lvt-cmp mine">
+          <div class="lvt-cmp-head">
+            <b>영진 대형연수</b><span>1교시 50분 · 1:1</span>
+          </div>
+          <div class="lvt-bar full">
+            <span>50분 전부 내 운전 시간</span>
+          </div>
+          <p class="lvt-cmp-foot">처음부터 끝까지 직접 운전하고, 강사는 옆에서 내 운전만 봅니다. 궁금한 것도 그 자리에서 바로 물어볼 수 있어요.</p>
+        </div>
+      </div>
+
+      <p class="lvt-ask">
+        어디서 연수를 받으시든, 상담할 때 <strong>"한 차에 몇 명이 함께 타나요?"</strong> 이 한 가지는 꼭 확인해보세요.<br>
+        같은 시간, 같은 비용이라도 실제로 운전해보는 시간은 크게 달라집니다.
       </p>
     </div>
   </section>
@@ -611,56 +654,13 @@
       </div>
     </div>
   </section>
-  <!-- ================= 핵심 차별점: 온전한 1:1 50분 ================= -->
-  <section class="section section-alt">
-    <div class="container">
-      <div class="section-head">
-        <span class="eyebrow">1:1 원칙</span>
-        <h2>1교시 50분, 온전히 한 분만 태웁니다</h2>
-      </div>
-
-      <p class="lvt-solo-lead">
-        대형연수는 <strong>한 대에 여러 명이 함께 타고 돌아가며</strong> 잠깐씩 운전하는 방식으로 진행되기도 합니다.
-        이 경우 함께 타는 인원이 많을수록 내가 실제로 핸들을 잡는 시간은 짧아집니다.
-        영진은 <strong>1교시 50분을 한 분만을 위해</strong> 씁니다. 차에는 수강생 한 분과 강사만 탑니다.
-      </p>
-
-      <div class="lvt-compare">
-        <div class="lvt-cmp">
-          <div class="lvt-cmp-head">
-            <b>여러 명이 함께 타는 경우</b><span>같은 50분을 나눠 씁니다</span>
-          </div>
-          <div class="lvt-bar">
-            <span class="on">내 차례</span><span>대기</span><span>대기</span><span>대기</span><span>대기</span>
-          </div>
-          <p class="lvt-cmp-foot">나머지 시간은 뒷자리에서 다른 분의 주행을 봅니다. 인원이 늘수록 내 차례는 더 짧아집니다.</p>
-        </div>
-
-        <div class="lvt-cmp mine">
-          <div class="lvt-cmp-head">
-            <b>영진 대형연수</b><span>1교시 50분 · 1:1</span>
-          </div>
-          <div class="lvt-bar full">
-            <span>50분 전부 내 운전 시간</span>
-          </div>
-          <p class="lvt-cmp-foot">처음부터 끝까지 직접 운전하고, 강사는 옆에서 내 운전만 봅니다. 궁금한 것도 그 자리에서 바로 물어볼 수 있어요.</p>
-        </div>
-      </div>
-
-      <p class="lvt-ask">
-        어디서 연수를 받으시든, 상담할 때 <strong>"한 차에 몇 명이 함께 타나요?"</strong> 이 한 가지는 꼭 확인해보세요.<br>
-        같은 시간, 같은 비용이라도 실제로 운전해보는 시간은 크게 달라집니다.
-      </p>
-    </div>
-  </section>
-
 
   <!-- ================= 커리큘럼 ================= -->
   <section class="section">
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">CURRICULUM</span>
-        <h2>무엇을 배우게 되나요?</h2>
+        <h2>대형연수에서 무엇을 배우게 되나요?</h2>
         <p>대형차를 처음 잡는 분도 실제 운행이 가능한 수준까지, 순서대로 익힙니다.</p>
       </div>
 
@@ -724,7 +724,7 @@
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">COURSES</span>
-        <h2>이런 분들이 찾으십니다</h2>
+        <h2>대형버스·대형화물, 이런 분들이 찾으십니다</h2>
         <p>목적에 따라 연습 내용과 시간을 다르게 구성해드립니다.</p>
       </div>
 
@@ -786,7 +786,7 @@
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">PROCESS</span>
-        <h2>이렇게 진행됩니다</h2>
+        <h2>대형연수, 이렇게 진행됩니다</h2>
         <p>정해진 커리큘럼에 맞추는 게 아니라, 수강생 상태에 맞춰 진행합니다.</p>
       </div>
       <div class="steps">
@@ -806,7 +806,7 @@
     <div class="container">
       <div class="section-head">
         <span class="eyebrow">FAQ</span>
-        <h2>자주 묻는 질문</h2>
+        <h2>대형연수 자주 묻는 질문</h2>
       </div>
       <div class="lvt-faq">
         <details open>
@@ -816,6 +816,10 @@
         <details>
           <summary>버스회사 채용 시험 코스도 연습할 수 있나요?</summary>
           <div class="a">네. 주요 버스회사가 채용 실기 시험에 사용하는 코스를 파악하고 있어, 시험 전에 해당 코스를 미리 주행해보실 수 있습니다. 다만 코스는 회사와 시기에 따라 달라질 수 있으니, 지원하시려는 회사를 말씀해주시면 상담 시 확인해 안내해드립니다.</div>
+        </details>
+        <details>
+          <summary>한 차에 몇 명이 함께 타나요?</summary>
+          <div class="a">수강생 한 분과 강사, 두 사람만 탑니다. 1교시 50분 전부를 한 분이 운전하시고, 다른 수강생과 시간을 나눠 쓰지 않습니다.</div>
         </details>
         <details>
           <summary>몇 시간 정도 받아야 하나요?</summary>
@@ -924,7 +928,3 @@
 <script src="js/main.js"></script>
 </body>
 </html>
-        <details>
-          <summary>한 차에 몇 명이 함께 타나요?</summary>
-          <div class="a">수강생 한 분과 강사, 두 사람만 탑니다. 1교시 50분 전부를 한 분이 운전하시고, 다른 수강생과 시간을 나눠 쓰지 않습니다.</div>
-        </details>

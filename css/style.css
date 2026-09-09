@@ -358,6 +358,9 @@ button { font-family: inherit; cursor: pointer; }
 .feature-card .icon svg { width: 26px; height: 26px; }
 .feature-card h3 { font-size: 17px; font-weight: 700; color: var(--color-ink); margin-bottom: 8px; }
 .feature-card p { font-size: 14.5px; color: var(--color-muted); }
+a.feature-card { display: block; color: inherit; }
+a.feature-card .fc-more { display: inline-block; margin-top: 14px; font-size: 13.5px; font-weight: 800; color: var(--color-primary); }
+a.feature-card:hover .fc-more { color: var(--color-primary-dark); }
 
 /* ---------- Course cards ---------- */
 .course-card {
