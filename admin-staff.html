@@ -229,8 +229,8 @@ fetch("api/auth.php").then(function(r){ return r.json(); }).then(function(res){
     loadingMsg.style.display = "none";
     mainArea.style.display = "block";
   });
-}).catch(function(){
-  loadingMsg.textContent = "서버(api)에 접속할 수 없습니다. DB 연동 배포 전(정적 미리보기)에는 이 페이지가 동작하지 않아요.";
+}).catch(function(err){
+  loadingMsg.textContent = "서버(api)에 접속할 수 없습니다. config.php 설정, DB 연결, 서버의 PHP 실행 여부를 확인해주세요. (" + (err && err.message ? err.message : err) + ")";
 });
 
 })();

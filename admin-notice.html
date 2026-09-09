@@ -253,8 +253,10 @@ fetch("api/auth.php").then(function(r){ return r.json(); }).then(function(res){
     loadingMsg.style.display = "none";
     mainArea.style.display = "block";
   });
-}).catch(function(){
-  loadingMsg.textContent = "서버(api)에 접속할 수 없습니다. DB 연동 배포 전(정적 미리보기)에는 이 페이지가 동작하지 않아요.";
+}).catch(function(err){
+  /* 서버가 실제로는 응답했지만 JSON이 아닌 내용(오류 페이지 등)을 돌려준 경우도
+     있으므로, "정적 미리보기라 안 됩니다"로 단정하지 않고 실제 오류를 보여줍니다. */
+  loadingMsg.textContent = "서버(api)에 접속할 수 없습니다. config.php 설정, DB 연결, 서버의 PHP 실행 여부를 확인해주세요. (" + (err && err.message ? err.message : err) + ")";
 });
 
 })();

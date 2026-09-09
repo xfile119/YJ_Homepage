@@ -152,7 +152,11 @@ function load() {
     .then(function (r) {
       if (r.status === 401) { throw new Error("로그인이 필요합니다. 관리자 홈에서 로그인해주세요."); }
       if (r.status === 403) { throw new Error("이 화면은 관리자 계정만 사용할 수 있습니다."); }
-      if (!r.ok) { throw new Error("서버(api)에 접속할 수 없습니다."); }
+      if (!r.ok) {
+        return r.json().catch(function () { return null; }).then(function (body) {
+          throw new Error(body && body.error ? body.error : "서버(api)에 접속할 수 없습니다. (HTTP " + r.status + ")");
+        });
+      }
       return r.json();
     })
     .then(function (res) { render(res.users || [], res.me); setStatus(""); })
