@@ -53,6 +53,19 @@ function yj_require_login() {
     }
 }
 
+/* 현재 로그인한 계정의 권한: 'admin'(전체) 또는 'office'(셔틀 명단만) */
+function yj_role() {
+    return isset($_SESSION['yj_role']) ? $_SESSION['yj_role'] : 'admin';
+}
+
+/* 공지·수강료·임직원·업로드처럼 원장님만 손대야 하는 기능에 씁니다. */
+function yj_require_admin() {
+    yj_require_login();
+    if (yj_role() !== 'admin') {
+        yj_json(['error' => '이 작업은 관리자 계정만 할 수 있습니다.'], 403);
+    }
+}
+
 function yj_input() {
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true);

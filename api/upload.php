@@ -6,7 +6,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     yj_json(['error' => 'Method not allowed'], 405);
 }
 
-yj_require_login();
+yj_require_admin();
 
 if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
     yj_json(['error' => '파일을 받지 못했습니다.'], 400);

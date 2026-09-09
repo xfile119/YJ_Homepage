@@ -63,16 +63,17 @@
   </div>
 
   <div class="admin-section" id="unlockedPanel">
-    <h2 style="font-size:16px;font-weight:800;color:var(--color-ink);margin-bottom:18px;">관리 도구</h2>
+    <h2 style="font-size:16px;font-weight:800;color:var(--color-ink);margin-bottom:6px;">관리 도구</h2>
+    <p id="whoAmI" style="font-size:13px;color:var(--color-muted);margin-bottom:18px;"></p>
     <div class="tool-list">
-      <div class="tool-card">
+      <div class="tool-card" data-admin-only>
         <div>
           <h3>공지사항 관리</h3>
           <p>공지사항 추가·수정·삭제, 홈 화면 미리보기 반영</p>
         </div>
         <a href="admin-notice.html" class="btn btn-primary btn-sm">열기</a>
       </div>
-      <div class="tool-card">
+      <div class="tool-card" data-admin-only>
         <div>
           <h3>수강료 · 교육시간 관리</h3>
           <p>면허가이드 페이지의 학원 정보, 응시료, 케이스별 교육시간·수강료 수정</p>
@@ -86,12 +87,19 @@
         </div>
         <a href="admin-shuttle.html" class="btn btn-primary btn-sm">열기</a>
       </div>
-      <div class="tool-card">
+      <div class="tool-card" data-admin-only>
         <div>
           <h3>임직원 관리</h3>
           <p>임직원 추가·수정·삭제, 사진·성향(MBTI)·근무형태·강의종별 관리 — 학원소개 페이지 강사진에 반영</p>
         </div>
         <a href="admin-staff.html" class="btn btn-primary btn-sm">열기</a>
+      </div>
+      <div class="tool-card" data-admin-only>
+        <div>
+          <h3>계정 관리</h3>
+          <p>셔틀 명단을 작성할 사무실 계정(office1~3)의 비밀번호 변경·추가·삭제</p>
+        </div>
+        <a href="admin-accounts.html" class="btn btn-primary btn-sm">열기</a>
       </div>
     </div>
     <button type="button" id="btnLock" class="btn btn-outline btn-sm" style="margin-top:20px;">로그아웃</button>
@@ -114,10 +122,24 @@ function showLogin(){
   loginPanel.style.display = "block";
   unlockedPanel.style.display = "none";
 }
-function showUnlocked(){
+function showUnlocked(username, role){
   checkingMsg.style.display = "none";
   loginPanel.style.display = "none";
   unlockedPanel.style.display = "block";
+
+  /* office 계정은 셔틀 명단만 쓸 수 있으므로 나머지 도구는 감춥니다.
+     (화면에서 감추는 것과 별개로 서버에서도 막고 있습니다) */
+  var isOffice = role === "office";
+  [].forEach.call(document.querySelectorAll("[data-admin-only]"), function(el){
+    el.style.display = isOffice ? "none" : "";
+  });
+  var who = document.getElementById("whoAmI");
+  if (username) {
+    who.textContent = username + " 계정으로 로그인했습니다 · "
+      + (isOffice ? "셔틀 명단 작성 권한" : "전체 관리 권한");
+  } else {
+    who.textContent = "";
+  }
 }
 function showError(msg){
   loginError.textContent = msg;
@@ -125,7 +147,7 @@ function showError(msg){
 }
 
 fetch("api/auth.php").then(function(r){ return r.json(); }).then(function(res){
-  if (res && res.loggedIn) showUnlocked(); else showLogin();
+  if (res && res.loggedIn) showUnlocked(res.username, res.role); else showLogin();
 }).catch(function(){
   showLogin();
   loginError.textContent = "서버(api/auth.php) 상태 확인에 실패했습니다. DB 연동 배포 전(정적 미리보기)이거나 서버 설정에 문제가 있을 수 있어요. 그래도 로그인을 시도해볼 수 있습니다.";
@@ -140,7 +162,7 @@ document.getElementById("btnLogin").addEventListener("click", function(){
     body: JSON.stringify({ action: "login", username: userInput.value, password: pwInput.value })
   }).then(function(r){ return r.json().then(function(data){ return { ok: r.ok, data: data }; }); })
     .then(function(res){
-      if (res.ok) { showUnlocked(); } else { showError(res.data.error || "로그인에 실패했습니다."); }
+      if (res.ok) { showUnlocked(res.data.username, res.data.role); } else { showError(res.data.error || "로그인에 실패했습니다."); }
     }).catch(function(){ showError("서버에 접속할 수 없습니다."); });
 });
 pwInput.addEventListener("keydown", function(e){

@@ -4,7 +4,11 @@ require __DIR__ . '/_db.php';
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
-    yj_json(['loggedIn' => !empty($_SESSION['yj_admin'])]);
+    yj_json([
+        'loggedIn' => !empty($_SESSION['yj_admin']),
+        'username' => isset($_SESSION['yj_admin']) ? $_SESSION['yj_admin'] : '',
+        'role' => !empty($_SESSION['yj_admin']) ? yj_role() : '',
+    ]);
 }
 
 if ($method !== 'POST') {
@@ -16,6 +20,7 @@ $action = isset($body['action']) ? $body['action'] : 'login';
 
 if ($action === 'logout') {
     unset($_SESSION['yj_admin']);
+    unset($_SESSION['yj_role']);
     yj_json(['ok' => true]);
 }
 
@@ -27,7 +32,7 @@ if ($username === '' || $password === '') {
 }
 
 $table = yj_table('admin_users');
-$stmt = yj_db()->prepare("SELECT password_hash FROM $table WHERE username = ? LIMIT 1");
+$stmt = yj_db()->prepare("SELECT password_hash, role FROM $table WHERE username = ? LIMIT 1");
 $stmt->execute([$username]);
 $row = $stmt->fetch();
 
@@ -35,5 +40,7 @@ if (!$row || !password_verify($password, $row['password_hash'])) {
     yj_json(['error' => '아이디 또는 비밀번호가 올바르지 않습니다.'], 401);
 }
 
+$role = (isset($row['role']) && $row['role'] === 'office') ? 'office' : 'admin';
 $_SESSION['yj_admin'] = $username;
-yj_json(['ok' => true]);
+$_SESSION['yj_role'] = $role;
+yj_json(['ok' => true, 'username' => $username, 'role' => $role]);

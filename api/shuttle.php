@@ -27,7 +27,7 @@ if ($method === 'GET') {
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
         yj_json(['error' => '날짜 형식이 올바르지 않습니다 (YYYY-MM-DD).'], 400);
     }
-    $stmt = yj_db()->prepare("SELECT id, depart_time, name, place, phone FROM $table WHERE ride_date = ? ORDER BY depart_time ASC, sort_order ASC, id ASC");
+    $stmt = yj_db()->prepare("SELECT id, depart_time, name, place, phone, updated_by FROM $table WHERE ride_date = ? ORDER BY depart_time ASC, sort_order ASC, id ASC");
     $stmt->execute([$date]);
     $riders = array_map(function ($r) {
         return [
@@ -37,8 +37,13 @@ if ($method === 'GET') {
             'place' => $r['place'],
             'phone' => $r['phone'],
         ];
-    }, $stmt->fetchAll());
-    yj_json(['date' => $date, 'riders' => $riders]);
+    }, $rows = $stmt->fetchAll());
+    /* 이 날짜 명단을 마지막으로 저장한 사람 (여러 직원이 함께 쓰므로 표시해줍니다) */
+    $updatedBy = '';
+    foreach ($rows as $r) {
+        if ($r['updated_by'] !== '') { $updatedBy = $r['updated_by']; }
+    }
+    yj_json(['date' => $date, 'riders' => $riders, 'updatedBy' => $updatedBy]);
 }
 
 if ($method !== 'POST') {
@@ -73,12 +78,14 @@ if ($action === 'lookup') {
     }
 
     $today = date('Y-m-d');
+    /* 이름은 공백을 무시하고 비교합니다 (명단에 "홍 길동"으로 적혀 있어도 "홍길동"으로 조회되도록) */
+    $nameKey = preg_replace('/\s+/u', '', $name);
     $stmt = yj_db()->prepare(
         "SELECT ride_date, depart_time, name, place, phone FROM $table
-         WHERE ride_date >= ? AND name = ?
+         WHERE ride_date >= ? AND REPLACE(REPLACE(name, ' ', ''), '\t', '') = ?
          ORDER BY ride_date ASC, depart_time ASC"
     );
-    $stmt->execute([$today, $name]);
+    $stmt->execute([$today, $nameKey]);
 
     /* 전화번호 뒷자리 대조는 PHP에서 처리합니다 (DB에 하이픈 유무가 섞여 있어도 맞도록) */
     $mine = [];
@@ -115,7 +122,7 @@ try {
     $del = $db->prepare("DELETE FROM $table WHERE ride_date = ?");
     $del->execute([$date]);
 
-    $insert = $db->prepare("INSERT INTO $table (ride_date, depart_time, name, place, phone, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
+    $insert = $db->prepare("INSERT INTO $table (ride_date, depart_time, name, place, phone, sort_order, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
     $i = 0;
     foreach (array_values($rows) as $r) {
         $time = trim((string)(isset($r['time']) ? $r['time'] : ''));
@@ -125,7 +132,7 @@ try {
         /* 이름이 비어 있는 줄(빈 칸)은 저장하지 않습니다 */
         if ($name === '') { $i++; continue; }
         if ($time === '') { $time = '미정'; }
-        $insert->execute([$date, $time, $name, $place, $phone, $i]);
+        $insert->execute([$date, $time, $name, $place, $phone, $i, $_SESSION['yj_admin']]);
         $i++;
     }
     $db->commit();

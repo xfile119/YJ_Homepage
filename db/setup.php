@@ -33,6 +33,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}admin_users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   username VARCHAR(50) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
+  role VARCHAR(20) NOT NULL DEFAULT 'admin',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
@@ -75,6 +76,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}shuttle_riders (
   place VARCHAR(100) NOT NULL DEFAULT '',
   phone VARCHAR(30) NOT NULL DEFAULT '',
   sort_order INT NOT NULL DEFAULT 0,
+  updated_by VARCHAR(50) NOT NULL DEFAULT '',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_ride_date (ride_date),
   INDEX idx_name (name)
@@ -92,6 +94,8 @@ function yj_ensure_column($pdo, $table, $column, $definition) {
 yj_ensure_column($pdo, $prefix . 'notices', 'content', 'MEDIUMTEXT NULL');
 yj_ensure_column($pdo, $prefix . 'notices', 'image', 'VARCHAR(255) NULL');
 yj_ensure_column($pdo, $prefix . 'staff', 'greeting', 'VARCHAR(200) NULL');
+yj_ensure_column($pdo, $prefix . 'admin_users', 'role', "VARCHAR(20) NOT NULL DEFAULT 'admin'");
+yj_ensure_column($pdo, $prefix . 'shuttle_riders', 'updated_by', "VARCHAR(50) NOT NULL DEFAULT ''");
 
 $noticeCount = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}notices")->fetchColumn();
 if ($noticeCount === 0) {
@@ -164,6 +168,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([$username, $hash]);
         $done = true;
         $message = '관리자 계정이 생성/변경되었습니다.';
+    }
+}
+
+/* 셔틀 명단 작성용 office 계정 3개를 만들어 둡니다.
+   비밀번호는 임시값이며, 관리자 화면의 "계정 관리"에서 반드시 바꿔주세요. */
+$officeTempPw = 'yjoffice1234';
+$officeIns = $pdo->prepare("INSERT INTO {$prefix}admin_users (username, password_hash, role) VALUES (?, ?, 'office')");
+foreach (['office1', 'office2', 'office3'] as $officeName) {
+    $chk = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}admin_users WHERE username = ?");
+    $chk->execute([$officeName]);
+    if ((int)$chk->fetchColumn() === 0) {
+        $officeIns->execute([$officeName, password_hash($officeTempPw, PASSWORD_DEFAULT)]);
     }
 }
 
