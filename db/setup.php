@@ -71,7 +71,9 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}staff (
 $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}shuttle_riders (
   id INT AUTO_INCREMENT PRIMARY KEY,
   ride_date VARCHAR(10) NOT NULL,
+  slot_no INT NOT NULL DEFAULT -1,
   depart_time VARCHAR(10) NOT NULL DEFAULT '',
+  board_time VARCHAR(10) NOT NULL DEFAULT '',
   name VARCHAR(50) NOT NULL DEFAULT '',
   place VARCHAR(100) NOT NULL DEFAULT '',
   phone VARCHAR(30) NOT NULL DEFAULT '',
@@ -86,7 +88,9 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}shuttle_riders (
 $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}shuttle_slots (
   id INT AUTO_INCREMENT PRIMARY KEY,
   ride_date VARCHAR(10) NOT NULL,
+  slot_no INT NOT NULL DEFAULT -1,
   depart_time VARCHAR(10) NOT NULL DEFAULT '',
+  vehicle VARCHAR(40) NOT NULL DEFAULT '',
   sort_order INT NOT NULL DEFAULT 0,
   INDEX idx_slot_date (ride_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
@@ -105,6 +109,27 @@ yj_ensure_column($pdo, $prefix . 'notices', 'image', 'VARCHAR(255) NULL');
 yj_ensure_column($pdo, $prefix . 'staff', 'greeting', 'VARCHAR(200) NULL');
 yj_ensure_column($pdo, $prefix . 'admin_users', 'role', "VARCHAR(20) NOT NULL DEFAULT 'admin'");
 yj_ensure_column($pdo, $prefix . 'shuttle_riders', 'updated_by', "VARCHAR(50) NOT NULL DEFAULT ''");
+
+/* 2026-09: 셔틀 명단 확장
+   - slot_no  : 시간이 아니라 "운행 편성 번호"로 사람과 편성을 묶습니다(시간을 고쳐도 명단이 따라옵니다).
+   - board_time: 탑승 장소마다 태우는 시각이 다르므로 사람별 탑승시간.
+   - vehicle  : 같은 시간에 여러 대가 나가므로 차량 호수/번호. */
+yj_ensure_column($pdo, $prefix . 'shuttle_riders', 'slot_no', 'INT NOT NULL DEFAULT -1');
+yj_ensure_column($pdo, $prefix . 'shuttle_riders', 'board_time', "VARCHAR(10) NOT NULL DEFAULT ''");
+yj_ensure_column($pdo, $prefix . 'shuttle_slots', 'slot_no', 'INT NOT NULL DEFAULT -1');
+yj_ensure_column($pdo, $prefix . 'shuttle_slots', 'vehicle', "VARCHAR(40) NOT NULL DEFAULT ''");
+
+/* 옛 데이터 이어붙이기: 편성 번호가 없던 기존 행에 번호를 매깁니다. 여러 번 실행해도 안전합니다. */
+$pdo->exec("UPDATE {$prefix}shuttle_slots SET slot_no = sort_order WHERE slot_no < 0");
+$pdo->exec(
+    "UPDATE {$prefix}shuttle_riders r
+       JOIN {$prefix}shuttle_slots s
+         ON s.ride_date = r.ride_date AND s.depart_time = r.depart_time
+        SET r.slot_no = s.slot_no
+      WHERE r.slot_no < 0"
+);
+/* 시간대 표가 아예 없던 더 옛날 데이터는 0번 편성으로 모읍니다 */
+$pdo->exec("UPDATE {$prefix}shuttle_riders SET slot_no = 0 WHERE slot_no < 0");
 
 $noticeCount = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}notices")->fetchColumn();
 if ($noticeCount === 0) {

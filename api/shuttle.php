@@ -1,9 +1,15 @@
 <?php
 /* 셔틀(차량 운행) 명단 API
    - GET  ?date=YYYY-MM-DD  : 해당 날짜 전체 명단 (관리자 로그인 필요)
-   - POST action=save_all   : 해당 날짜의 시간대+명단 통째로 저장 (관리자 로그인 필요)
-     시간대(slots)를 따로 저장하므로, 탑승자가 없는 시간대도 유지됩니다.
+   - POST action=save_all   : 해당 날짜의 운행 편성+명단 통째로 저장 (관리자 로그인 필요)
+     편성(slots)을 따로 저장하므로, 탑승자가 없는 편성도 유지됩니다.
    - POST action=lookup     : 수강생 본인 조회 (로그인 불필요, 본인 것만 반환)
+
+   "편성(slot)" 한 건 = 차량 한 대의 한 번 운행입니다. 같은 시간에 여러 대가
+   동시에 나갈 수 있으므로 편성마다 차량(호수/번호)을 둡니다. 사람과 편성은
+   시간 문자열이 아니라 slot_no로 묶습니다 — 그래야 출발시간을 고쳐도 명단이
+   그대로 따라옵니다. 탑승 장소마다 태우는 시각이 다르므로 탑승시간(board_time)은
+   사람마다 따로 적을 수 있고, 비워두면 편성의 출발시간을 씁니다.
 
    개인정보(이름·연락처)를 다루므로 lookup은 아래 원칙을 지킵니다.
    1) 이름과 전화번호 뒷 4자리가 모두 맞아야 하고,
@@ -23,15 +29,37 @@ function yj_digits($s) {
     return preg_replace('/[^0-9]/', '', (string)$s);
 }
 
+/* 새로 추가한 칸(slot_no·board_time·vehicle)이 아직 없는 서버에서, 무슨 일인지 알 수 있게 안내합니다.
+   db/setup.php를 한 번 더 실행하면 칸이 만들어집니다. */
+function yj_shuttle_db_error($e) {
+    $msg = $e->getMessage();
+    if (strpos($msg, 'Unknown column') !== false || strpos($msg, '42S22') !== false) {
+        yj_json(['error' => '셔틀 명단 표에 새 칸(차량·탑승시간)이 아직 없습니다. db/setup.php를 한 번 더 실행해주세요.'], 500);
+    }
+    yj_json(['error' => 'DB 오류: ' . $msg], 500);
+}
+
+/* 차량 표기 등 길이 제한 (한글도 글자 수 기준으로 세도록) */
+function yj_strlen($s) {
+    return function_exists('mb_strlen') ? mb_strlen($s, 'UTF-8') : strlen($s);
+}
+function yj_cut($s, $n) {
+    return function_exists('mb_substr') ? mb_substr($s, 0, $n, 'UTF-8') : substr($s, 0, $n);
+}
+
 if ($method === 'GET') {
     yj_require_login();
     $date = isset($_GET['date']) ? (string)$_GET['date'] : '';
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
         yj_json(['error' => '날짜 형식이 올바르지 않습니다 (YYYY-MM-DD).'], 400);
     }
-    $stmt = yj_db()->prepare("SELECT depart_time, name, place, phone, updated_by FROM $table WHERE ride_date = ? ORDER BY sort_order ASC, id ASC");
-    $stmt->execute([$date]);
-    $rows = $stmt->fetchAll();
+    try {
+        $stmt = yj_db()->prepare("SELECT slot_no, depart_time, board_time, name, place, phone, updated_by FROM $table WHERE ride_date = ? ORDER BY sort_order ASC, id ASC");
+        $stmt->execute([$date]);
+        $rows = $stmt->fetchAll();
+    } catch (PDOException $e) {
+        yj_shuttle_db_error($e);
+    }
 
     /* 이 날짜 명단을 마지막으로 저장한 사람 (여러 직원이 함께 쓰므로 표시해줍니다) */
     $updatedBy = '';
@@ -39,28 +67,48 @@ if ($method === 'GET') {
         if ($r['updated_by'] !== '') { $updatedBy = $r['updated_by']; }
     }
 
-    /* 저장된 시간대 목록. 탑승자가 없는 시간대도 여기에 남아 있습니다. */
-    $slotStmt = yj_db()->prepare("SELECT depart_time FROM $slotTable WHERE ride_date = ? ORDER BY sort_order ASC, id ASC");
-    $slotStmt->execute([$date]);
-    $times = [];
-    foreach ($slotStmt->fetchAll() as $s) { $times[] = $s['depart_time']; }
+    /* 저장된 운행 편성 목록. 탑승자가 없는 편성도 여기에 남아 있습니다. */
+    try {
+        $slotStmt = yj_db()->prepare("SELECT slot_no, depart_time, vehicle FROM $slotTable WHERE ride_date = ? ORDER BY sort_order ASC, id ASC");
+        $slotStmt->execute([$date]);
+        $slotRows = $slotStmt->fetchAll();
+    } catch (PDOException $e) {
+        yj_shuttle_db_error($e);
+    }
 
-    /* 옛 데이터(시간대 표가 생기기 전)를 위해, 시간대 기록이 없으면 탑승자에게서 뽑아냅니다 */
-    if (empty($times)) {
+    /* 옛 데이터(편성 표가 생기기 전)를 위해, 편성 기록이 없으면 탑승자에게서 뽑아냅니다 */
+    if (empty($slotRows)) {
+        $seen = [];
         foreach ($rows as $r) {
-            if (!in_array($r['depart_time'], $times, true)) { $times[] = $r['depart_time']; }
+            if (!in_array($r['depart_time'], $seen, true)) {
+                $seen[] = $r['depart_time'];
+                $slotRows[] = ['slot_no' => null, 'depart_time' => $r['depart_time'], 'vehicle' => ''];
+            }
         }
     }
 
     $slots = [];
-    foreach ($times as $t) {
+    foreach ($slotRows as $sr) {
         $list = [];
         foreach ($rows as $r) {
-            if ($r['depart_time'] === $t) {
-                $list[] = ['name' => $r['name'], 'place' => $r['place'], 'phone' => $r['phone']];
+            /* 편성 번호로 묶되, 번호가 없는 옛 행은 시간으로 맞춰봅니다 */
+            $mine = ($sr['slot_no'] !== null && (int)$r['slot_no'] >= 0)
+                ? ((int)$r['slot_no'] === (int)$sr['slot_no'])
+                : ($r['depart_time'] === $sr['depart_time']);
+            if ($mine) {
+                $list[] = [
+                    'name' => $r['name'],
+                    'place' => $r['place'],
+                    'phone' => $r['phone'],
+                    'boardTime' => $r['board_time'],
+                ];
             }
         }
-        $slots[] = ['time' => $t, 'riders' => $list];
+        $slots[] = [
+            'time' => $sr['depart_time'],
+            'vehicle' => $sr['vehicle'],
+            'riders' => $list,
+        ];
     }
 
     yj_json(['date' => $date, 'slots' => $slots, 'updatedBy' => $updatedBy]);
@@ -100,10 +148,15 @@ if ($action === 'lookup') {
     $today = date('Y-m-d');
     /* 이름은 공백을 무시하고 비교합니다 (명단에 "홍 길동"으로 적혀 있어도 "홍길동"으로 조회되도록) */
     $nameKey = preg_replace('/\s+/u', '', $name);
+    /* 차량(호수/번호)은 편성 표에 있으므로 함께 붙여옵니다 */
     $stmt = yj_db()->prepare(
-        "SELECT ride_date, depart_time, name, place, phone FROM $table
-         WHERE ride_date >= ? AND REPLACE(REPLACE(name, ' ', ''), '\t', '') = ?
-         ORDER BY ride_date ASC, depart_time ASC"
+        "SELECT r.ride_date, r.depart_time, r.board_time, r.name, r.place, r.phone,
+                COALESCE(s.vehicle, '') AS vehicle
+           FROM $table r
+           LEFT JOIN $slotTable s
+             ON s.ride_date = r.ride_date AND s.slot_no = r.slot_no AND r.slot_no >= 0
+          WHERE r.ride_date >= ? AND REPLACE(REPLACE(r.name, ' ', ''), '\t', '') = ?
+          ORDER BY r.ride_date ASC, r.depart_time ASC"
     );
     $stmt->execute([$today, $nameKey]);
 
@@ -111,10 +164,14 @@ if ($action === 'lookup') {
     $mine = [];
     foreach ($stmt->fetchAll() as $r) {
         if (substr(yj_digits($r['phone']), -4) === $tail) {
+            /* 개인 탑승시간이 적혀 있으면 그 시간을, 없으면 편성 출발시간을 안내합니다 */
+            $boardTime = trim((string)$r['board_time']);
             $mine[] = [
                 'date' => $r['ride_date'],
-                'time' => $r['depart_time'],
+                'time' => ($boardTime !== '' ? $boardTime : $r['depart_time']),
+                'departTime' => $r['depart_time'],
                 'place' => $r['place'],
+                'vehicle' => $r['vehicle'],
             ];
         }
     }
@@ -142,39 +199,44 @@ try {
     $db->prepare("DELETE FROM $table WHERE ride_date = ?")->execute([$date]);
     $db->prepare("DELETE FROM $slotTable WHERE ride_date = ?")->execute([$date]);
 
-    $slotIns = $db->prepare("INSERT INTO $slotTable (ride_date, depart_time, sort_order) VALUES (?, ?, ?)");
-    $insert = $db->prepare("INSERT INTO $table (ride_date, depart_time, name, place, phone, sort_order, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $slotIns = $db->prepare("INSERT INTO $slotTable (ride_date, slot_no, depart_time, vehicle, sort_order) VALUES (?, ?, ?, ?, ?)");
+    $insert = $db->prepare("INSERT INTO $table (ride_date, slot_no, depart_time, board_time, name, place, phone, sort_order, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     $slotIndex = 0;
     $rowIndex = 0;
     foreach (array_values($slots) as $slot) {
         $time = trim((string)(isset($slot['time']) ? $slot['time'] : ''));
+        $vehicle = trim((string)(isset($slot['vehicle']) ? $slot['vehicle'] : ''));
+        if (yj_strlen($vehicle) > 40) { $vehicle = yj_cut($vehicle, 40); }
         $riders = isset($slot['riders']) && is_array($slot['riders']) ? $slot['riders'] : [];
 
-        /* 시간도 안 적고 사람도 없는 빈 시간대는 버립니다 */
+        /* 시간도 차량도 안 적고 사람도 없는 빈 편성은 버립니다 */
         $hasRider = false;
         foreach ($riders as $r) {
             if (trim((string)(isset($r['name']) ? $r['name'] : '')) !== '') { $hasRider = true; break; }
         }
-        if ($time === '' && !$hasRider) { continue; }
+        if ($time === '' && $vehicle === '' && !$hasRider) { continue; }
         if ($time === '') { $time = '미정'; }
 
-        /* 탑승자가 없어도 시간대 자체는 남깁니다 (다음에 열었을 때 그대로 보이도록) */
-        $slotIns->execute([$date, $time, $slotIndex]);
-        $slotIndex++;
+        /* 탑승자가 없어도 편성 자체는 남깁니다 (다음에 열었을 때 그대로 보이도록) */
+        $slotIns->execute([$date, $slotIndex, $time, $vehicle, $slotIndex]);
 
         foreach (array_values($riders) as $r) {
             $name = trim((string)(isset($r['name']) ? $r['name'] : ''));
             if ($name === '') { continue; }
             $place = trim((string)(isset($r['place']) ? $r['place'] : ''));
             $phone = trim((string)(isset($r['phone']) ? $r['phone'] : ''));
-            $insert->execute([$date, $time, $name, $place, $phone, $rowIndex, $_SESSION['yj_admin']]);
+            /* 개인 탑승시간. 비워두면 편성 출발시간을 그대로 씁니다 */
+            $boardTime = trim((string)(isset($r['boardTime']) ? $r['boardTime'] : ''));
+            $insert->execute([$date, $slotIndex, $time, $boardTime, $name, $place, $phone, $rowIndex, $_SESSION['yj_admin']]);
             $rowIndex++;
         }
+        $slotIndex++;
     }
     $db->commit();
 } catch (Exception $e) {
     $db->rollBack();
+    if ($e instanceof PDOException) { yj_shuttle_db_error($e); }
     yj_json(['error' => '저장 실패: ' . $e->getMessage()], 500);
 }
 

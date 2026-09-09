@@ -44,7 +44,12 @@ CREATE TABLE IF NOT EXISTS {prefix}staff (
 CREATE TABLE IF NOT EXISTS {prefix}shuttle_riders (
   id INT AUTO_INCREMENT PRIMARY KEY,
   ride_date VARCHAR(10) NOT NULL,
+  -- slot_no = 이 사람이 타는 운행 편성 번호({prefix}shuttle_slots.slot_no와 짝)
+  -- 시간이 바뀌어도 소속이 유지되도록, 시간이 아니라 번호로 묶습니다. -1 = 옛 데이터(미배정)
+  slot_no INT NOT NULL DEFAULT -1,
   depart_time VARCHAR(10) NOT NULL DEFAULT '',
+  -- 탑승 장소마다 태우는 시각이 다르므로 사람별 탑승시간을 따로 둡니다. 비우면 출발시간과 같습니다.
+  board_time VARCHAR(10) NOT NULL DEFAULT '',
   name VARCHAR(50) NOT NULL DEFAULT '',
   place VARCHAR(100) NOT NULL DEFAULT '',
   phone VARCHAR(30) NOT NULL DEFAULT '',
@@ -58,7 +63,11 @@ CREATE TABLE IF NOT EXISTS {prefix}shuttle_riders (
 CREATE TABLE IF NOT EXISTS {prefix}shuttle_slots (
   id INT AUTO_INCREMENT PRIMARY KEY,
   ride_date VARCHAR(10) NOT NULL,
+  -- 한 날짜에 여러 대가 동시에 움직이므로, 시간대가 아니라 "운행 편성" 한 건입니다.
+  slot_no INT NOT NULL DEFAULT -1,
   depart_time VARCHAR(10) NOT NULL DEFAULT '',
+  -- 차량 호수 또는 차량번호 (예: 1호차, 광주70바1234)
+  vehicle VARCHAR(40) NOT NULL DEFAULT '',
   sort_order INT NOT NULL DEFAULT 0,
   INDEX idx_slot_date (ride_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
