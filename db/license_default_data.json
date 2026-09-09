@@ -12,6 +12,7 @@
       "B2": { "gi": 55000, "doro": 55000, "hak": null, "examGi": 50000, "examDoro": 50000 },
       "B1": { "gi": 55000, "doro": 55000, "hak": null, "examGi": 50000, "examDoro": 50000 },
       "TM": { "gi": 55000, "doro": 55000, "hak": null, "examGi": 50000, "examDoro": 50000 },
+      "CD": { "gi": 55000, "doro": 55000, "hak": null, "examGi": 50000, "examDoro": 50000 },
       "S2": { "gi": 40000, "doro": null, "hak": 0, "examGi": 40000, "examDoro": null },
       "WD": { "gi": 42500, "doro": null, "hak": null, "examGi": 40000, "examDoro": null },
       "DH": { "gi": 68000, "doro": null, "hak": 11000, "examGi": 68000, "examDoro": null },
@@ -298,8 +299,8 @@
           0
         ],
         "gi": [
-          4,
-          4
+          0,
+          0
         ],
         "doro": [
           6,
@@ -308,25 +309,34 @@
       },
       "cost": {
         "hak": 0,
-        "gi": 220000,
+        "gi": 0,
         "doro": 330000
       },
-      "note": "2종보통(자동)에서 1종보통(수동)을 취득하는 경우라 기능·도로주행은 원칙 시간이 적용돼요."
+      "note": "학과·장내기능 교육이 모두 면제되고, 도로주행 6시간 이수 후 도로주행 시험만 보시면 돼요."
     },
     "CD-01": {
-      "status": "unknown",
+      "status": "ok",
       "target": "제1종 보통면허(수동)",
       "hours": {
-        "hak": null,
-        "gi": null,
-        "doro": null
+        "hak": [
+          0,
+          0
+        ],
+        "gi": [
+          4,
+          4
+        ],
+        "doro": [
+          0,
+          0
+        ]
       },
       "cost": {
-        "hak": null,
-        "gi": null,
-        "doro": null
+        "hak": 0,
+        "gi": 220000,
+        "doro": 0
       },
-      "note": "이 조합은 절차가 아직 확정되지 않았어요. 학원에 직접 문의해주시면 정확히 안내해드릴게요."
+      "note": "1종보통(자동) 보유자가 수동으로 전환하는 과정이에요. 학과·도로주행은 면제되고, 장내기능 4시간 이수 후 장내기능 시험만 보시면 돼요."
     },
     "B1-05": {
       "status": "doc",
