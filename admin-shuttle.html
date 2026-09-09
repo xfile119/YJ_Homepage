@@ -64,7 +64,8 @@
     font-family: inherit; font-size: 14px; color: var(--color-ink);
   }
   table.rider-table input:focus { outline: 2px solid var(--color-primary); outline-offset: -2px; border-radius: 4px; }
-  table.rider-table input[type="time"] { font-variant-numeric: tabular-nums; }
+  table.rider-table input.yj-time { font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+  input.yj-time.is-bad { outline: 2px solid #c53030; outline-offset: -2px; border-radius: 4px; }
   table.rider-table td.col-time input { text-align: center; }
   table.rider-table td.col-del { width: 34px; text-align: center; }
   @media (max-width: 560px) {
@@ -97,11 +98,9 @@
     .slot-head input { border: none; padding: 2px 0; background: transparent; }
     .slot-field label { color: #444; }
     .col-del { display: none; }
-    /* 종이 양식처럼 보이도록: 시계 아이콘과 빈 시간칸("--:--")은 인쇄에서 감춥니다 */
-    input[type="time"]::-webkit-calendar-picker-indicator { display: none; }
-    input.is-empty { visibility: hidden; }
     /* 안내용 예시 글자(placeholder)가 실제로 적힌 값처럼 인쇄되면 안 됩니다 */
     input::placeholder { color: transparent; }
+    input.yj-time.is-bad { outline: none; }
   }
   .print-title { display: none; }
 </style>
@@ -144,6 +143,17 @@
   <div class="slot-grid" id="slotGrid"></div>
 </div>
 
+<!-- 자주 쓰는 출발 시간 (직접 입력도 됩니다) -->
+<datalist id="timeOptions">
+  <option value="08:30"></option>
+  <option value="09:30"></option>
+  <option value="10:30"></option>
+  <option value="13:30"></option>
+  <option value="14:30"></option>
+  <option value="16:30"></option>
+  <option value="18:30"></option>
+</datalist>
+
 <!-- 차량 칸에서 자주 쓰는 값을 골라 넣을 수 있게 합니다 (직접 입력도 됩니다) -->
 <datalist id="vehicleOptions">
   <option value="1호차"></option>
@@ -163,11 +173,14 @@ var DEFAULT_SLOTS = [
 ];
 var ROWS_PER_SLOT = 10;
 
-/* <input type="time">은 HH:MM만 받습니다. "8:30", "0830" 같은 옛 표기를 맞춰줍니다.
+/* "8:30", "0830", "8시30" 같은 표기를 08:30 모양으로 맞춰줍니다.
    시간으로 읽을 수 없으면 빈 값을 돌려주고, 원래 글자는 화면에 따로 알려줍니다. */
 function normTime(v) {
   var t = String(v == null ? "" : v).trim();
   if (t === "") { return ""; }
+  /* "8" 처럼 시(時)만 적으면 08:00으로 봅니다 */
+  var hourOnly = t.match(/^(\d{1,2})\s*시?$/);
+  if (hourOnly) { t = hourOnly[1] + ":00"; }
   var m = t.match(/^(\d{1,2})\s*[:시]?\s*(\d{2})$/);
   if (!m) { return ""; }
   var h = Number(m[1]), mi = Number(m[2]);
@@ -195,11 +208,46 @@ function todayStr() {
   return d.getFullYear() + "-" + (m.length < 2 ? "0" + m : m) + "-" + (day.length < 2 ? "0" + day : day);
 }
 
+/* ---------- 시간 입력 도우미 ----------
+   브라우저 내장 시간 위젯(<input type="time">)은 칸을 눌러도 커서만 생기고
+   숫자가 안 먹히는 경우가 있어(그리고 "오전 08:30"처럼 종이 양식과 다르게 보여서)
+   평범한 글자 칸으로 두고, 숫자만 치면 자동으로 08:30 모양이 되게 합니다. */
+function attachTimeHelpers(root) {
+  root.addEventListener("input", function (e) {
+    var el = e.target;
+    if (!el.classList || !el.classList.contains("yj-time")) { return; }
+    /* 숫자만 남기고 4자리까지만 받습니다. maxlength로 막으면 칸이 꽉 찼을 때
+       커서만 깜빡이고 글자가 안 들어가서, 고칠 수 없는 칸처럼 보입니다. */
+    var d = el.value.replace(/[^0-9]/g, "").slice(0, 4);
+    var next = (d.length >= 3) ? (d.slice(0, d.length - 2) + ":" + d.slice(-2)) : d;
+    if (el.value !== next) { el.value = next; }
+    el.classList.remove("is-bad");
+  });
+  /* 칸을 벗어날 때 08:30 모양으로 맞춰줍니다. 시간으로 읽을 수 없으면 빨갛게 표시합니다. */
+  root.addEventListener("blur", function (e) {
+    var el = e.target;
+    if (!el.classList || !el.classList.contains("yj-time")) { return; }
+    if (el.value.trim() === "") { el.classList.remove("is-bad"); return; }
+    var t = normTime(el.value);
+    if (t === "") { el.classList.add("is-bad"); }
+    else { el.value = t; el.classList.remove("is-bad"); }
+  }, true);
+  /* 칸을 누를 때마다 전체를 선택해줍니다. 그래야 바로 새 시간을 쳐서 덮어쓸 수 있습니다
+     (커서만 놓이면 "고쳐지지 않는다"고 느끼게 됩니다). */
+  function selectAll(e) {
+    var el = e.target;
+    if (el.classList && el.classList.contains("yj-time") && el.value !== "") { el.select(); }
+  }
+  root.addEventListener("focus", selectAll, true);
+  root.addEventListener("click", selectAll);
+}
+
 /* ---------- 렌더링 ---------- */
 function rowHtml(r) {
   return '<tr>'
     + '<td><input class="f-name" value="' + esc(r.name) + '" /></td>'
-    + '<td class="col-time"><input type="time" class="f-time" value="' + esc(normTime(r.boardTime)) + '" /></td>'
+    + '<td class="col-time"><input type="text" class="f-time yj-time" inputmode="numeric" '
+    +   'placeholder="--:--" value="' + esc(normTime(r.boardTime)) + '" /></td>'
     + '<td><input class="f-place" value="' + esc(r.place) + '" /></td>'
     + '<td><input class="f-phone" value="' + esc(r.phone) + '" inputmode="tel" /></td>'
     + '<td class="col-del"><button type="button" class="btn-del-row" title="이 줄 지우기">×</button></td>'
@@ -221,7 +269,8 @@ function slotHtml(slot) {
   return '<div class="slot">'
     + '<div class="slot-head">'
     +   '<div class="slot-field"><label>출발 시간</label>'
-    +     '<input type="time" class="slot-time" value="' + esc(time) + '" /></div>'
+    +     '<input type="text" class="slot-time yj-time" inputmode="numeric" '
+    +       'list="timeOptions" placeholder="08:30" value="' + esc(time) + '" /></div>'
     +   '<div class="slot-field"><label>차량 (호수·번호)</label>'
     +     '<input type="text" class="slot-vehicle" list="vehicleOptions" placeholder="1호차" value="' + esc(slot.vehicle || "") + '" /></div>'
     +   '<span class="slot-count"></span>'
@@ -317,11 +366,28 @@ function countRiders(slots) {
 }
 
 /* ---------- 서버 연동 ---------- */
+/* 불러오기가 느릴 때 사용자가 먼저 입력을 시작하면, 뒤늦게 도착한 응답이
+   화면을 통째로 다시 그리면서 방금 친 내용을 지워버립니다. 그래서
+   ①요청에 번호를 붙여 마지막 요청의 응답만 반영하고 ②불러오는 동안에는
+   운행 추가·저장 버튼을 잠급니다. */
+var loadSeq = 0;
+var addBtn = document.getElementById("btnAddSlot");
+var saveBtn = document.getElementById("btnSave");
+var loadBtn = document.getElementById("btnLoad");
+
+function setBusy(busy) {
+  addBtn.disabled = busy;
+  saveBtn.disabled = busy;
+  loadBtn.disabled = busy;
+}
+
 function load() {
   var date = dateEl.value;
   if (!date) { setStatus("날짜를 선택해주세요.", "err"); return; }
+  var my = ++loadSeq;
   printTitle.textContent = "차량 운행 명단 (" + date.slice(5).replace("-", "/") + ")";
   setStatus("불러오는 중...");
+  setBusy(true);
   fetch("api/shuttle.php?date=" + encodeURIComponent(date), { credentials: "same-origin" })
     .then(function (r) {
       if (r.status === 401) { throw new Error("로그인이 필요합니다. 관리자 홈에서 로그인해주세요."); }
@@ -329,6 +395,7 @@ function load() {
       return r.json();
     })
     .then(function (res) {
+      if (my !== loadSeq) { return; }   /* 더 최근 요청이 있으면 이 응답은 버립니다 */
       var slots = res.slots || [];
       if (slots.length === 0) { slots = DEFAULT_SLOTS; }
       render(slots);
@@ -336,9 +403,11 @@ function load() {
       setStatus(slots.length + "건의 운행, 총 " + countRiders(slots) + "명을 불러왔습니다." + by, "ok");
     })
     .catch(function (err) {
+      if (my !== loadSeq) { return; }
       render(DEFAULT_SLOTS);
       setStatus(err.message + " (빈 양식으로 시작합니다)", "err");
-    });
+    })
+    .then(function () { if (my === loadSeq) { setBusy(false); } });
 }
 
 document.getElementById("btnLoad").addEventListener("click", load);
@@ -355,6 +424,12 @@ document.getElementById("btnAddSlot").addEventListener("click", function () {
 document.getElementById("btnSave").addEventListener("click", function () {
   var date = dateEl.value;
   if (!date) { setStatus("날짜를 선택해주세요.", "err"); return; }
+  var bad = gridEl.querySelector(".yj-time.is-bad");
+  if (bad) {
+    bad.focus();
+    setStatus("시간을 08:30 같은 형태로 적어주세요.", "err");
+    return;
+  }
   var slots = collect();
   setStatus("저장 중...");
   fetch("api/shuttle.php", {
@@ -374,15 +449,7 @@ document.getElementById("btnSave").addEventListener("click", function () {
     .catch(function (err) { setStatus(err.message, "err"); });
 });
 
-/* 인쇄할 때 빈 시간칸이 "--:--"로 찍히지 않도록 표시해둡니다 */
-window.addEventListener("beforeprint", function () {
-  [].forEach.call(gridEl.querySelectorAll('input[type="time"]'), function (el) {
-    if (el.value === "") { el.classList.add("is-empty"); } else { el.classList.remove("is-empty"); }
-  });
-});
-window.addEventListener("afterprint", function () {
-  [].forEach.call(gridEl.querySelectorAll("input.is-empty"), function (el) { el.classList.remove("is-empty"); });
-});
+attachTimeHelpers(gridEl);
 
 /* 시작 */
 dateEl.value = todayStr();
