@@ -1,0 +1,21 @@
+# 영진자동차운전전문학원 robots.txt
+# 사이트를 하위 경로(예: /new)에 올려두신 동안에는 아래 Sitemap 주소도
+# 같은 경로로 맞춰 주세요. (예: https://www.yjcdrive.co.kr/new/sitemap.xml)
+
+User-agent: *
+Allow: /
+
+# 관리자 화면·API·업로드 원본은 검색 결과에 나올 필요가 없습니다.
+Disallow: /admin.html
+Disallow: /admin-accounts.html
+Disallow: /admin-license.html
+Disallow: /admin-notice.html
+Disallow: /admin-shuttle.html
+Disallow: /admin-staff.html
+Disallow: /shuttle.html
+Disallow: /notice-detail.html
+Disallow: /api/
+Disallow: /db/
+Disallow: /uploads/
+
+Sitemap: https://www.yjcdrive.co.kr/sitemap.xml

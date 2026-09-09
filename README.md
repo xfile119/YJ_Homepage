@@ -208,6 +208,44 @@
 - **요율표에 없는 면허 코드를 쓰면 검정료가 조용히 사라집니다.** `examFeeNumbers()`가 코드 앞부분(`TM-01`의 `TM`)으로 요율을 찾는데, 없는 타입이면 `null`을 반환해 검정료 칸이 통째로 안 나옵니다(CD-01이 실제로 이 상태였습니다). **새 케이스 코드를 만들 때는 반드시 `rates.types`에 같은 접두어를 추가**하세요 — `license-guide.html`, `db/license_default_data.json`, `admin-license.html` 세 곳 모두입니다.
 - **검산 방법**: 저장된 금액이 `교육시간 × 단가`와 맞는지 한 번에 확인하려면, `license-guide.html`의 `DATA` 블록을 파싱해 모든 케이스를 대조해보면 됩니다. 이 방식으로 TM-01/02/03 도로주행비(330,000 → 165,000)와 GN 학과비 오류를 찾아냈습니다.
 
+## 검색 노출(SEO) 작업 — 2026-09
+
+"검색이 잘 되도록" 요청에 따라 아래를 정리했습니다. 홍보 문구(전환용 카피)는 그대로 두고,
+**검색어는 title·description·소제목·본문에 자연스럽게** 넣는 방식을 택했습니다.
+(예: 홈 h1 "아이도 이해할 만큼 쉽고…"는 유지하고, 그 아래에 "광주 광산구 운전면허학원…" 안내 섹션을 새로 넣었습니다.)
+
+**⚠️ 도메인 주소가 한 곳에 박혀 있습니다.** 아래 파일들의 절대주소를 `https://www.yjcdrive.co.kr` 기준으로 적었습니다.
+사이트를 `yjcdrive.co.kr/new` 같은 **하위 경로에 올려두는 동안에는 주소가 실제와 다릅니다.** 확정되면 한 번에 바꾸세요:
+
+```bash
+# 예) /new 하위에 두는 경우
+grep -rl "https://www.yjcdrive.co.kr" *.html robots.txt sitemap.xml \
+  | xargs sed -i 's|https://www.yjcdrive.co.kr|https://www.yjcdrive.co.kr/new|g'
+```
+
+### 무엇을 넣었나
+
+| 항목 | 위치 | 설명 |
+| --- | --- | --- |
+| `<title>` / `description` | 공개 페이지 10개 | "광주", "광산구", "운전면허학원", "대형연수", "도로연수" 등 실제 검색어를 앞쪽에 배치 |
+| `<link rel="canonical">` | 공개 페이지 10개 | 중복 주소로 색인되는 것 방지 |
+| Open Graph / Twitter 카드 | 공개 페이지 10개 | 카카오톡·네이버·페이스북에 링크를 붙였을 때 썸네일과 문구가 나옵니다 |
+| 공유 썸네일 이미지 | `images/og-cover.jpg`, `images/og-large-vehicle.jpg` | 1200×630. 실제 사진이 준비되면 같은 크기로 교체하면 됩니다 |
+| 구조화 데이터(JSON-LD) | 각 페이지 `<head>` | `DrivingSchool`(상호·전화·팩스·주소·영업시간·과정 목록), `BreadcrumbList`, `Service`, `FAQPage`, `WebSite` |
+| `robots.txt` | 루트 | 관리자 화면·API·업로드 폴더는 색인 제외 |
+| `sitemap.xml` | 루트 | 공개 페이지 10개. 페이지를 추가하면 여기에도 추가하세요 |
+| `noindex` | `admin*.html`, `shuttle.html`, `notice-detail.html` | 검색 결과에 나오면 안 되는 화면 |
+
+`large-vehicle-training.html`의 FAQ 8개는 화면의 질문·답변과 **JSON-LD가 같은 내용**입니다.
+FAQ 문구를 고치면 `<head>`의 `FAQPage` 블록도 같이 고쳐야 검색 결과의 Q&A와 어긋나지 않습니다.
+
+### 배포 후에 사람이 해야 하는 것 (코드로는 못 합니다)
+
+1. **네이버 서치어드바이저**(searchadvisor.naver.com)와 **구글 서치콘솔**(search.google.com/search-console)에 사이트 등록 → `sitemap.xml` 제출. 지역 검색은 네이버 유입이 큽니다.
+2. **네이버 스마트플레이스 / 구글 비즈니스 프로필** 등록·정비. "광주 운전학원"처럼 지역+업종 검색은 홈페이지보다 지도·플레이스가 먼저 노출됩니다. **홈페이지 SEO보다 이쪽 효과가 큽니다.**
+3. 플레이스·홈페이지·블로그의 **상호/주소/전화번호 표기를 완전히 동일하게** 맞추기(검색엔진이 같은 업체로 인식하는 기준입니다).
+4. 공지사항을 주기적으로 올리기 — 갱신되는 페이지가 있는 사이트가 상위에 잘 올라갑니다.
+
 ## 확인된 학원 정보
 
 - 상호명: (주)영진자동차운전전문학원
