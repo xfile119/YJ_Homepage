@@ -295,18 +295,14 @@ button { font-family: inherit; cursor: pointer; }
 .hero-badge {
   position: relative;
   z-index: 1;
-  background: #fff;
-  color: var(--color-ink);
-  padding: 14px 18px;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
+  color: #fff;
   display: flex;
   align-items: center;
   gap: 10px;
   font-weight: 700;
   font-size: 14px;
 }
-.hero-badge .dot { width: 10px; height: 10px; border-radius: 50%; background: #23c16b; box-shadow: 0 0 0 4px rgba(35,193,107,0.18); }
+.hero-badge .dot { width: 10px; height: 10px; border-radius: 50%; background: #23c16b; box-shadow: 0 0 0 4px rgba(255,255,255,0.25); flex-shrink: 0; }
 
 /* ---------- Section basics ---------- */
 .section { padding: 88px 0; }
