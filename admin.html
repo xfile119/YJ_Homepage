@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="css/style.css" />
 <style>
   body { background: var(--color-surface); }
-  .admin-shell { max-width: 640px; margin: 0 auto; padding: 48px 24px 80px; }
+  .admin-shell { max-width: 800px; margin: 0 auto; padding: 48px 24px 80px; }
   .admin-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
   .admin-header h1 { font-size: 22px; font-weight: 800; color: var(--color-ink); }
   .admin-warning {
@@ -28,11 +28,20 @@
   #loginError { color: #d64545; font-size: 13px; font-weight: 700; margin-top: 10px; display: none; }
   .tool-list { display: flex; flex-direction: column; gap: 14px; }
   .tool-card {
-    display: flex; align-items: center; justify-content: space-between; gap: 16px;
-    border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: 18px 20px; flex-wrap: wrap;
+    display: flex; align-items: center; gap: 16px;
+    border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: 18px 20px;
   }
+  /* 설명 글이 길어 두 줄이 되어도 "열기" 버튼은 항상 같은 줄, 오른쪽 끝에 정렬되도록
+     텍스트 쪽만 줄어들게 하고(min-width:0) 버튼은 줄어들지 않게(flex:none) 고정합니다. */
+  .tool-card-body { flex: 1 1 auto; min-width: 0; }
   .tool-card h3 { font-size: 15.5px; font-weight: 800; color: var(--color-ink); margin-bottom: 4px; }
   .tool-card p { font-size: 12.5px; color: var(--color-muted); line-height: 1.6; }
+  .tool-card .btn { flex: none; }
+  @media (max-width: 480px) {
+    /* 화면이 아주 좁으면 그때는 버튼을 아래로 내려 줄바꿈을 허용합니다 */
+    .tool-card { flex-wrap: wrap; }
+    .tool-card .btn { margin-left: auto; }
+  }
   #unlockedPanel, #loginPanel { display: none; }
   #checkingMsg { font-size: 13px; color: var(--color-muted); }
 </style>
@@ -67,35 +76,35 @@
     <p id="whoAmI" style="font-size:13px;color:var(--color-muted);margin-bottom:18px;"></p>
     <div class="tool-list">
       <div class="tool-card" data-admin-only>
-        <div>
+        <div class="tool-card-body">
           <h3>공지사항 관리</h3>
           <p>공지사항 추가·수정·삭제, 홈 화면 미리보기 반영</p>
         </div>
         <a href="admin-notice.html" class="btn btn-primary btn-sm">열기</a>
       </div>
       <div class="tool-card" data-admin-only>
-        <div>
+        <div class="tool-card-body">
           <h3>수강료 · 교육시간 관리</h3>
           <p>면허가이드 페이지의 학원 정보, 응시료, 케이스별 교육시간·수강료 수정</p>
         </div>
         <a href="admin-license.html" class="btn btn-primary btn-sm">열기</a>
       </div>
       <div class="tool-card">
-        <div>
+        <div class="tool-card-body">
           <h3>차량 운행 명단 (셔틀)</h3>
           <p>날짜별 셔틀 탑승 명단 작성 — 저장하면 수강생이 셔틀 조회 페이지에서 본인 시간·장소를 확인합니다</p>
         </div>
         <a href="admin-shuttle.html" class="btn btn-primary btn-sm">열기</a>
       </div>
       <div class="tool-card" data-admin-only>
-        <div>
+        <div class="tool-card-body">
           <h3>임직원 관리</h3>
           <p>임직원 추가·수정·삭제, 사진·성향(MBTI)·근무형태·강의종별 관리 — 학원소개 페이지 강사진에 반영</p>
         </div>
         <a href="admin-staff.html" class="btn btn-primary btn-sm">열기</a>
       </div>
       <div class="tool-card" data-admin-only>
-        <div>
+        <div class="tool-card-body">
           <h3>계정 관리</h3>
           <p>셔틀 명단을 작성할 사무실 계정(office1~3)의 비밀번호 변경·추가·삭제</p>
         </div>
