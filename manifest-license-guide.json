@@ -1,0 +1,21 @@
+{
+  "name": "영진 면허 탐색기",
+  "short_name": "면허 탐색기",
+  "description": "보유 면허와 목표 면허를 고르면 취득 절차·수강료·소요기간·준비물·시험일정을 한 번에 확인하는 영진자동차운전전문학원 면허 탐색기입니다.",
+  "id": "license-guide.html",
+  "start_url": "license-guide.html?source=pwa",
+  "scope": "license-guide.html",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#f7f5f2",
+  "theme_color": "#ff8a1f",
+  "lang": "ko-KR",
+  "dir": "ltr",
+  "icons": [
+    { "src": "icons/license-guide-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/license-guide-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/license-guide-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/license-guide-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

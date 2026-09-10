@@ -51,6 +51,19 @@
 }
 </script>
 <!-- /SEO -->
+
+<!-- PWA: 이 페이지만 태블릿·휴대폰 홈 화면에 앱처럼 설치할 수 있게 합니다 -->
+<link rel="manifest" href="manifest-license-guide.json" />
+<meta name="theme-color" content="#ff8a1f" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="면허 탐색기" />
+<!-- /PWA -->
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -818,6 +831,16 @@ function startWithFreshData(){
 startWithFreshData();
 
 })();
+</script>
+
+<!-- PWA: 서비스워커 등록 (이 페이지에만 적용되도록 scope를 이 페이지 자신으로 좁힙니다) -->
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw-license-guide.js", { scope: "license-guide.html" })
+      .catch(function () { /* 오프라인 캐시 없이도 페이지는 정상 동작하므로 조용히 무시합니다 */ });
+  });
+}
 </script>
 </body>
 </html>
