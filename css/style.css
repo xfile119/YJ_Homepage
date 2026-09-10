@@ -3,19 +3,20 @@
    ========================================================================== */
 
 :root {
-  --color-primary: #ff8a1f;
-  --color-primary-dark: #e97205;
-  --color-primary-light: #fff3e2;
-  --color-accent: #ffd028;
-  --color-accent-dark: #efbb10;
-  /* 어두운 배경(상단바·푸터·정보카드)에 쓰는 네이비 */
-  --color-deep: #25324f;
-  --color-deep-2: #3b4d75;
-  --color-ink: #1f2a44;
-  --color-body: #414d68;
-  --color-muted: #7b849b;
-  --color-line: #e6e9f0;
-  --color-surface: #f7f9fc;
+  /* 색상 테스트: 마켓컬리 느낌의 보라색 팔레트 (2026-09) — 기존 주황/네이비 팔레트에서 전환 */
+  --color-primary: #6D28D9;
+  --color-primary-dark: #5B21B6;
+  --color-primary-light: #F3E8FF;
+  --color-accent: #F5B700;
+  --color-accent-dark: #D69E00;
+  /* 어두운 배경(상단바·푸터·정보카드)에 쓰는 짙은 보라 (기존 네이비 자리) */
+  --color-deep: #241934;
+  --color-deep-2: #3D2A5C;
+  --color-ink: #2E2440;
+  --color-body: #4A4258;
+  --color-muted: #8A8299;
+  --color-line: #ECE6F5;
+  --color-surface: #FAF8FC;
   --color-white: #ffffff;
   --radius-sm: 8px;
   --radius-md: 14px;
@@ -202,7 +203,7 @@ button { font-family: inherit; cursor: pointer; }
 .hero {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(120deg, #ff8a1f 0%, #ffa93d 55%, #ffd028 100%);
+  background: linear-gradient(120deg, #6D28D9 0%, #9D5CE0 55%, #C9A0F0 100%);
   color: #fff;
 }
 .hero::after {
@@ -244,7 +245,7 @@ button { font-family: inherit; cursor: pointer; }
   font-weight: 800;
   letter-spacing: -0.01em;
 }
-.hero h1 em { color: #1f2a44; font-style: normal; }
+.hero h1 em { color: #F5B700; font-style: normal; }
 .hero p.lead {
   margin-top: 18px;
   font-size: 17px;
@@ -278,7 +279,7 @@ button { font-family: inherit; cursor: pointer; }
   right: -25%;
   top: -20%;
   bottom: -10%;
-  background: radial-gradient(ellipse 60% 60% at 62% 42%, rgba(255,238,214,0.4), rgba(255,238,214,0) 70%);
+  background: radial-gradient(ellipse 60% 60% at 62% 42%, rgba(233,216,250,0.5), rgba(233,216,250,0) 70%);
   filter: blur(46px);
   pointer-events: none;
   z-index: 0;
@@ -478,7 +479,7 @@ a.feature-card:hover .fc-more { color: var(--color-primary-dark); }
 
 /* ---------- CTA banner ---------- */
 .cta-banner {
-  background: linear-gradient(120deg, #ff8a1f, #ffc247);
+  background: linear-gradient(120deg, #6D28D9, #9D5CE0);
   border-radius: var(--radius-lg);
   padding: 48px;
   color: #fff;
@@ -509,7 +510,7 @@ a.feature-card:hover .fc-more { color: var(--color-primary-dark); }
 
 /* ---------- Page header (inner pages) ---------- */
 .page-header {
-  background: linear-gradient(120deg, #ff8a1f, #ffb43d);
+  background: linear-gradient(120deg, #6D28D9, #9D5CE0);
   color: #fff;
   padding: 56px 0 42px;
 }
@@ -844,7 +845,7 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
   grid-template-columns: 1.15fr 0.85fr;
   align-items: center;
   gap: 32px;
-  background: linear-gradient(125deg, #25324f 0%, #3b4d75 55%, #ff8a1f 135%);
+  background: linear-gradient(125deg, #241934 0%, #3D2A5C 55%, #6D28D9 135%);
   border-radius: var(--radius-lg);
   padding: 40px 44px;
   color: #fff;
