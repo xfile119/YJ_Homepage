@@ -203,7 +203,7 @@ button { font-family: inherit; cursor: pointer; }
 .hero {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(120deg, #6D28D9 0%, #9D5CE0 55%, #C9A0F0 100%);
+  background: var(--color-primary);
   color: #fff;
 }
 .hero::after {
@@ -479,7 +479,7 @@ a.feature-card:hover .fc-more { color: var(--color-primary-dark); }
 
 /* ---------- CTA banner ---------- */
 .cta-banner {
-  background: linear-gradient(120deg, #6D28D9, #9D5CE0);
+  background: var(--color-primary);
   border-radius: var(--radius-lg);
   padding: 48px;
   color: #fff;
@@ -510,7 +510,7 @@ a.feature-card:hover .fc-more { color: var(--color-primary-dark); }
 
 /* ---------- Page header (inner pages) ---------- */
 .page-header {
-  background: linear-gradient(120deg, #6D28D9, #9D5CE0);
+  background: var(--color-primary);
   color: #fff;
   padding: 56px 0 42px;
 }
