@@ -841,7 +841,7 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
   grid-template-columns: 1.15fr 0.85fr;
   align-items: center;
   gap: 32px;
-  background: linear-gradient(125deg, #241934 0%, #3D2A5C 55%, #6D28D9 135%);
+  background: linear-gradient(125deg, #170C2B 0%, #2A1650 50%, #4C1D95 100%);
   border-radius: var(--radius-lg);
   padding: 40px 44px;
   color: #fff;
