@@ -47,6 +47,26 @@ function yj_cut($s, $n) {
     return function_exists('mb_substr') ? mb_substr($s, 0, $n, 'UTF-8') : substr($s, 0, $n);
 }
 
+/* "8:30", "0830", "8시30" 같은 표기를 08:30 모양으로 맞춥니다.
+   admin-shuttle.html의 normTime()과 같은 규칙입니다 — 같은 시간을 다르게
+   적어서 중복 검사를 피해가는 걸 막기 위해 서버에서도 같은 방식으로 비교합니다. */
+function yj_norm_time($v) {
+    $t = trim((string)$v);
+    if ($t === '') { return ''; }
+    if (preg_match('/^(\d{1,2})\s*시?$/u', $t, $m)) { $t = $m[1] . ':00'; }
+    if (!preg_match('/^(\d{1,2})\s*[:시]?\s*(\d{2})$/u', $t, $m)) { return ''; }
+    $h = (int)$m[1];
+    $mi = (int)$m[2];
+    if ($h > 23 || $mi > 59) { return ''; }
+    return ($h < 10 ? '0' . $h : (string)$h) . ':' . $m[2];
+}
+
+/* 차량 표기 비교용 — 앞뒤/중간 공백과 대소문자 차이는 같은 차량으로 봅니다 */
+function yj_norm_vehicle($v) {
+    $t = preg_replace('/\s+/u', '', (string)$v);
+    return function_exists('mb_strtolower') ? mb_strtolower($t, 'UTF-8') : strtolower($t);
+}
+
 if ($method === 'GET') {
     yj_require_login();
     $date = isset($_GET['date']) ? (string)$_GET['date'] : '';
@@ -191,6 +211,25 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
     yj_json(['error' => '날짜 형식이 올바르지 않습니다 (YYYY-MM-DD).'], 400);
 }
 $slots = isset($body['slots']) && is_array($body['slots']) ? $body['slots'] : [];
+
+/* 같은 시간에 같은 차량이 두 번 등록되면 조회 화면에서 명단이 뒤섞입니다.
+   admin-shuttle.html에서도 같은 검사를 하지만, API를 직접 호출하는 경우까지
+   막기 위해 저장하기 전에 서버에서도 한 번 더 확인합니다. 시간·차량 둘 다
+   있는 경우만 비교합니다(둘 중 하나라도 비어 있으면 검사에서 뺍니다). */
+$seenSlotKeys = [];
+foreach (array_values($slots) as $slot) {
+    $nTime = yj_norm_time(isset($slot['time']) ? $slot['time'] : '');
+    $nVehicle = yj_norm_vehicle(isset($slot['vehicle']) ? $slot['vehicle'] : '');
+    if ($nTime === '' || $nVehicle === '') { continue; }
+    $key = $nTime . '|' . $nVehicle;
+    if (isset($seenSlotKeys[$key])) {
+        yj_json(['error' =>
+            '같은 시간(' . $nTime . ')에 같은 차량(' . trim((string)$slot['vehicle']) . ')이 두 번 있습니다. ' .
+            '차량 호수나 출발 시간을 다르게 적어주세요.'
+        ], 400);
+    }
+    $seenSlotKeys[$key] = true;
+}
 
 $db = yj_db();
 $db->beginTransaction();

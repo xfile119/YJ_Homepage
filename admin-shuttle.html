@@ -52,6 +52,8 @@
   .slot-head .slot-count { margin-left: auto; font-size: 12.5px; color: var(--color-muted); padding-bottom: 8px; }
   .slot-head .btn-del-slot { margin-bottom: 1px; }
   .slot-legacy { flex-basis: 100%; font-size: 12px; font-weight: 700; color: #c53030; }
+  /* 같은 시간·같은 차량이 두 번 있을 때 저장을 막고 두 표를 함께 표시합니다 */
+  .slot.slot-dup { border-color: #c53030; box-shadow: 0 0 0 2px rgba(197,48,48,0.35); }
 
   /* 차량(운행)별 인쇄 선택 체크박스 */
   .slot-print-toggle {
@@ -364,6 +366,10 @@ gridEl.addEventListener("click", function (e) {
 });
 gridEl.addEventListener("input", function (e) {
   if (e.target.classList.contains("f-name")) { updateCounts(); }
+  /* 시간·차량 칸을 고치면, 저장 시도 때 표시했던 중복 경고 표시를 지웁니다 */
+  if (e.target.classList.contains("slot-time") || e.target.classList.contains("slot-vehicle")) {
+    clearDupHighlight();
+  }
 });
 
 /* ---------- 수집 ---------- */
@@ -396,6 +402,38 @@ function countRiders(slots) {
   var n = 0;
   slots.forEach(function (s) { n += s.riders.length; });
   return n;
+}
+
+/* ---------- 중복 운행 확인 ----------
+   같은 시간에 같은 차량을 두 번 등록하면(예: "운행 추가"를 반복해서 누르고
+   차량 호수를 안 바꾼 경우), 셔틀 조회 결과에서 명단이 뒤섞입니다.
+   시간·차량이 둘 다 있는 경우에만 비교합니다(둘 중 하나라도 비어 있으면
+   "아직 안 정한 값"으로 보고 중복 검사에서 뺍니다). */
+function vehicleKey(v) {
+  return String(v == null ? "" : v).trim().replace(/\s+/g, "").toLowerCase();
+}
+function clearDupHighlight() {
+  [].forEach.call(gridEl.querySelectorAll(".slot-dup"), function (s) { s.classList.remove("slot-dup"); });
+}
+function findDuplicateSlots() {
+  var byKey = {};
+  [].forEach.call(gridEl.querySelectorAll(".slot"), function (slot) {
+    var time = normTime(slot.querySelector(".slot-time").value);
+    var vehicle = vehicleKey(slot.querySelector(".slot-vehicle").value);
+    if (time === "" || vehicle === "") { return; }
+    var key = time + "|" + vehicle;
+    (byKey[key] = byKey[key] || []).push(slot);
+  });
+  for (var key in byKey) {
+    if (byKey[key].length > 1) {
+      return {
+        time: byKey[key][0].querySelector(".slot-time").value,
+        vehicle: byKey[key][0].querySelector(".slot-vehicle").value.trim(),
+        slots: byKey[key]
+      };
+    }
+  }
+  return null;
 }
 
 /* ---------- 서버 연동 ---------- */
@@ -475,6 +513,18 @@ document.getElementById("btnSave").addEventListener("click", function () {
   if (bad) {
     bad.focus();
     setStatus("시간을 08:30 같은 형태로 적어주세요.", "err");
+    return;
+  }
+  clearDupHighlight();
+  var dup = findDuplicateSlots();
+  if (dup) {
+    dup.slots.forEach(function (s) { s.classList.add("slot-dup"); });
+    dup.slots[0].scrollIntoView({ block: "center" });
+    setStatus(
+      "같은 시간(" + dup.time + ")에 같은 차량(" + dup.vehicle + ")이 " + dup.slots.length + "번 있습니다. " +
+      "차량 호수나 출발 시간을 다르게 적어주세요.",
+      "err"
+    );
     return;
   }
   var slots = collect();
