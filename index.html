@@ -868,18 +868,23 @@ function onDragEnd(){
   snapTo(snapped);
 }
 
-var focusFromPointer = false;
+/* 마우스 드래그로 인한 포커스에는 테두리를 표시하지 않고, 실제 Tab 키 이동으로
+   포커스됐을 때만(키보드 접근성용) 테두리를 보여줍니다. 직전 사용자 입력이
+   키보드였는지를 계속 기억해두는 방식이라(한 번 쓰고 버리는 플래그가 아니라서),
+   다른 탭에 다녀와 브라우저가 포커스를 이 박스로 되돌려놓아도(그 시점엔 마우스도
+   키보드 입력도 없었으므로) 테두리가 다시 나타나지 않습니다. */
+var usingKeyboard = false;
+document.addEventListener("keydown", function(e){
+  if (e.key === "Tab") usingKeyboard = true;
+});
 stage.addEventListener("mousedown", function(e){
   onDragStart(e.clientX);
   e.preventDefault();
-  focusFromPointer = true;
+  usingKeyboard = false;
   stage.focus();
 });
 stage.addEventListener("focus", function(){
-  /* 마우스 드래그로 인한 포커스에는 테두리를 표시하지 않고, 실제 Tab 키 이동으로
-     포커스됐을 때만(키보드 접근성용) 테두리를 보여줍니다. */
-  stage.classList.toggle("kb-focus", !focusFromPointer);
-  focusFromPointer = false;
+  stage.classList.toggle("kb-focus", usingKeyboard);
 });
 window.addEventListener("mousemove", function(e){ onDragMove(e.clientX); });
 window.addEventListener("mouseup", onDragEnd);
