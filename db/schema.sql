@@ -60,6 +60,16 @@ CREATE TABLE IF NOT EXISTS {prefix}shuttle_riders (
   INDEX idx_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS {prefix}contact_messages (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL DEFAULT '',
+  phone VARCHAR(30) NOT NULL DEFAULT '',
+  message TEXT NOT NULL,
+  -- 'unread' = 원장님이 아직 확인 안 함, 'read' = 확인함
+  status VARCHAR(10) NOT NULL DEFAULT 'unread',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS {prefix}shuttle_slots (
   id INT AUTO_INCREMENT PRIMARY KEY,
   ride_date VARCHAR(10) NOT NULL,

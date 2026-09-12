@@ -84,6 +84,15 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}shuttle_riders (
   INDEX idx_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
+$pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}contact_messages (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL DEFAULT '',
+  phone VARCHAR(30) NOT NULL DEFAULT '',
+  message TEXT NOT NULL,
+  status VARCHAR(10) NOT NULL DEFAULT 'unread',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
 /* 탑승자가 아직 없는 시간대도 남겨두기 위해 시간대를 따로 저장합니다 */
 $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}shuttle_slots (
   id INT AUTO_INCREMENT PRIMARY KEY,
