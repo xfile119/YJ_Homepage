@@ -70,6 +70,24 @@ CREATE TABLE IF NOT EXISTS {prefix}contact_messages (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- 학사서버(MSSQL)에서 주기적으로 밀어넣는(push) "다가오는 일정"의 최소 정보 사본입니다.
+-- 원본이 아니라 캐시이므로, 매 동기화마다 전체 삭제 후 다시 채웁니다(schedule-sync.php 참고).
+-- 주민번호 등 민감정보는 애초에 포함하지 않습니다.
+CREATE TABLE IF NOT EXISTS {prefix}student_schedule (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_key VARCHAR(50) NOT NULL DEFAULT '',
+  name VARCHAR(50) NOT NULL DEFAULT '',
+  phone VARCHAR(30) NOT NULL DEFAULT '',
+  edu_type VARCHAR(10) NOT NULL DEFAULT '',
+  reservation_date VARCHAR(10) NOT NULL DEFAULT '',
+  reservation_time VARCHAR(10) NOT NULL DEFAULT '',
+  staff_name VARCHAR(50) NOT NULL DEFAULT '',
+  place VARCHAR(100) NOT NULL DEFAULT '',
+  synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_name (name),
+  INDEX idx_date (reservation_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS {prefix}shuttle_slots (
   id INT AUTO_INCREMENT PRIMARY KEY,
   ride_date VARCHAR(10) NOT NULL,

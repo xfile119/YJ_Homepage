@@ -66,6 +66,21 @@ function yj_require_admin() {
     }
 }
 
+/* 학사서버의 동기화 프로그램처럼, 로그인 세션이 없는 서버-투-서버 호출을 인증할 때 씁니다.
+   요청 헤더 X-Sync-Key 값이 config.php의 schedule_sync_key와 일치해야 통과합니다. */
+function yj_require_sync_key() {
+    $c = yj_config();
+    $expected = isset($c['schedule_sync_key']) ? (string)$c['schedule_sync_key'] : '';
+    $headers = function_exists('getallheaders') ? getallheaders() : [];
+    $given = '';
+    foreach ($headers as $k => $v) {
+        if (strtolower($k) === 'x-sync-key') { $given = (string)$v; break; }
+    }
+    if ($expected === '' || $given === '' || !hash_equals($expected, $given)) {
+        yj_json(['error' => '인증에 실패했습니다.'], 401);
+    }
+}
+
 function yj_input() {
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true);

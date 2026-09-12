@@ -84,6 +84,21 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}shuttle_riders (
   INDEX idx_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
+$pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}student_schedule (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_key VARCHAR(50) NOT NULL DEFAULT '',
+  name VARCHAR(50) NOT NULL DEFAULT '',
+  phone VARCHAR(30) NOT NULL DEFAULT '',
+  edu_type VARCHAR(10) NOT NULL DEFAULT '',
+  reservation_date VARCHAR(10) NOT NULL DEFAULT '',
+  reservation_time VARCHAR(10) NOT NULL DEFAULT '',
+  staff_name VARCHAR(50) NOT NULL DEFAULT '',
+  place VARCHAR(100) NOT NULL DEFAULT '',
+  synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_name (name),
+  INDEX idx_date (reservation_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
 $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}contact_messages (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(50) NOT NULL DEFAULT '',

@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>내 일정 조회 | 영진자동차운전전문학원</title>
+<meta name="description" content="영진자동차운전전문학원 수강생 일정 조회 - 이름과 전화번호 뒷 4자리로 본인의 학과·기능·도로 교육 일정을 확인하실 수 있습니다." />
+<meta name="robots" content="noindex" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<style>
+.ms-wrap { max-width: 640px; margin: 0 auto; }
+
+.ms-form-card {
+  background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-lg);
+  padding: 30px 30px 26px; box-shadow: var(--shadow-sm);
+}
+.ms-form-card h2 { font-size: 19px; font-weight: 800; color: var(--color-ink); }
+.ms-form-card > p { margin-top: 8px; font-size: 14px; color: var(--color-muted); line-height: 1.7; }
+.ms-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 22px; }
+@media (max-width: 560px) { .ms-fields { grid-template-columns: 1fr; } }
+.ms-field label { display: block; font-size: 13px; font-weight: 700; color: var(--color-ink); margin-bottom: 7px; }
+.ms-field input {
+  width: 100%; border: 1px solid var(--color-line); border-radius: var(--radius-sm);
+  padding: 13px 14px; font-size: 15px; font-family: inherit; color: var(--color-ink); background: #fff;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.ms-field input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
+.ms-field .ms-help { font-size: 12px; color: var(--color-muted); margin-top: 6px; }
+
+.ms-status { margin-top: 16px; font-size: 13.5px; font-weight: 600; min-height: 20px; }
+.ms-status.err { color: #c53030; }
+
+.ms-results { margin-top: 26px; display: none; }
+.ms-results.show { display: block; }
+.ms-results-head { font-size: 14px; font-weight: 800; color: var(--color-ink); margin-bottom: 14px; }
+.ms-item {
+  display: flex; align-items: center; gap: 18px;
+  background: #fff; border: 1px solid var(--color-line); border-left: 5px solid var(--color-primary);
+  border-radius: var(--radius-md); padding: 20px 22px; margin-bottom: 12px;
+}
+.ms-item .ms-when { flex: none; text-align: center; min-width: 92px; }
+.ms-item .ms-date { font-size: 12.5px; font-weight: 700; color: var(--color-muted); }
+.ms-item .ms-time { font-size: 25px; font-weight: 900; color: var(--color-primary-dark); line-height: 1.25; letter-spacing: -0.01em; }
+.ms-item .ms-what { border-left: 1px solid var(--color-line); padding-left: 18px; flex: 1; }
+.ms-item .ms-what .k { font-size: 12px; font-weight: 700; color: var(--color-muted); }
+.ms-item .ms-what .v { font-size: 17px; font-weight: 800; color: var(--color-ink); margin-top: 3px; }
+.ms-item .ms-type {
+  display: inline-block; margin-top: 8px; background: var(--color-primary-light);
+  color: var(--color-primary-dark); font-size: 12.5px; font-weight: 800;
+  border-radius: 999px; padding: 4px 11px;
+}
+.ms-item .ms-staff { display: block; margin-top: 7px; font-size: 12px; color: var(--color-muted); }
+@media (max-width: 560px) {
+  .ms-item { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .ms-item .ms-when { text-align: left; min-width: 0; }
+  .ms-item .ms-what { border-left: none; padding-left: 0; }
+}
+.ms-badge-today {
+  display: inline-block; background: var(--color-accent); color: var(--color-ink);
+  font-size: 11.5px; font-weight: 900; border-radius: 999px; padding: 3px 9px; margin-left: 6px;
+}
+
+.ms-empty {
+  background: var(--color-surface); border: 1px dashed var(--color-line); border-radius: var(--radius-md);
+  padding: 26px 24px; text-align: center;
+}
+.ms-empty p { font-size: 14.5px; font-weight: 700; color: var(--color-ink); }
+.ms-empty span { display: block; margin-top: 8px; font-size: 13px; color: var(--color-muted); line-height: 1.7; }
+
+.ms-note {
+  margin-top: 22px; font-size: 12.5px; color: var(--color-muted); line-height: 1.8;
+  background: var(--color-surface); border-radius: var(--radius-md); padding: 16px 18px;
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="container">
+    <div class="topbar-links">
+      <a href="location.html">오시는 길</a>
+      <a href="my-schedule.html">내 일정 조회</a>
+      <a href="shuttle.html">셔틀 조회</a>
+      <a href="notice.html">공지사항</a>
+    </div>
+    <a class="topbar-tel" href="tel:062-951-5100">☎ 062-951-5100</a>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="brand">
+      <span class="mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M12 3v4M12 17v4M4.2 7.8l3 2M16.8 14.2l3 2M4.2 16.2l3-2M16.8 9.8l3-2"/></svg>
+      </span>
+      <span>
+        영진자동차운전전문학원
+        <span class="brand-sub">YEONGJIN DRIVING SCHOOL</span>
+      </span>
+    </a>
+    <nav class="main-nav" id="main-nav">
+      <a href="index.html" data-page="index.html">홈</a>
+      <a href="license-guide.html" data-page="license-guide.html">면허 탐색기</a>
+      <a href="large-vehicle-training.html" data-page="large-vehicle-training.html">대형연수</a>
+      <a href="contact.html" data-page="contact.html">상담문의</a>
+    </nav>
+    <div class="header-cta">
+      <button class="nav-toggle" aria-label="메뉴 열기" aria-expanded="false"><span></span></button>
+    </div>
+  </div>
+</header>
+
+<div class="page-header">
+  <div class="container">
+    <div class="breadcrumb"><a href="index.html">홈</a> / 내 일정 조회</div>
+    <h1>내 일정 조회</h1>
+    <p>이름과 전화번호 뒷 4자리를 입력하시면 본인의 학과·기능·도로 교육 예정 일정을 확인하실 수 있어요.</p>
+  </div>
+</div>
+
+<main>
+  <section class="section">
+    <div class="container">
+      <div class="ms-wrap">
+
+        <div class="ms-form-card">
+          <h2>내 교육 일정 확인하기</h2>
+          <p>수강 신청 시 등록하신 이름과 연락처로 조회합니다. 본인 정보만 조회되며, 다른 분의 일정은 표시되지 않습니다.</p>
+
+          <form id="msForm" autocomplete="off">
+            <div class="ms-fields">
+              <div class="ms-field">
+                <label for="msName">이름</label>
+                <input type="text" id="msName" placeholder="홍길동" required />
+              </div>
+              <div class="ms-field">
+                <label for="msPhone">전화번호 뒷 4자리</label>
+                <input type="text" id="msPhone" placeholder="5678" inputmode="numeric" maxlength="4" required />
+                <p class="ms-help">010-1234-<strong>5678</strong> 이면 5678</p>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-accent btn-block" style="margin-top:20px;" id="msSubmit">조회하기</button>
+          </form>
+
+          <p class="ms-status" id="msStatus"></p>
+        </div>
+
+        <div class="ms-results" id="msResults"></div>
+
+        <p class="ms-note">
+          · 일정은 학원 전산에서 주기적으로 반영되므로, 방금 등록·변경된 일정은 아직 조회되지 않을 수 있어요.<br>
+          · 일정을 바꾸시려면 <a href="tel:062-951-5100" style="color:var(--color-primary);font-weight:700;">062-951-5100</a>으로 연락 주세요.<br>
+          · 조회가 안 되시면 수강 신청 시 적어주신 이름·연락처와 같은지 확인해주세요.
+        </p>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand">
+          <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M12 3v4M12 17v4M4.2 7.8l3 2M16.8 14.2l3 2M4.2 16.2l3-2M16.8 9.8l3-2"/></svg></span>
+          영진자동차운전전문학원
+        </div>
+        <p class="footer-desc">
+          광주광역시 광산구 목련로 372-19<br>
+          전화 062-951-5100 · 안전운전의 시작, 영진자동차운전전문학원이 함께합니다.
+        </p>
+      </div>
+      <div class="footer-col">
+        <h5>바로가기</h5>
+        <ul>
+          <li><a href="about.html">학원소개</a></li>
+          <li><a href="license-guide.html">면허 탐색기</a></li>
+          <li><a href="large-vehicle-training.html">대형연수</a></li>
+          <li><a href="driving-lessons.html">도로연수</a></li>
+          <li><a href="my-schedule.html">내 일정 조회</a></li>
+          <li><a href="shuttle.html">셔틀 조회</a></li>
+          <li><a href="notice.html">공지사항</a></li>
+          <li><a href="location.html">오시는길</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h5>고객센터</h5>
+        <ul>
+          <li><span>전화 062-951-5100</span></li>
+          <li><span>평일 09:00 - 18:00</span></li>
+          <li><span>팩스 062-951-5107</span></li>
+          <li><a href="contact.html#naver-talktalk">네이버 톡톡 상담</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 영진자동차운전전문학원. All rights reserved.</span>
+      <div class="footer-legal">
+        <a href="privacy.html">개인정보처리방침</a>
+        <span>사업자등록번호 410-81-87858</span>
+        <span>대표 김성환</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="floating-actions">
+  <a class="fa-call" href="tel:062-951-5100" aria-label="전화 상담">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8 9.7a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6a2 2 0 0 1 1.7 2Z"/></svg>
+  </a>
+  <a class="fa-kakao" href="http://pf.kakao.com/_UftKG/chat" target="_blank" rel="noopener" aria-label="카카오톡 상담">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+  </a>
+  <a class="fa-naver" href="contact.html#naver-talktalk" aria-label="네이버 톡톡 상담">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+  </a>
+  <button class="fa-top" aria-label="맨 위로">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+  </button>
+</div>
+
+<script src="js/main.js"></script>
+<script>
+(function () {
+"use strict";
+
+var form = document.getElementById("msForm");
+var nameEl = document.getElementById("msName");
+var phoneEl = document.getElementById("msPhone");
+var statusEl = document.getElementById("msStatus");
+var resultsEl = document.getElementById("msResults");
+var submitBtn = document.getElementById("msSubmit");
+
+var EDU_LABEL = { "학과": "학과교육", "기능": "기능교육", "도로": "도로연수" };
+
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function setStatus(msg, kind) {
+  statusEl.textContent = msg || "";
+  statusEl.className = "ms-status" + (kind ? " " + kind : "");
+}
+function todayYmd() {
+  var d = new Date();
+  var m = String(d.getMonth() + 1), day = String(d.getDate());
+  return "" + d.getFullYear() + (m.length < 2 ? "0" + m : m) + (day.length < 2 ? "0" + day : day);
+}
+var WEEK = ["일", "월", "화", "수", "목", "금", "토"];
+/* YYYYMMDD -> "9월 12일 (금)" */
+function prettyDate(ymd) {
+  ymd = String(ymd || "");
+  if (ymd.length !== 8) { return ymd; }
+  var y = Number(ymd.slice(0, 4)), m = Number(ymd.slice(4, 6)), day = Number(ymd.slice(6, 8));
+  var d = new Date(y, m - 1, day);
+  return m + "월 " + day + "일 (" + WEEK[d.getDay()] + ")";
+}
+/* HHMMSS -> "17:43" */
+function prettyTime(hms) {
+  hms = String(hms || "");
+  if (hms.length < 4) { return hms; }
+  return hms.slice(0, 2) + ":" + hms.slice(2, 4);
+}
+
+phoneEl.addEventListener("input", function () {
+  this.value = this.value.replace(/[^0-9]/g, "").slice(0, 4);
+});
+
+function renderItems(items) {
+  var today = todayYmd();
+  var html = '<div class="ms-results-head">' + esc(nameEl.value.trim()) + '님의 예정된 일정 ' + items.length + '건</div>';
+  items.forEach(function (it) {
+    var isToday = it.date === today;
+    var typeLabel = EDU_LABEL[it.eduType] || it.eduType;
+    var staffNote = it.staffName ? '<span class="ms-staff">담당 ' + esc(it.staffName) + '</span>' : '';
+    html += '<div class="ms-item">'
+      + '<div class="ms-when">'
+      +   '<div class="ms-date">' + esc(prettyDate(it.date)) + (isToday ? '<span class="ms-badge-today">오늘</span>' : '') + '</div>'
+      +   '<div class="ms-time">' + esc(prettyTime(it.time)) + '</div>'
+      + '</div>'
+      + '<div class="ms-what">'
+      +   '<div class="k">일정 종류</div>'
+      +   '<div class="v">' + esc(typeLabel) + '</div>'
+      +   '<span class="ms-type">' + esc(typeLabel) + '</span>'
+      +   staffNote
+      + '</div>'
+      + '</div>';
+  });
+  resultsEl.innerHTML = html;
+  resultsEl.classList.add("show");
+}
+
+function renderEmpty() {
+  resultsEl.innerHTML = '<div class="ms-empty">'
+    + '<p>예정된 일정이 없습니다.</p>'
+    + '<span>아직 반영 전이거나, 입력하신 이름·전화번호가 신청서와 다를 수 있어요.<br>'
+    + '자세한 내용은 062-951-5100으로 문의해주세요.</span>'
+    + '</div>';
+  resultsEl.classList.add("show");
+}
+
+form.addEventListener("submit", function (e) {
+  e.preventDefault();
+  var name = nameEl.value.trim();
+  var tail = phoneEl.value.trim();
+  if (name === "" || tail.length !== 4) {
+    setStatus("이름과 전화번호 뒷 4자리를 정확히 입력해주세요.", "err");
+    return;
+  }
+  setStatus("조회 중...");
+  submitBtn.disabled = true;
+  resultsEl.classList.remove("show");
+
+  fetch("api/schedule.php", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "lookup", name: name, phoneTail: tail })
+  })
+    .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+    .then(function (res) {
+      if (!res.ok || res.body.error) {
+        throw new Error(res.body.error || "조회에 실패했습니다.");
+      }
+      setStatus("");
+      if (res.body.found && res.body.schedule.length) { renderItems(res.body.schedule); }
+      else { renderEmpty(); }
+    })
+    .catch(function () {
+      setStatus("지금은 조회할 수 없습니다. 잠시 후 다시 시도하시거나 062-951-5100으로 문의해주세요.", "err");
+    })
+    .then(function () { submitBtn.disabled = false; });
+});
+
+})();
+</script>
+</body>
+</html>
