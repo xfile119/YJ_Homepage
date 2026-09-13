@@ -79,6 +79,8 @@ CREATE TABLE IF NOT EXISTS {prefix}student_schedule (
   name VARCHAR(50) NOT NULL DEFAULT '',
   phone VARCHAR(30) NOT NULL DEFAULT '',
   edu_type VARCHAR(10) NOT NULL DEFAULT '',
+  -- 같은 학생이 면허를 여러 개 등록한 경우(학사 DB의 서로 다른 StudentID) 구분해서 보여주기 위한 값입니다.
+  license_type VARCHAR(30) NOT NULL DEFAULT '',
   reservation_date VARCHAR(10) NOT NULL DEFAULT '',
   reservation_time VARCHAR(10) NOT NULL DEFAULT '',
   staff_name VARCHAR(50) NOT NULL DEFAULT '',

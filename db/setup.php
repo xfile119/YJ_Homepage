@@ -90,6 +90,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}student_schedule (
   name VARCHAR(50) NOT NULL DEFAULT '',
   phone VARCHAR(30) NOT NULL DEFAULT '',
   edu_type VARCHAR(10) NOT NULL DEFAULT '',
+  license_type VARCHAR(30) NOT NULL DEFAULT '',
   reservation_date VARCHAR(10) NOT NULL DEFAULT '',
   reservation_time VARCHAR(10) NOT NULL DEFAULT '',
   staff_name VARCHAR(50) NOT NULL DEFAULT '',
@@ -133,6 +134,7 @@ yj_ensure_column($pdo, $prefix . 'notices', 'image', 'VARCHAR(255) NULL');
 yj_ensure_column($pdo, $prefix . 'staff', 'greeting', 'VARCHAR(200) NULL');
 yj_ensure_column($pdo, $prefix . 'admin_users', 'role', "VARCHAR(20) NOT NULL DEFAULT 'admin'");
 yj_ensure_column($pdo, $prefix . 'shuttle_riders', 'updated_by', "VARCHAR(50) NOT NULL DEFAULT ''");
+yj_ensure_column($pdo, $prefix . 'student_schedule', 'license_type', "VARCHAR(30) NOT NULL DEFAULT ''");
 
 /* 2026-09: 셔틀 명단 확장
    - slot_no  : 시간이 아니라 "운행 편성 번호"로 사람과 편성을 묶습니다(시간을 고쳐도 명단이 따라옵니다).

@@ -63,6 +63,22 @@
   font-size: 11.5px; font-weight: 900; border-radius: 999px; padding: 3px 9px; margin-left: 6px;
 }
 
+/* 면허(등록)가 2개 이상일 때만 나타나는 필터 탭 — 등록별로 일정을 나눠 보고 싶을 때 씁니다 */
+.ms-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.ms-tab {
+  font-family: inherit; font-size: 13px; font-weight: 700; color: var(--color-muted);
+  background: #fff; border: 1px solid var(--color-line); border-radius: 999px;
+  padding: 7px 15px; cursor: pointer; transition: all .15s ease;
+}
+.ms-tab:hover { border-color: var(--color-primary); color: var(--color-primary-dark); }
+.ms-tab.is-active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+
+/* 일정 카드 안에서 실제 면허종류(예: 2종보통)를 알려주는 표시 */
+.ms-license {
+  display: inline-block; font-size: 11.5px; font-weight: 800; color: var(--color-muted);
+  border: 1px solid var(--color-line); border-radius: 6px; padding: 2px 8px; margin-bottom: 6px;
+}
+
 .ms-empty {
   background: var(--color-surface); border: 1px dashed var(--color-line); border-radius: var(--radius-md);
   padding: 26px 24px; text-align: center;
@@ -270,20 +286,53 @@ phoneEl.addEventListener("input", function () {
   this.value = this.value.replace(/[^0-9]/g, "").slice(0, 4);
 });
 
-function renderItems(items) {
-  var today = todayYmd();
-  var html = '<div class="ms-results-head">' + esc(nameEl.value.trim()) + '님의 예정된 일정 ' + items.length + '건</div>';
+var lastItems = [];
+var currentFilter = "all";
+
+/* 면허(등록)별로 묶어서, 등록이 2개 이상이면 위에 필터 탭을 보여줍니다.
+   면허종류가 안 들어온 예전 데이터는 "면허 미지정"으로 묶습니다. */
+function licenseGroups(items) {
+  var order = [];
+  var seen = {};
   items.forEach(function (it) {
+    var key = it.licenseType || "면허 미지정";
+    if (!seen[key]) { seen[key] = 0; order.push(key); }
+    seen[key]++;
+  });
+  return { order: order, counts: seen };
+}
+
+function renderTabs(items) {
+  var groups = licenseGroups(items);
+  if (groups.order.length < 2) { return ""; }
+  var html = '<div class="ms-tabs">';
+  html += '<button type="button" class="ms-tab' + (currentFilter === "all" ? " is-active" : "") + '" data-filter="all">전체 (' + items.length + ')</button>';
+  groups.order.forEach(function (key) {
+    html += '<button type="button" class="ms-tab' + (currentFilter === key ? " is-active" : "") + '" data-filter="' + esc(key) + '">' + esc(key) + ' (' + groups.counts[key] + ')</button>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderItems(items) {
+  lastItems = items;
+  var today = todayYmd();
+  var visible = currentFilter === "all" ? items : items.filter(function (it) { return (it.licenseType || "면허 미지정") === currentFilter; });
+
+  var html = renderTabs(items);
+  html += '<div class="ms-results-head">' + esc(nameEl.value.trim()) + '님의 예정된 일정 ' + visible.length + '건</div>';
+  visible.forEach(function (it) {
     var isToday = it.date === today;
     var typeLabel = EDU_LABEL[it.eduType] || it.eduType;
     var staffNote = it.staffName ? '<span class="ms-staff">담당 ' + esc(it.staffName) + '</span>' : '';
+    var licenseNote = it.licenseType ? '<span class="ms-license">' + esc(it.licenseType) + '</span>' : '';
     html += '<div class="ms-item">'
       + '<div class="ms-when">'
       +   '<div class="ms-date">' + esc(prettyDate(it.date)) + (isToday ? '<span class="ms-badge-today">오늘</span>' : '') + '</div>'
       +   '<div class="ms-time">' + esc(prettyTime(it.time)) + '</div>'
       + '</div>'
       + '<div class="ms-what">'
-      +   '<div class="k">일정 종류</div>'
+      +   licenseNote
       +   '<div class="v">' + esc(typeLabel) + '</div>'
       +   '<span class="ms-type">' + esc(typeLabel) + '</span>'
       +   staffNote
@@ -292,6 +341,14 @@ function renderItems(items) {
   });
   resultsEl.innerHTML = html;
   resultsEl.classList.add("show");
+
+  var tabs = resultsEl.querySelectorAll(".ms-tab");
+  for (var i = 0; i < tabs.length; i++) {
+    tabs[i].addEventListener("click", function () {
+      currentFilter = this.getAttribute("data-filter");
+      renderItems(lastItems);
+    });
+  }
 }
 
 function renderEmpty() {
@@ -314,6 +371,7 @@ form.addEventListener("submit", function (e) {
   setStatus("조회 중...");
   submitBtn.disabled = true;
   resultsEl.classList.remove("show");
+  currentFilter = "all";
 
   fetch("api/schedule.php", {
     method: "POST",

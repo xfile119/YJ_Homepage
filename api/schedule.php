@@ -54,7 +54,7 @@ $today = date('Ymd');
 /* 이름은 공백을 무시하고 비교합니다 */
 $nameKey = preg_replace('/\s+/u', '', $name);
 $stmt = yj_db()->prepare(
-    "SELECT edu_type, reservation_date, reservation_time, staff_name, place, phone
+    "SELECT edu_type, license_type, reservation_date, reservation_time, staff_name, place, phone
        FROM $table
       WHERE reservation_date >= ? AND REPLACE(REPLACE(name, ' ', ''), '\t', '') = ?
       ORDER BY reservation_date ASC, reservation_time ASC"
@@ -66,6 +66,7 @@ foreach ($stmt->fetchAll() as $r) {
     if (substr(yj_sched_digits($r['phone']), -4) === $tail) {
         $mine[] = [
             'eduType' => $r['edu_type'],
+            'licenseType' => $r['license_type'],
             'date' => $r['reservation_date'],
             'time' => $r['reservation_time'],
             'staffName' => $r['staff_name'],

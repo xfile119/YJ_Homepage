@@ -27,8 +27,8 @@ try {
     $db->exec("DELETE FROM $table");
 
     $insert = $db->prepare(
-        "INSERT INTO $table (student_key, name, phone, edu_type, reservation_date, reservation_time, staff_name, place)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        "INSERT INTO $table (student_key, name, phone, edu_type, license_type, reservation_date, reservation_time, staff_name, place)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
     $count = 0;
     foreach ($rows as $r) {
@@ -43,6 +43,7 @@ try {
             $name,
             $phone,
             (string)(isset($r['eduType']) ? $r['eduType'] : ''),
+            (string)(isset($r['licenseType']) ? $r['licenseType'] : ''),
             $date,
             (string)(isset($r['time']) ? $r['time'] : ''),
             (string)(isset($r['staffName']) ? $r['staffName'] : ''),
