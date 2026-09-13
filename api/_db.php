@@ -6,6 +6,23 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+/* 치명적 오류(fatal error)가 나도 빈 화면 대신 원인을 알 수 있는 JSON을 돌려줍니다.
+   (디버깅용 — 문제 원인이 밝혀지면 이 블록은 다시 지워도 됩니다) */
+register_shutdown_function(function () {
+    $err = error_get_last();
+    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        if (!headers_sent()) {
+            http_response_code(500);
+            header('Content-Type: application/json; charset=utf-8');
+        }
+        echo json_encode([
+            'error' => 'Fatal error: ' . $err['message'],
+            'file' => $err['file'],
+            'line' => $err['line'],
+        ], JSON_UNESCAPED_UNICODE);
+    }
+});
+
 function yj_config() {
     static $config = null;
     if ($config === null) {
@@ -71,12 +88,13 @@ function yj_require_admin() {
 function yj_require_sync_key() {
     $c = yj_config();
     $expected = isset($c['schedule_sync_key']) ? (string)$c['schedule_sync_key'] : '';
-    $headers = function_exists('getallheaders') ? getallheaders() : [];
-    $given = '';
-    foreach ($headers as $k => $v) {
-        if (strtolower($k) === 'x-sync-key') { $given = (string)$v; break; }
-    }
-    if ($expected === '' || $given === '' || !hash_equals($expected, $given)) {
+    /* $_SERVER의 HTTP_X_SYNC_KEY는 웹서버 종류(Apache/nginx+PHP-FPM 등)와 무관하게
+       항상 쓸 수 있어서, getallheaders()보다 더 안전합니다. */
+    $given = isset($_SERVER['HTTP_X_SYNC_KEY']) ? (string)$_SERVER['HTTP_X_SYNC_KEY'] : '';
+    $match = function_exists('hash_equals')
+        ? hash_equals($expected, $given)
+        : ($expected !== '' && $expected === $given);
+    if ($expected === '' || $given === '' || !$match) {
         yj_json(['error' => '인증에 실패했습니다.'], 401);
     }
 }
