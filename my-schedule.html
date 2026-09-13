@@ -253,6 +253,19 @@ var submitBtn = document.getElementById("msSubmit");
 
 var EDU_LABEL = { "학과": "학과교육", "기능": "기능교육", "도로": "도로연수" };
 
+/* 학사서버는 인코딩 문제를 피하려고 면허종류를 코드값(1, A, 2, 3, 4...)으로 보내고,
+   실제 이름으로 바꾸는 건 여기서 합니다. */
+var LICENSE_LABEL = {
+  "1": "1종보통(수동)", "A": "1종보통(자동)",
+  "2": "2종보통(수동)", "3": "2종보통(자동)",
+  "4": "1종대형", "5": "대형견인", "6": "구난차",
+  "7": "2종소형", "8": "원자", "9": "소형견인"
+};
+function licenseLabel(code) {
+  if (!code) { return "면허 미지정"; }
+  return LICENSE_LABEL[code] || code;
+}
+
 function esc(s) {
   return String(s == null ? "" : s)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -295,8 +308,8 @@ function licenseGroups(items) {
   var order = [];
   var seen = {};
   items.forEach(function (it) {
-    var key = it.licenseType || "면허 미지정";
-    if (!seen[key]) { seen[key] = 0; order.push(key); }
+    var key = it.licenseType || "";
+    if (!(key in seen)) { seen[key] = 0; order.push(key); }
     seen[key]++;
   });
   return { order: order, counts: seen };
@@ -308,7 +321,7 @@ function renderTabs(items) {
   var html = '<div class="ms-tabs">';
   html += '<button type="button" class="ms-tab' + (currentFilter === "all" ? " is-active" : "") + '" data-filter="all">전체 (' + items.length + ')</button>';
   groups.order.forEach(function (key) {
-    html += '<button type="button" class="ms-tab' + (currentFilter === key ? " is-active" : "") + '" data-filter="' + esc(key) + '">' + esc(key) + ' (' + groups.counts[key] + ')</button>';
+    html += '<button type="button" class="ms-tab' + (currentFilter === key ? " is-active" : "") + '" data-filter="' + esc(key) + '">' + esc(licenseLabel(key)) + ' (' + groups.counts[key] + ')</button>';
   });
   html += '</div>';
   return html;
@@ -317,7 +330,7 @@ function renderTabs(items) {
 function renderItems(items) {
   lastItems = items;
   var today = todayYmd();
-  var visible = currentFilter === "all" ? items : items.filter(function (it) { return (it.licenseType || "면허 미지정") === currentFilter; });
+  var visible = currentFilter === "all" ? items : items.filter(function (it) { return (it.licenseType || "") === currentFilter; });
 
   var html = renderTabs(items);
   html += '<div class="ms-results-head">' + esc(nameEl.value.trim()) + '님의 예정된 일정 ' + visible.length + '건</div>';
@@ -325,7 +338,7 @@ function renderItems(items) {
     var isToday = it.date === today;
     var typeLabel = EDU_LABEL[it.eduType] || it.eduType;
     var staffNote = it.staffName ? '<span class="ms-staff">담당 ' + esc(it.staffName) + '</span>' : '';
-    var licenseNote = it.licenseType ? '<span class="ms-license">' + esc(it.licenseType) + '</span>' : '';
+    var licenseNote = '<span class="ms-license">' + esc(licenseLabel(it.licenseType)) + '</span>';
     html += '<div class="ms-item">'
       + '<div class="ms-when">'
       +   '<div class="ms-date">' + esc(prettyDate(it.date)) + (isToday ? '<span class="ms-badge-today">오늘</span>' : '') + '</div>'
