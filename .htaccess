@@ -1,0 +1,6 @@
+# http:// 로 들어오는 모든 요청을 https:// 로 강제 전환합니다.
+# (SSL 없이 접속됐을 때 브라우저가 "연결이 안전하지 않음" 경고를 띄우고
+#  스타일/이미지가 깨져 보이는 문제를 막기 위한 조치)
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
