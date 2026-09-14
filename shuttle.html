@@ -84,6 +84,7 @@
   <div class="container">
     <div class="topbar-links">
       <a href="location.html">오시는 길</a>
+      <a href="my-schedule.html">내 일정 조회</a>
       <a href="shuttle.html">셔틀 조회</a>
       <a href="notice.html">공지사항</a>
     </div>
@@ -182,6 +183,7 @@
           <li><a href="license-guide.html">면허 탐색기</a></li>
           <li><a href="large-vehicle-training.html">대형연수</a></li>
           <li><a href="driving-lessons.html">도로연수</a></li>
+          <li><a href="my-schedule.html">내 일정 조회</a></li>
           <li><a href="shuttle.html">셔틀 조회</a></li>
           <li><a href="notice.html">공지사항</a></li>
           <li><a href="location.html">오시는길</a></li>
@@ -239,6 +241,13 @@ function esc(s) {
   return String(s == null ? "" : s)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
+/* 화면에 이름을 그대로 노출하지 않도록 가운데 글자를 가립니다 (예: 윤영철 -> 윤*철) */
+function maskName(name) {
+  name = String(name || "");
+  if (name.length <= 1) { return name; }
+  if (name.length === 2) { return name.charAt(0) + "*"; }
+  return name.charAt(0) + "*".repeat(name.length - 2) + name.charAt(name.length - 1);
+}
 function setStatus(msg, kind) {
   statusEl.textContent = msg || "";
   statusEl.className = "sh-status" + (kind ? " " + kind : "");
@@ -263,7 +272,7 @@ phoneEl.addEventListener("input", function () {
 
 function renderRides(rides) {
   var today = todayStr();
-  var html = '<div class="sh-results-head">' + nameEl.value.trim() + '님의 예정된 셔틀 ' + rides.length + '건</div>';
+  var html = '<div class="sh-results-head">' + esc(maskName(nameEl.value.trim())) + '님의 예정된 셔틀 ' + rides.length + '건</div>';
   rides.forEach(function (r) {
     var isToday = r.date === today;
     /* 개인 탑승시간이 출발시간과 다르면(중간에서 타는 경우) 출발시간도 함께 알려줍니다 */

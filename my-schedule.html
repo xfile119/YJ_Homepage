@@ -270,6 +270,13 @@ function esc(s) {
   return String(s == null ? "" : s)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
+/* 화면에 이름을 그대로 노출하지 않도록 가운데 글자를 가립니다 (예: 윤영철 -> 윤*철) */
+function maskName(name) {
+  name = String(name || "");
+  if (name.length <= 1) { return name; }
+  if (name.length === 2) { return name.charAt(0) + "*"; }
+  return name.charAt(0) + "*".repeat(name.length - 2) + name.charAt(name.length - 1);
+}
 function setStatus(msg, kind) {
   statusEl.textContent = msg || "";
   statusEl.className = "ms-status" + (kind ? " " + kind : "");
@@ -333,7 +340,7 @@ function renderItems(items) {
   var visible = currentFilter === "all" ? items : items.filter(function (it) { return (it.licenseType || "") === currentFilter; });
 
   var html = renderTabs(items);
-  html += '<div class="ms-results-head">' + esc(nameEl.value.trim()) + '님의 예정된 일정 ' + visible.length + '건</div>';
+  html += '<div class="ms-results-head">' + esc(maskName(nameEl.value.trim())) + '님의 예정된 일정 ' + visible.length + '건</div>';
   visible.forEach(function (it) {
     var isToday = it.date === today;
     var typeLabel = EDU_LABEL[it.eduType] || it.eduType;
