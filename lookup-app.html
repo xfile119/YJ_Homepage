@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>영진 셔틀/일정 조회</title>
+<meta name="description" content="영진자동차운전전문학원 셔틀·일정 조회, 강사 본인 수업 조회 앱입니다." />
+<meta name="robots" content="noindex" />
+
+<!-- PWA: 이 페이지만 태블릿·휴대폰 홈 화면에 앱처럼 설치할 수 있게 합니다 -->
+<link rel="manifest" href="manifest-lookup-app.json" />
+<meta name="theme-color" content="#6D28D9" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/lookup-app-192.png" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="영진 조회" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<style>
+body { background: var(--color-surface); }
+.app-wrap { max-width: 640px; margin: 0 auto; padding: 20px 18px 60px; }
+.app-header { text-align: center; padding: 10px 0 18px; }
+.app-header h1 { font-size: 19px; font-weight: 900; color: var(--color-ink); }
+.app-header p { margin-top: 4px; font-size: 12.5px; color: var(--color-muted); }
+
+.app-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+.app-tab {
+  flex: 1; text-align: center; font-family: inherit; font-size: 13.5px; font-weight: 800;
+  color: var(--color-muted); background: #fff; border: 1px solid var(--color-line);
+  border-radius: var(--radius-md); padding: 12px 8px; cursor: pointer; transition: all .15s ease;
+}
+.app-tab.is-active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+.app-pane { display: none; }
+.app-pane.is-active { display: block; }
+
+.form-card {
+  background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-lg);
+  padding: 24px 22px; box-shadow: var(--shadow-sm);
+}
+.form-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-field label { display: block; font-size: 12.5px; font-weight: 700; color: var(--color-ink); margin-bottom: 6px; }
+.form-field input {
+  width: 100%; box-sizing: border-box; border: 1px solid var(--color-line); border-radius: var(--radius-sm);
+  padding: 12px 13px; font-size: 15px; font-family: inherit; color: var(--color-ink); background: #fff;
+}
+.form-field input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
+.form-help { font-size: 11.5px; color: var(--color-muted); margin-top: 5px; }
+.form-status { margin-top: 14px; font-size: 13px; font-weight: 600; min-height: 18px; }
+.form-status.err { color: #c53030; }
+.form-status.ok { color: #1c8a4f; }
+
+.results { margin-top: 22px; display: none; }
+.results.show { display: block; }
+.results-head { font-size: 13.5px; font-weight: 800; color: var(--color-ink); margin-bottom: 12px; }
+.item-card {
+  display: flex; align-items: center; gap: 16px;
+  background: #fff; border: 1px solid var(--color-line); border-left: 5px solid var(--color-primary);
+  border-radius: var(--radius-md); padding: 16px 18px; margin-bottom: 10px;
+}
+.item-card .when { flex: none; text-align: center; min-width: 80px; }
+.item-card .date { font-size: 11.5px; font-weight: 700; color: var(--color-muted); }
+.item-card .time { font-size: 21px; font-weight: 900; color: var(--color-primary-dark); }
+.item-card .what { border-left: 1px solid var(--color-line); padding-left: 16px; flex: 1; }
+.item-card .who { font-size: 15px; font-weight: 800; color: var(--color-ink); }
+.item-card .tag {
+  display: inline-block; font-size: 11px; font-weight: 800; color: var(--color-muted);
+  border: 1px solid var(--color-line); border-radius: 6px; padding: 2px 7px; margin-bottom: 5px;
+}
+.item-card .type-badge {
+  display: inline-block; margin-top: 6px; background: var(--color-primary-light);
+  color: var(--color-primary-dark); font-size: 11.5px; font-weight: 800; border-radius: 999px; padding: 3px 10px;
+}
+.item-card .sub { display: block; margin-top: 6px; font-size: 11.5px; color: var(--color-muted); }
+.badge-today {
+  display: inline-block; background: var(--color-accent); color: var(--color-ink);
+  font-size: 10.5px; font-weight: 900; border-radius: 999px; padding: 2px 8px; margin-left: 5px;
+}
+.tabs-inline { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.tab-chip {
+  font-family: inherit; font-size: 12px; font-weight: 700; color: var(--color-muted);
+  background: #fff; border: 1px solid var(--color-line); border-radius: 999px; padding: 6px 13px; cursor: pointer;
+}
+.tab-chip.is-active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+.empty-box {
+  background: var(--color-surface); border: 1px dashed var(--color-line); border-radius: var(--radius-md);
+  padding: 22px 20px; text-align: center; color: var(--color-muted); font-size: 13px;
+}
+.who-strip {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  font-size: 12.5px; color: var(--color-muted); margin-bottom: 14px;
+}
+</style>
+</head>
+<body>
+
+<div class="app-wrap">
+  <div class="app-header">
+    <h1>영진자동차운전전문학원</h1>
+    <p>셔틀·일정 조회 / 강사 수업 조회</p>
+  </div>
+
+  <div class="app-tabs">
+    <button type="button" class="app-tab is-active" data-tab="sh">셔틀조회</button>
+    <button type="button" class="app-tab" data-tab="ms">일정조회</button>
+    <button type="button" class="app-tab" data-tab="in">강사조회</button>
+  </div>
+
+  <!-- 셔틀조회 -->
+  <div class="app-pane is-active" id="pane-sh">
+    <div class="form-card">
+      <form id="shForm" autocomplete="off">
+        <div class="form-fields">
+          <div class="form-field"><label for="shName">이름</label><input type="text" id="shName" placeholder="홍길동" required /></div>
+          <div class="form-field"><label for="shPhone">전화번호 뒷 4자리</label><input type="text" id="shPhone" placeholder="5678" inputmode="numeric" maxlength="4" required /></div>
+        </div>
+        <p class="form-help">본인 정보만 조회되며, 다른 분의 명단은 표시되지 않습니다.</p>
+        <button type="submit" class="btn btn-accent btn-block" style="margin-top:16px;" id="shSubmit">조회하기</button>
+      </form>
+      <p class="form-status" id="shStatus"></p>
+    </div>
+    <div class="results" id="shResults"></div>
+  </div>
+
+  <!-- 일정조회 -->
+  <div class="app-pane" id="pane-ms">
+    <div class="form-card">
+      <form id="msForm" autocomplete="off">
+        <div class="form-fields">
+          <div class="form-field"><label for="msName">이름</label><input type="text" id="msName" placeholder="홍길동" required /></div>
+          <div class="form-field"><label for="msPhone">전화번호 뒷 4자리</label><input type="text" id="msPhone" placeholder="5678" inputmode="numeric" maxlength="4" required /></div>
+        </div>
+        <p class="form-help">학과·기능·도로 교육 예정 일정을 확인하실 수 있어요.</p>
+        <button type="submit" class="btn btn-accent btn-block" style="margin-top:16px;" id="msSubmit">조회하기</button>
+      </form>
+      <p class="form-status" id="msStatus"></p>
+    </div>
+    <div class="results" id="msResults"></div>
+  </div>
+
+  <!-- 강사조회 -->
+  <div class="app-pane" id="pane-in">
+    <div class="form-card" id="inLoginCard">
+      <form id="inForm" autocomplete="off">
+        <div class="form-fields" style="grid-template-columns:1fr;">
+          <div class="form-field"><label for="inUser">아이디</label><input type="text" id="inUser" autocomplete="username" required /></div>
+          <div class="form-field"><label for="inPw">비밀번호</label><input type="password" id="inPw" autocomplete="current-password" required /></div>
+        </div>
+        <button type="submit" class="btn btn-accent btn-block" style="margin-top:16px;" id="inSubmit">로그인</button>
+      </form>
+      <p class="form-status" id="inStatus"></p>
+    </div>
+    <div id="inLoggedArea" style="display:none;">
+      <div class="who-strip">
+        <span id="inWho"></span>
+        <button type="button" class="btn btn-outline btn-sm" id="inLogout">로그아웃</button>
+      </div>
+      <div class="results show" id="inResults"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+"use strict";
+
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function maskName(name) {
+  name = String(name || "");
+  if (name.length <= 1) { return name; }
+  if (name.length === 2) { return name.charAt(0) + "*"; }
+  return name.charAt(0) + "*".repeat(name.length - 2) + name.charAt(name.length - 1);
+}
+function todayYmdDash() {
+  var d = new Date();
+  var m = String(d.getMonth() + 1), day = String(d.getDate());
+  return d.getFullYear() + "-" + (m.length < 2 ? "0" + m : m) + "-" + (day.length < 2 ? "0" + day : day);
+}
+function todayYmd() {
+  return todayYmdDash().replace(/-/g, "");
+}
+var WEEK = ["일", "월", "화", "수", "목", "금", "토"];
+function prettyDateDash(ymd) {
+  var p = String(ymd || "").split("-");
+  if (p.length !== 3) { return ymd; }
+  var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  return Number(p[1]) + "월 " + Number(p[2]) + "일 (" + WEEK[d.getDay()] + ")";
+}
+function prettyDate8(ymd) {
+  ymd = String(ymd || "");
+  if (ymd.length !== 8) { return ymd; }
+  var y = Number(ymd.slice(0, 4)), m = Number(ymd.slice(4, 6)), day = Number(ymd.slice(6, 8));
+  var d = new Date(y, m - 1, day);
+  return m + "월 " + day + "일 (" + WEEK[d.getDay()] + ")";
+}
+function prettyTime4(hms) {
+  hms = String(hms || "");
+  if (hms.length < 4) { return hms; }
+  return hms.slice(0, 2) + ":" + hms.slice(2, 4);
+}
+
+/* -------- 탭 전환 -------- */
+var tabs = document.querySelectorAll(".app-tab");
+var panes = { sh: document.getElementById("pane-sh"), ms: document.getElementById("pane-ms"), in: document.getElementById("pane-in") };
+tabs.forEach(function (t) {
+  t.addEventListener("click", function () {
+    tabs.forEach(function (x) { x.classList.remove("is-active"); });
+    Object.keys(panes).forEach(function (k) { panes[k].classList.remove("is-active"); });
+    t.classList.add("is-active");
+    panes[t.getAttribute("data-tab")].classList.add("is-active");
+  });
+});
+
+/* ================= 셔틀조회 ================= */
+(function () {
+  var form = document.getElementById("shForm");
+  var nameEl = document.getElementById("shName");
+  var phoneEl = document.getElementById("shPhone");
+  var statusEl = document.getElementById("shStatus");
+  var resultsEl = document.getElementById("shResults");
+  var submitBtn = document.getElementById("shSubmit");
+
+  phoneEl.addEventListener("input", function () { this.value = this.value.replace(/[^0-9]/g, "").slice(0, 4); });
+
+  function renderRides(rides) {
+    var today = todayYmdDash();
+    var html = '<div class="results-head">' + esc(maskName(nameEl.value.trim())) + '님의 예정된 셔틀 ' + rides.length + '건</div>';
+    rides.forEach(function (r) {
+      var isToday = r.date === today;
+      var departNote = (r.departTime && r.departTime !== r.time) ? '<span class="sub">차량 출발 ' + esc(r.departTime) + '</span>' : '';
+      var vehicle = r.vehicle ? '<span class="tag">' + esc(r.vehicle) + '</span>' : '';
+      html += '<div class="item-card">'
+        + '<div class="when"><div class="date">' + esc(prettyDateDash(r.date)) + (isToday ? '<span class="badge-today">오늘</span>' : '') + '</div><div class="time">' + esc(r.time) + '</div></div>'
+        + '<div class="what">' + vehicle + '<div class="who">' + esc(r.place ? r.place : "학원에 문의") + '</div>' + departNote + '</div>'
+        + '</div>';
+    });
+    resultsEl.innerHTML = html;
+    resultsEl.classList.add("show");
+  }
+  function renderEmpty() {
+    resultsEl.innerHTML = '<div class="empty-box">예정된 셔틀 탑승 정보가 없습니다.<br>062-951-5100으로 문의해주세요.</div>';
+    resultsEl.classList.add("show");
+  }
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var name = nameEl.value.trim(), tail = phoneEl.value.trim();
+    if (name === "" || tail.length !== 4) { statusEl.textContent = "이름과 전화번호 뒷 4자리를 정확히 입력해주세요."; statusEl.className = "form-status err"; return; }
+    statusEl.textContent = "조회 중..."; statusEl.className = "form-status";
+    submitBtn.disabled = true; resultsEl.classList.remove("show");
+    fetch("api/shuttle.php", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "lookup", name: name, phoneTail: tail }) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+      .then(function (res) {
+        if (!res.ok || res.body.error) { throw new Error(res.body.error || "조회에 실패했습니다."); }
+        statusEl.textContent = "";
+        if (res.body.found && res.body.rides.length) { renderRides(res.body.rides); } else { renderEmpty(); }
+      })
+      .catch(function () { statusEl.textContent = "지금은 조회할 수 없습니다. 062-951-5100으로 문의해주세요."; statusEl.className = "form-status err"; })
+      .then(function () { submitBtn.disabled = false; });
+  });
+})();
+
+/* ================= 일정조회 ================= */
+(function () {
+  var form = document.getElementById("msForm");
+  var nameEl = document.getElementById("msName");
+  var phoneEl = document.getElementById("msPhone");
+  var statusEl = document.getElementById("msStatus");
+  var resultsEl = document.getElementById("msResults");
+  var submitBtn = document.getElementById("msSubmit");
+
+  var EDU_LABEL = { "학과": "학과교육", "기능": "기능교육", "도로": "도로연수" };
+  var LICENSE_LABEL = {
+    "1": "1종보통(수동)", "A": "1종보통(자동)", "2": "2종보통(수동)", "3": "2종보통(자동)",
+    "4": "1종대형", "5": "대형견인", "6": "구난차", "7": "2종소형", "8": "원자", "9": "소형견인"
+  };
+  function licenseLabel(code) { if (!code) { return "면허 미지정"; } return LICENSE_LABEL[code] || code; }
+
+  phoneEl.addEventListener("input", function () { this.value = this.value.replace(/[^0-9]/g, "").slice(0, 4); });
+
+  var lastItems = [], currentFilter = "all";
+  function licenseGroups(items) {
+    var order = [], seen = {};
+    items.forEach(function (it) { var key = it.licenseType || ""; if (!(key in seen)) { seen[key] = 0; order.push(key); } seen[key]++; });
+    return { order: order, counts: seen };
+  }
+  function renderTabs(items) {
+    var groups = licenseGroups(items);
+    if (groups.order.length < 2) { return ""; }
+    var html = '<div class="tabs-inline">';
+    html += '<button type="button" class="tab-chip' + (currentFilter === "all" ? " is-active" : "") + '" data-filter="all">전체 (' + items.length + ')</button>';
+    groups.order.forEach(function (key) {
+      html += '<button type="button" class="tab-chip' + (currentFilter === key ? " is-active" : "") + '" data-filter="' + esc(key) + '">' + esc(licenseLabel(key)) + ' (' + groups.counts[key] + ')</button>';
+    });
+    html += '</div>';
+    return html;
+  }
+  function renderItems(items) {
+    lastItems = items;
+    var today = todayYmd();
+    var visible = currentFilter === "all" ? items : items.filter(function (it) { return (it.licenseType || "") === currentFilter; });
+    var html = renderTabs(items);
+    html += '<div class="results-head">' + esc(maskName(nameEl.value.trim())) + '님의 예정된 일정 ' + visible.length + '건</div>';
+    visible.forEach(function (it) {
+      var isToday = it.date === today;
+      var typeLabel = EDU_LABEL[it.eduType] || it.eduType;
+      var staffNote = it.staffName ? '<span class="sub">담당 ' + esc(it.staffName) + '</span>' : '';
+      html += '<div class="item-card">'
+        + '<div class="when"><div class="date">' + esc(prettyDate8(it.date)) + (isToday ? '<span class="badge-today">오늘</span>' : '') + '</div><div class="time">' + esc(prettyTime4(it.time)) + '</div></div>'
+        + '<div class="what"><span class="tag">' + esc(licenseLabel(it.licenseType)) + '</span><div class="who">' + esc(typeLabel) + '</div><span class="type-badge">' + esc(typeLabel) + '</span>' + staffNote + '</div>'
+        + '</div>';
+    });
+    resultsEl.innerHTML = html;
+    resultsEl.classList.add("show");
+    var chips = resultsEl.querySelectorAll(".tab-chip");
+    for (var i = 0; i < chips.length; i++) {
+      chips[i].addEventListener("click", function () { currentFilter = this.getAttribute("data-filter"); renderItems(lastItems); });
+    }
+  }
+  function renderEmpty() {
+    resultsEl.innerHTML = '<div class="empty-box">예정된 일정이 없습니다.<br>062-951-5100으로 문의해주세요.</div>';
+    resultsEl.classList.add("show");
+  }
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var name = nameEl.value.trim(), tail = phoneEl.value.trim();
+    if (name === "" || tail.length !== 4) { statusEl.textContent = "이름과 전화번호 뒷 4자리를 정확히 입력해주세요."; statusEl.className = "form-status err"; return; }
+    statusEl.textContent = "조회 중..."; statusEl.className = "form-status";
+    submitBtn.disabled = true; resultsEl.classList.remove("show"); currentFilter = "all";
+    fetch("api/schedule.php", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "lookup", name: name, phoneTail: tail }) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+      .then(function (res) {
+        if (!res.ok || res.body.error) { throw new Error(res.body.error || "조회에 실패했습니다."); }
+        statusEl.textContent = "";
+        if (res.body.found && res.body.schedule.length) { renderItems(res.body.schedule); } else { renderEmpty(); }
+      })
+      .catch(function () { statusEl.textContent = "지금은 조회할 수 없습니다. 062-951-5100으로 문의해주세요."; statusEl.className = "form-status err"; })
+      .then(function () { submitBtn.disabled = false; });
+  });
+})();
+
+/* ================= 강사조회 ================= */
+(function () {
+  var loginCard = document.getElementById("inLoginCard");
+  var loggedArea = document.getElementById("inLoggedArea");
+  var inForm = document.getElementById("inForm");
+  var inStatus = document.getElementById("inStatus");
+  var inWho = document.getElementById("inWho");
+  var inResults = document.getElementById("inResults");
+  var inSubmit = document.getElementById("inSubmit");
+
+  var EDU_LABEL = { "학과": "학과교육", "기능": "기능교육", "도로": "도로연수" };
+  var LICENSE_LABEL = {
+    "1": "1종보통(수동)", "A": "1종보통(자동)", "2": "2종보통(수동)", "3": "2종보통(자동)",
+    "4": "1종대형", "5": "대형견인", "6": "구난차", "7": "2종소형", "8": "원자", "9": "소형견인"
+  };
+  function licenseLabel(code) { if (!code) { return "면허 미지정"; } return LICENSE_LABEL[code] || code; }
+
+  function renderSchedule(realName, schedule) {
+    var today = todayYmd();
+    inWho.textContent = realName + " 강사님 · 예정된 일정 " + schedule.length + "건";
+    if (!schedule.length) { inResults.innerHTML = '<div class="empty-box">예정된 일정이 없습니다.</div>'; return; }
+    var html = "";
+    schedule.forEach(function (it) {
+      var isToday = it.date === today;
+      var typeLabel = EDU_LABEL[it.eduType] || it.eduType;
+      html += '<div class="item-card">'
+        + '<div class="when"><div class="date">' + esc(prettyDate8(it.date)) + (isToday ? '<span class="badge-today">오늘</span>' : '') + '</div><div class="time">' + esc(prettyTime4(it.time)) + '</div></div>'
+        + '<div class="what"><span class="tag">' + esc(licenseLabel(it.licenseType)) + '</span><div class="who">' + esc(it.studentName) + '</div><span class="type-badge">' + esc(typeLabel) + '</span>'
+        + (it.phone ? '<span class="sub">연락처 ' + esc(it.phone) + '</span>' : '') + '</div>'
+        + '</div>';
+    });
+    inResults.innerHTML = html;
+  }
+
+  function showLoggedIn() { loginCard.style.display = "none"; loggedArea.style.display = "block"; }
+  function showLoggedOut() { loginCard.style.display = "block"; loggedArea.style.display = "none"; }
+
+  function loadMySchedule() {
+    fetch("api/my-schedule.php", { credentials: "same-origin" })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+      .then(function (res) {
+        if (!res.ok || res.body.error) { throw new Error(res.body.error || "조회에 실패했습니다."); }
+        showLoggedIn();
+        renderSchedule(res.body.realName, res.body.schedule || []);
+      })
+      .catch(function (err) { inStatus.textContent = err.message || "조회에 실패했습니다."; inStatus.className = "form-status err"; });
+  }
+
+  fetch("api/auth.php", { credentials: "same-origin" }).then(function (r) { return r.json(); }).then(function (res) {
+    if (res && res.loggedIn) { loadMySchedule(); } else { showLoggedOut(); }
+  }).catch(function () { showLoggedOut(); });
+
+  inForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var u = document.getElementById("inUser").value.trim();
+    var p = document.getElementById("inPw").value;
+    if (!u || !p) { inStatus.textContent = "아이디와 비밀번호를 입력해주세요."; inStatus.className = "form-status err"; return; }
+    inStatus.textContent = "로그인 중..."; inStatus.className = "form-status";
+    inSubmit.disabled = true;
+    fetch("api/auth.php", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "login", username: u, password: p }) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+      .then(function (res) {
+        if (!res.ok || res.body.error) { throw new Error(res.body.error || "로그인에 실패했습니다."); }
+        inStatus.textContent = "";
+        loadMySchedule();
+      })
+      .catch(function (err) { inStatus.textContent = err.message; inStatus.className = "form-status err"; })
+      .then(function () { inSubmit.disabled = false; });
+  });
+
+  document.getElementById("inLogout").addEventListener("click", function () {
+    fetch("api/auth.php", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) })
+      .finally(function () {
+        document.getElementById("inUser").value = ""; document.getElementById("inPw").value = "";
+        showLoggedOut();
+      });
+  });
+})();
+
+})();
+</script>
+
+<!-- PWA: 서비스워커 등록 (이 페이지에만 적용되도록 scope를 이 페이지 자신으로 좁힙니다) -->
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw-lookup-app.js", { scope: "lookup-app.html" })
+      .catch(function () { /* 오프라인 캐시 없이도 페이지는 정상 동작하므로 조용히 무시합니다 */ });
+  });
+}
+</script>
+</body>
+</html>

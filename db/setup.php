@@ -84,6 +84,31 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}shuttle_riders (
   INDEX idx_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
+$pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}student_schedule (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_key VARCHAR(50) NOT NULL DEFAULT '',
+  name VARCHAR(50) NOT NULL DEFAULT '',
+  phone VARCHAR(30) NOT NULL DEFAULT '',
+  edu_type VARCHAR(10) NOT NULL DEFAULT '',
+  license_type VARCHAR(30) NOT NULL DEFAULT '',
+  reservation_date VARCHAR(10) NOT NULL DEFAULT '',
+  reservation_time VARCHAR(10) NOT NULL DEFAULT '',
+  staff_name VARCHAR(50) NOT NULL DEFAULT '',
+  place VARCHAR(100) NOT NULL DEFAULT '',
+  synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_name (name),
+  INDEX idx_date (reservation_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+$pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}contact_messages (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL DEFAULT '',
+  phone VARCHAR(30) NOT NULL DEFAULT '',
+  message TEXT NOT NULL,
+  status VARCHAR(10) NOT NULL DEFAULT 'unread',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
 /* 탑승자가 아직 없는 시간대도 남겨두기 위해 시간대를 따로 저장합니다 */
 $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}shuttle_slots (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -109,6 +134,29 @@ yj_ensure_column($pdo, $prefix . 'notices', 'image', 'VARCHAR(255) NULL');
 yj_ensure_column($pdo, $prefix . 'staff', 'greeting', 'VARCHAR(200) NULL');
 yj_ensure_column($pdo, $prefix . 'admin_users', 'role', "VARCHAR(20) NOT NULL DEFAULT 'admin'");
 yj_ensure_column($pdo, $prefix . 'shuttle_riders', 'updated_by', "VARCHAR(50) NOT NULL DEFAULT ''");
+yj_ensure_column($pdo, $prefix . 'student_schedule', 'license_type', "VARCHAR(30) NOT NULL DEFAULT ''");
+
+/* 역할 세분화(최고관리자/사무실/셔틀/강사, 한 사람이 여러 역할을 겸직할 수 있어
+   role 컬럼은 이제 쉼표로 구분된 여러 값을 담습니다, 예: "instructor,office").
+   강사 역할 계정이 학사서버 예약을 본인 것만 걸러보려면 실명이 필요합니다.
+   staff.name은 홈페이지에 공개되는 가명이라, 실명은 staff에 비공개 컬럼으로 따로 두고
+   계정을 자동 생성할 때 admin_users.real_name으로 복사해 둡니다. staff_id는 어느
+   임직원 카드에서 만들어진 계정인지 연결합니다. */
+yj_ensure_column($pdo, $prefix . 'staff', 'real_name', "VARCHAR(50) NULL DEFAULT NULL");
+yj_ensure_column($pdo, $prefix . 'admin_users', 'real_name', "VARCHAR(50) NULL DEFAULT NULL");
+yj_ensure_column($pdo, $prefix . 'admin_users', 'staff_id', "INT NULL DEFAULT NULL");
+
+/* role은 원래 VARCHAR(20)으로 만들어졌는데, 겸직 지원으로 쉼표 구분 여러 값
+   ("admin,manager,office,instructor" 이면 32자)을 담아야 해서 넓혀둡니다. */
+function yj_widen_column($pdo, $table, $column, $definition, $minLength) {
+    $check = $pdo->prepare("SELECT CHARACTER_MAXIMUM_LENGTH FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?");
+    $check->execute([$table, $column]);
+    $len = $check->fetchColumn();
+    if ($len !== false && (int)$len < $minLength) {
+        $pdo->exec("ALTER TABLE {$table} MODIFY COLUMN {$column} {$definition}");
+    }
+}
+yj_widen_column($pdo, $prefix . 'admin_users', 'role', "VARCHAR(60) NOT NULL DEFAULT 'admin'", 60);
 
 /* 2026-09: 셔틀 명단 확장
    - slot_no  : 시간이 아니라 "운행 편성 번호"로 사람과 편성을 묶습니다(시간을 고쳐도 명단이 따라옵니다).

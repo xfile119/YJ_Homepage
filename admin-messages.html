@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>문의 관리 (비공개)</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<style>
+  body { background: var(--color-surface); }
+  .admin-shell { max-width: 1080px; margin: 0 auto; padding: 32px 24px 80px; }
+  .admin-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+  .admin-header h1 { font-size: 22px; font-weight: 800; color: var(--color-ink); }
+  .admin-header-links { display: flex; gap: 8px; flex-wrap: wrap; }
+  .admin-warning {
+    background: #fff4e5; border: 1px solid #ffe1b3; color: #8a5910;
+    border-radius: var(--radius-md); padding: 16px 18px; font-size: 13.5px; line-height: 1.7; margin-bottom: 28px;
+  }
+  .admin-section { background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 22px; }
+  .admin-section h2 { font-size: 16px; font-weight: 800; color: var(--color-ink); margin-bottom: 8px; }
+  .admin-note { font-size: 12.5px; color: var(--color-muted); margin-bottom: 16px; line-height: 1.7; }
+  .msg-list { display: flex; flex-direction: column; gap: 12px; }
+  .msg-card { border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: 16px 18px; }
+  .msg-card.is-unread { border-color: var(--color-primary); background: var(--color-primary-light); }
+  .msg-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .msg-who { font-size: 14.5px; font-weight: 800; color: var(--color-ink); }
+  .msg-who a { color: inherit; }
+  .msg-date { font-size: 12px; color: var(--color-muted); }
+  .msg-status {
+    display: inline-block; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 3px 10px; margin-left: 8px;
+  }
+  .msg-status.unread { background: var(--color-primary); color: #fff; }
+  .msg-status.read { background: var(--color-line); color: var(--color-muted); }
+  .msg-body { font-size: 14px; color: var(--color-body); line-height: 1.7; white-space: pre-wrap; margin-bottom: 12px; }
+  .msg-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .msg-actions button {
+    border: 1px solid var(--color-line); background: #fff; border-radius: var(--radius-sm);
+    padding: 6px 12px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+  }
+  .msg-actions button:hover { background: var(--color-primary-light); border-color: var(--color-primary); }
+  .msg-actions button.danger:hover { background: #fdeeee; border-color: #d64545; color: #d64545; }
+  .empty-note { font-size: 13.5px; color: var(--color-muted); padding: 20px 0; text-align: center; }
+  #mainArea { display: none; }
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+  <div class="admin-header">
+    <h1>문의 관리</h1>
+    <div class="admin-header-links">
+      <a href="admin.html" class="btn btn-outline btn-sm">← 관리자 메인</a>
+      <a href="contact.html" class="btn btn-outline btn-sm">상담문의 페이지 보기</a>
+    </div>
+  </div>
+
+  <div class="admin-warning">
+    <strong>이 페이지는 비공개 도구입니다.</strong> 홈페이지 메뉴 어디에도 연결되어 있지 않고 검색엔진에도 노출되지 않아요.<br>
+    상담문의 페이지의 "문의 남기기" 양식으로 접수된 내용을 확인할 수 있습니다. 연락처에는 고객 개인정보가 포함되어 있으니 취급에 주의해주세요.
+  </div>
+
+  <p id="loadingMsg">불러오는 중...</p>
+
+  <div id="mainArea">
+    <div class="admin-section">
+      <h2>접수된 문의</h2>
+      <p class="admin-note">최신순으로 표시됩니다. "읽음 처리"를 누르면 표시가 사라지고, "삭제"를 누르면 목록에서 완전히 제거됩니다.</p>
+      <div class="msg-list" id="msgList"></div>
+      <p class="empty-note" id="emptyNote" style="display:none;">접수된 문의가 없습니다.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var DATA = [];
+var msgList = document.getElementById("msgList");
+var emptyNote = document.getElementById("emptyNote");
+var loadingMsg = document.getElementById("loadingMsg");
+var mainArea = document.getElementById("mainArea");
+
+function esc(str){
+  return String(str == null ? "" : str)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function telHref(phone){
+  return "tel:" + String(phone || "").replace(/[^0-9+]/g, "");
+}
+
+function render(){
+  msgList.innerHTML = "";
+  emptyNote.style.display = DATA.length ? "none" : "block";
+
+  DATA.forEach(function(row){
+    var card = document.createElement("div");
+    card.className = "msg-card" + (row.status === "unread" ? " is-unread" : "");
+    card.innerHTML =
+      '<div class="msg-top">' +
+        '<span class="msg-who">' + esc(row.name) +
+          ' · <a href="' + telHref(row.phone) + '">' + esc(row.phone) + '</a>' +
+          '<span class="msg-status ' + (row.status === "unread" ? "unread" : "read") + '">' +
+            (row.status === "unread" ? "안읽음" : "읽음") + '</span>' +
+        '</span>' +
+        '<span class="msg-date">' + esc(row.createdAt) + '</span>' +
+      '</div>' +
+      '<div class="msg-body">' + esc(row.message) + '</div>' +
+      '<div class="msg-actions">' +
+        '<button type="button" class="btn-toggle-status">' + (row.status === "unread" ? "읽음 처리" : "안읽음으로") + '</button>' +
+        '<button type="button" class="btn-del danger">삭제</button>' +
+      '</div>';
+    msgList.appendChild(card);
+
+    card.querySelector(".btn-toggle-status").addEventListener("click", function(){
+      var nextStatus = row.status === "unread" ? "read" : "unread";
+      fetch("api/contact.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "mark_status", id: row.id, status: nextStatus })
+      }).then(function(r){ return r.json().then(function(data){ return { ok: r.ok, data: data }; }); })
+        .then(function(res){
+          if (res.ok) { row.status = nextStatus; render(); }
+          else { alert("오류: " + (res.data.error || "처리 실패")); }
+        }).catch(function(){ alert("서버에 접속할 수 없습니다."); });
+    });
+
+    card.querySelector(".btn-del").addEventListener("click", function(){
+      if (!confirm("이 문의를 삭제할까요? 삭제하면 되돌릴 수 없습니다.")) return;
+      fetch("api/contact.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", id: row.id })
+      }).then(function(r){ return r.json().then(function(data){ return { ok: r.ok, data: data }; }); })
+        .then(function(res){
+          if (res.ok) {
+            DATA = DATA.filter(function(m){ return m.id !== row.id; });
+            render();
+          } else { alert("오류: " + (res.data.error || "삭제 실패")); }
+        }).catch(function(){ alert("서버에 접속할 수 없습니다."); });
+    });
+  });
+}
+
+fetch("api/auth.php").then(function(r){ return r.json(); }).then(function(res){
+  if (!res || !res.loggedIn || res.role === "office") {
+    location.href = "admin.html";
+    return;
+  }
+  return fetch("api/contact.php").then(function(r){ return r.json(); }).then(function(res2){
+    DATA = (res2 && res2.messages) || [];
+    render();
+    loadingMsg.style.display = "none";
+    mainArea.style.display = "block";
+  });
+}).catch(function(err){
+  loadingMsg.textContent = "서버(api)에 접속할 수 없습니다. config.php 설정, DB 연결, 서버의 PHP 실행 여부를 확인해주세요. (" + (err && err.message ? err.message : err) + ")";
+});
+
+})();
+</script>
+</body>
+</html>

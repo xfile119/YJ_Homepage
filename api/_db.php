@@ -6,6 +6,23 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+/* 치명적 오류(fatal error)가 나도 빈 화면 대신 원인을 알 수 있는 JSON을 돌려줍니다.
+   (디버깅용 — 문제 원인이 밝혀지면 이 블록은 다시 지워도 됩니다) */
+register_shutdown_function(function () {
+    $err = error_get_last();
+    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        if (!headers_sent()) {
+            http_response_code(500);
+            header('Content-Type: application/json; charset=utf-8');
+        }
+        echo json_encode([
+            'error' => 'Fatal error: ' . $err['message'],
+            'file' => $err['file'],
+            'line' => $err['line'],
+        ], JSON_UNESCAPED_UNICODE);
+    }
+});
+
 function yj_config() {
     static $config = null;
     if ($config === null) {
@@ -53,16 +70,57 @@ function yj_require_login() {
     }
 }
 
-/* 현재 로그인한 계정의 권한: 'admin'(전체) 또는 'office'(셔틀 명단만) */
-function yj_role() {
-    return isset($_SESSION['yj_role']) ? $_SESSION['yj_role'] : 'admin';
+/* 현재 로그인한 계정의 역할들 (겸직 가능해서 쉼표로 구분된 하나 이상의 값):
+   'admin' = 최고관리자(전체+계정관리), 'manager' = 사무실(전체, 계정관리 제외),
+   'office' = 셔틀계정(셔틀 명단만), 'instructor' = 강사(본인 예약만 조회) */
+function yj_roles() {
+    $raw = isset($_SESSION['yj_role']) ? (string)$_SESSION['yj_role'] : 'admin';
+    $parts = array_filter(array_map('trim', explode(',', $raw)), function ($v) { return $v !== ''; });
+    return $parts ? array_values($parts) : ['admin'];
+}
+function yj_has_role($role) {
+    return in_array($role, yj_roles(), true);
 }
 
-/* 공지·수강료·임직원·업로드처럼 원장님만 손대야 하는 기능에 씁니다. */
+/* 계정 관리(다른 로그인 생성·삭제)처럼 최고관리자만 손대야 하는 기능에 씁니다. */
 function yj_require_admin() {
     yj_require_login();
-    if (yj_role() !== 'admin') {
-        yj_json(['error' => '이 작업은 관리자 계정만 할 수 있습니다.'], 403);
+    if (!yj_has_role('admin')) {
+        yj_json(['error' => '이 작업은 최고관리자 계정만 할 수 있습니다.'], 403);
+    }
+}
+
+/* 공지·수강료·임직원·업로드·문의메시지·면허가이드처럼, 계정 관리를 제외한
+   콘텐츠 전반을 다루는 기능에 씁니다 (최고관리자 + 사무실, 겸직도 통과). */
+function yj_require_content_admin() {
+    yj_require_login();
+    if (!yj_has_role('admin') && !yj_has_role('manager')) {
+        yj_json(['error' => '이 작업은 관리자 또는 사무실 계정만 할 수 있습니다.'], 403);
+    }
+}
+
+/* 셔틀 명단 작성/조회에 씁니다 (최고관리자 + 사무실 + 셔틀계정, 겸직도 통과).
+   강사 역할만 있는 계정은 셔틀 명단을 건드릴 필요가 없어 막습니다. */
+function yj_require_shuttle_admin() {
+    yj_require_login();
+    if (!yj_has_role('admin') && !yj_has_role('manager') && !yj_has_role('office')) {
+        yj_json(['error' => '이 작업은 관리자·사무실·셔틀 계정만 할 수 있습니다.'], 403);
+    }
+}
+
+/* 학사서버의 동기화 프로그램처럼, 로그인 세션이 없는 서버-투-서버 호출을 인증할 때 씁니다.
+   요청 헤더 X-Sync-Key 값이 config.php의 schedule_sync_key와 일치해야 통과합니다. */
+function yj_require_sync_key() {
+    $c = yj_config();
+    $expected = isset($c['schedule_sync_key']) ? (string)$c['schedule_sync_key'] : '';
+    /* $_SERVER의 HTTP_X_SYNC_KEY는 웹서버 종류(Apache/nginx+PHP-FPM 등)와 무관하게
+       항상 쓸 수 있어서, getallheaders()보다 더 안전합니다. */
+    $given = isset($_SERVER['HTTP_X_SYNC_KEY']) ? (string)$_SERVER['HTTP_X_SYNC_KEY'] : '';
+    $match = function_exists('hash_equals')
+        ? hash_equals($expected, $given)
+        : ($expected !== '' && $expected === $given);
+    if ($expected === '' || $given === '' || !$match) {
+        yj_json(['error' => '인증에 실패했습니다.'], 401);
     }
 }
 

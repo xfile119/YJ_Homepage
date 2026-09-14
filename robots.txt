@@ -1,6 +1,4 @@
 # 영진자동차운전전문학원 robots.txt
-# 사이트를 하위 경로(예: /new)에 올려두신 동안에는 아래 Sitemap 주소도
-# 같은 경로로 맞춰 주세요. (예: https://www.yjcdrive.co.kr/new/sitemap.xml)
 
 User-agent: *
 Allow: /

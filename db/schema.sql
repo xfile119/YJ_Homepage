@@ -5,8 +5,16 @@ CREATE TABLE IF NOT EXISTS {prefix}admin_users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   username VARCHAR(50) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  -- 'admin' = 전체 권한(원장), 'office' = 셔틀 명단만
-  role VARCHAR(20) NOT NULL DEFAULT 'admin',
+  -- 쉼표로 구분된 하나 이상의 역할 (겸직 가능), 예: "instructor,office"
+  -- 'admin' = 최고관리자(전체+계정관리), 'manager' = 사무실(전체, 계정관리 제외),
+  -- 'office' = 셔틀계정(셔틀 명단만), 'instructor' = 강사(본인 예약만 조회)
+  role VARCHAR(60) NOT NULL DEFAULT 'admin',
+  -- instructor 역할이 학사서버 예약을 본인 것만 걸러보기 위한 비공개 실명
+  -- (staff.name은 홈페이지에 공개되는 가명이라 여기 따로 둡니다. 계정 자동 생성 시
+  -- staff.real_name에서 복사됩니다.)
+  real_name VARCHAR(50) NULL DEFAULT NULL,
+  -- 임직원 등록 화면에서 자동 생성된 계정이면, 어느 staff 카드에서 만들어졌는지 연결
+  staff_id INT NULL DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -58,6 +66,36 @@ CREATE TABLE IF NOT EXISTS {prefix}shuttle_riders (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_ride_date (ride_date),
   INDEX idx_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS {prefix}contact_messages (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL DEFAULT '',
+  phone VARCHAR(30) NOT NULL DEFAULT '',
+  message TEXT NOT NULL,
+  -- 'unread' = 원장님이 아직 확인 안 함, 'read' = 확인함
+  status VARCHAR(10) NOT NULL DEFAULT 'unread',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- 학사서버(MSSQL)에서 주기적으로 밀어넣는(push) "다가오는 일정"의 최소 정보 사본입니다.
+-- 원본이 아니라 캐시이므로, 매 동기화마다 전체 삭제 후 다시 채웁니다(schedule-sync.php 참고).
+-- 주민번호 등 민감정보는 애초에 포함하지 않습니다.
+CREATE TABLE IF NOT EXISTS {prefix}student_schedule (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_key VARCHAR(50) NOT NULL DEFAULT '',
+  name VARCHAR(50) NOT NULL DEFAULT '',
+  phone VARCHAR(30) NOT NULL DEFAULT '',
+  edu_type VARCHAR(10) NOT NULL DEFAULT '',
+  -- 같은 학생이 면허를 여러 개 등록한 경우(학사 DB의 서로 다른 StudentID) 구분해서 보여주기 위한 값입니다.
+  license_type VARCHAR(30) NOT NULL DEFAULT '',
+  reservation_date VARCHAR(10) NOT NULL DEFAULT '',
+  reservation_time VARCHAR(10) NOT NULL DEFAULT '',
+  staff_name VARCHAR(50) NOT NULL DEFAULT '',
+  place VARCHAR(100) NOT NULL DEFAULT '',
+  synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_name (name),
+  INDEX idx_date (reservation_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS {prefix}shuttle_slots (

@@ -111,17 +111,24 @@ function renderList(){
   staffList.innerHTML = "";
   DATA.forEach(function(row, i){
     if (!row.courseTypes) row.courseTypes = [];
+    if (!row.workTypes) row.workTypes = row.workType ? [row.workType] : [];
     if (row.greeting == null) row.greeting = "";
+    if (row.realName == null) row.realName = "";
+    if (row.autoCreateAccount == null) row.autoCreateAccount = false;
     var card = document.createElement("div");
     card.className = "staff-card";
 
-    var workOptsHtml = WORK_TYPES.map(function(w){
-      return '<option value="' + w + '"' + (row.workType === w ? " selected" : "") + '>' + w + '</option>';
+    var workChecksHtml = WORK_TYPES.map(function(w){
+      var checked = row.workTypes.indexOf(w) >= 0 ? " checked" : "";
+      return '<label><input type="checkbox" class="f-worktype" value="' + esc(w) + '"' + checked + '> ' + esc(w) + '</label>';
     }).join("");
     var courseChecksHtml = COURSE_TYPES.map(function(c, ci){
       var checked = row.courseTypes.indexOf(c) >= 0 ? " checked" : "";
       return '<label><input type="checkbox" class="f-course" value="' + esc(c) + '"' + checked + '> ' + esc(c) + '</label>';
     }).join("");
+    var accountNote = row.accountUsername
+      ? '<span style="display:block;margin-top:4px;font-size:12px;color:var(--color-muted);">연동 계정: <b>' + esc(row.accountUsername) + '</b></span>'
+      : '';
 
     card.innerHTML =
       '<div class="staff-photo-col">' +
@@ -132,12 +139,17 @@ function renderList(){
       '</div>' +
       '<div class="staff-fields">' +
         '<div class="field-grid">' +
-          '<div class="admin-field"><label>이름</label><input class="f-name" type="text" value="' + esc(row.name).replace(/"/g,"&quot;") + '"></div>' +
+          '<div class="admin-field"><label>이름 (가명, 홈페이지에 공개됨)</label><input class="f-name" type="text" value="' + esc(row.name).replace(/"/g,"&quot;") + '"></div>' +
           '<div class="admin-field"><label>성향 (MBTI)</label><input class="f-mbti" type="text" placeholder="예: ENFP" value="' + esc(row.mbti).replace(/"/g,"&quot;") + '"></div>' +
-          '<div class="admin-field"><label>근무형태</label><select class="f-worktype">' + workOptsHtml + '</select></div>' +
+          '<div class="admin-field"><label>실명 (비공개, 학사서버 연동용)</label><input class="f-realname" type="text" placeholder="예: 김철수" value="' + esc(row.realName).replace(/"/g,"&quot;") + '"></div>' +
         '</div>' +
         '<div class="admin-field"><label>인사말 (선택, 캐러셀 MBTI 아래에 표시됩니다)</label><input class="f-greeting" type="text" maxlength="60" placeholder="예: 안전운전이 최우선입니다!" value="' + esc(row.greeting).replace(/"/g,"&quot;") + '"></div>' +
+        '<div class="admin-field"><label>근무형태 (해당되는 항목 모두 선택, 겸직 가능)</label><div class="course-checks">' + workChecksHtml + '</div></div>' +
         '<div class="admin-field"><label>강의종별 (해당되는 항목 모두 선택)</label><div class="course-checks">' + courseChecksHtml + '</div></div>' +
+        '<div class="admin-field">' +
+          '<label><input type="checkbox" class="f-autocreate"' + (row.autoCreateAccount ? " checked" : "") + (row.accountUsername ? " disabled" : "") + '> 로그인 계정 자동 생성 (선택한 근무형태에 맞는 권한으로)</label>' +
+          accountNote +
+        '</div>' +
       '</div>' +
       '<div class="staff-card-actions">' +
         '<button type="button" class="btn-up" title="위로">↑</button>' +
@@ -148,8 +160,17 @@ function renderList(){
 
     card.querySelector(".f-name").addEventListener("input", function(){ row.name = this.value; });
     card.querySelector(".f-mbti").addEventListener("input", function(){ row.mbti = this.value.toUpperCase(); });
-    card.querySelector(".f-worktype").addEventListener("change", function(){ row.workType = this.value; });
+    card.querySelector(".f-realname").addEventListener("input", function(){ row.realName = this.value; });
     card.querySelector(".f-greeting").addEventListener("input", function(){ row.greeting = this.value; });
+    card.querySelector(".f-autocreate").addEventListener("change", function(){ row.autoCreateAccount = this.checked; });
+    Array.prototype.forEach.call(card.querySelectorAll(".f-worktype"), function(cb){
+      cb.addEventListener("change", function(){
+        var v = this.value;
+        var idx = row.workTypes.indexOf(v);
+        if (this.checked && idx < 0) row.workTypes.push(v);
+        if (!this.checked && idx >= 0) row.workTypes.splice(idx, 1);
+      });
+    });
     Array.prototype.forEach.call(card.querySelectorAll(".f-course"), function(cb){
       cb.addEventListener("change", function(){
         var v = this.value;
@@ -202,19 +223,39 @@ function renderList(){
 }
 
 document.getElementById("btnAddRow").addEventListener("click", function(){
-  DATA.push({ name: "새 임직원", mbti: "", workType: "강사", courseTypes: [], photo: null, greeting: "" });
+  DATA.push({ name: "새 임직원", mbti: "", workTypes: ["강사"], courseTypes: [], photo: null, greeting: "", realName: "", autoCreateAccount: false });
   renderList();
 });
 
+var newAccountsBox = document.createElement("div");
+newAccountsBox.id = "newAccountsBox";
+newAccountsBox.style.cssText = "display:none;margin-top:14px;padding:14px 16px;background:#fff8e6;border:1px solid #ffe1a8;border-radius:var(--radius-md);font-size:13px;color:#8a5910;line-height:1.8;";
+document.getElementById("mainArea").insertBefore(newAccountsBox, document.querySelector(".admin-actions"));
+
 document.getElementById("btnSave").addEventListener("click", function(){
   statusMsg.textContent = "저장 중...";
+  newAccountsBox.style.display = "none";
   fetch("api/staff.php", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "save_all", staff: DATA })
   }).then(function(r){ return r.json().then(function(data){ return { ok: r.ok, data: data }; }); })
     .then(function(res){
-      statusMsg.textContent = res.ok ? "저장 완료! 홈페이지에 바로 반영됩니다." : "오류: " + (res.data.error || "저장 실패");
+      if (!res.ok) { statusMsg.textContent = "오류: " + (res.data.error || "저장 실패"); return; }
+      statusMsg.textContent = "저장 완료! 홈페이지에 바로 반영됩니다.";
+      var created = res.data.createdAccounts || [];
+      if (created.length) {
+        newAccountsBox.innerHTML = "<strong>새로 만들어진 계정 — 지금만 보이니 꼭 적어두거나 담당자에게 전달해주세요:</strong><br>"
+          + created.map(function(a){
+              return esc(a.name) + " — 아이디: <b>" + esc(a.username) + "</b> / 임시비밀번호: <b>" + esc(a.password) + "</b>";
+            }).join("<br>");
+        newAccountsBox.style.display = "block";
+      }
+      /* 다시 불러와서 연동 계정 표시(accountUsername)를 화면에 반영합니다 */
+      return fetch("api/staff.php").then(function(r){ return r.json(); }).then(function(res2){
+        DATA = (res2 && res2.staff) || [];
+        renderList();
+      });
     }).catch(function(){ statusMsg.textContent = "서버에 접속할 수 없습니다."; });
 });
 

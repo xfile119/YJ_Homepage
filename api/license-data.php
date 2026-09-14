@@ -14,7 +14,7 @@ if ($method !== 'POST') {
     yj_json(['error' => 'Method not allowed'], 405);
 }
 
-yj_require_admin();
+yj_require_content_admin();
 $body = yj_input();
 $data = isset($body['data']) ? $body['data'] : null;
 
