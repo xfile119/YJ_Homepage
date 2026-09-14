@@ -5,7 +5,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 $table = yj_table('contact_messages');
 
 if ($method === 'GET') {
-    yj_require_admin();
+    yj_require_content_admin();
     $stmt = yj_db()->query("SELECT id, name, phone, message, status, created_at FROM $table ORDER BY id DESC");
     $rows = $stmt->fetchAll();
     $messages = array_map(function ($r) {
@@ -47,7 +47,7 @@ if ($action === 'submit') {
     yj_json(['ok' => true]);
 }
 
-yj_require_admin();
+yj_require_content_admin();
 
 if ($action === 'mark_status') {
     $id = isset($body['id']) ? (int)$body['id'] : 0;

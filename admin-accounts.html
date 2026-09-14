@@ -29,7 +29,9 @@
     padding: 3px 10px; margin-left: 7px; vertical-align: 2px;
   }
   .role.admin { background: var(--color-primary-light); color: var(--color-primary-dark); }
+  .role.manager { background: #eef0fb; color: #4b3fa8; }
   .role.office { background: #e6effb; color: #2b5aa8; }
+  .role.instructor { background: #e9f7ee; color: #1c8a4f; }
   .acct .who span { display: block; font-size: 12.5px; color: var(--color-muted); margin-top: 3px; }
   .acct input[type="password"] {
     width: 190px; border: 1px solid var(--color-line); border-radius: var(--radius-sm);
@@ -75,8 +77,9 @@
   <div class="panel">
     <h2>계정 목록</h2>
     <p class="hint">
-      <strong>관리자</strong>는 공지·수강료·임직원·셔틀 전부를 다룰 수 있고,
-      <strong>사무실(office)</strong>은 <strong>셔틀 명단만</strong> 작성할 수 있습니다.
+      <strong>최고관리자</strong>는 전체 + 계정 관리, <strong>사무실</strong>은 계정 관리를 뺀 전체,
+      <strong>셔틀계정</strong>은 셔틀 명단만, <strong>강사</strong>는 본인 예약만 조회할 수 있습니다.
+      한 계정이 여러 역할을 겸직할 수 있습니다.
     </p>
     <div id="acctList" style="margin-top:16px;">
       <p class="hint">불러오는 중...</p>
@@ -85,17 +88,36 @@
   </div>
 
   <div class="panel">
-    <h2>사무실 계정 추가</h2>
-    <p class="hint">직원이 더 필요하면 여기서 계정을 만드세요. 이 화면에서 만드는 계정은 항상 셔틀 명단 권한만 갖습니다.</p>
+    <h2>계정 추가</h2>
+    <p class="hint">직원이 더 필요하면 여기서 계정을 만드세요 (최고관리자 계정은 이 화면에서 늘릴 수 없습니다). 역할은 여러 개 선택할 수 있습니다.</p>
     <div class="new-row">
       <div>
         <label for="newUser">아이디</label>
-        <input type="text" id="newUser" placeholder="office4" autocomplete="off" />
+        <input type="text" id="newUser" placeholder="예: office4" autocomplete="off" />
       </div>
       <div>
         <label for="newPw">비밀번호 (8자 이상)</label>
         <input type="password" id="newPw" autocomplete="new-password" />
       </div>
+    </div>
+    <div class="new-row" style="margin-top:14px;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:700;color:var(--color-ink);">
+        <input type="checkbox" class="new-role" value="manager" /> 사무실
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:700;color:var(--color-ink);">
+        <input type="checkbox" class="new-role" value="office" /> 셔틀계정
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:700;color:var(--color-ink);">
+        <input type="checkbox" class="new-role" value="instructor" /> 강사
+      </label>
+    </div>
+    <div class="new-row" id="newRealNameRow" style="margin-top:10px;display:none;">
+      <div>
+        <label for="newRealName">강사 실명 (학사서버 담당강사 이름과 동일하게, 비공개)</label>
+        <input type="text" id="newRealName" placeholder="예: 김철수" autocomplete="off" />
+      </div>
+    </div>
+    <div class="new-row" style="margin-top:14px;">
       <button type="button" id="btnCreate" class="btn btn-primary btn-sm">계정 만들기</button>
     </div>
   </div>
@@ -130,18 +152,25 @@ function post(payload) {
   });
 }
 
+var ROLE_LABEL = { admin: "최고관리자", manager: "사무실", office: "셔틀계정", instructor: "강사" };
+
 function render(users, me) {
   if (!users.length) { listEl.innerHTML = '<p class="hint">계정이 없습니다.</p>'; return; }
   listEl.innerHTML = users.map(function (u) {
-    var isOffice = u.role === "office";
+    var roles = u.roles && u.roles.length ? u.roles : ["admin"];
+    var isAdmin = roles.indexOf("admin") >= 0;
+    var badges = roles.map(function (r) {
+      return '<span class="role ' + esc(r) + '">' + esc(ROLE_LABEL[r] || r) + '</span>';
+    }).join("");
+    var realNameNote = u.realName ? '<span>실명: ' + esc(u.realName) + '</span>' : '';
     return '<div class="acct" data-user="' + esc(u.username) + '">'
-      + '<div class="who"><b>' + esc(u.username) + '</b>'
-      +   '<span class="role ' + (isOffice ? "office" : "admin") + '">' + (isOffice ? "사무실 · 셔틀 명단만" : "관리자 · 전체") + '</span>'
+      + '<div class="who"><b>' + esc(u.username) + '</b>' + badges
       +   (u.username === me ? '<span>지금 로그인한 계정</span>' : '')
+      +   realNameNote
       + '</div>'
       + '<input type="password" class="f-pw" placeholder="새 비밀번호 (8자 이상)" autocomplete="new-password" />'
       + '<button type="button" class="btn btn-outline btn-sm btn-pw">변경</button>'
-      + (isOffice && u.username !== me
+      + (!isAdmin && u.username !== me
           ? '<button type="button" class="btn btn-outline btn-sm btn-del">삭제</button>' : '')
       + '</div>';
   }).join("");
@@ -187,16 +216,31 @@ listEl.addEventListener("click", function (e) {
   }
 });
 
+var roleChecks = document.querySelectorAll(".new-role");
+var realNameRow = document.getElementById("newRealNameRow");
+function syncRealNameVisibility() {
+  var hasInstructor = Array.prototype.some.call(roleChecks, function (c) { return c.value === "instructor" && c.checked; });
+  realNameRow.style.display = hasInstructor ? "flex" : "none";
+}
+Array.prototype.forEach.call(roleChecks, function (c) { c.addEventListener("change", syncRealNameVisibility); });
+
 document.getElementById("btnCreate").addEventListener("click", function () {
   var u = document.getElementById("newUser").value.trim();
   var p = document.getElementById("newPw").value;
+  var roles = Array.prototype.filter.call(roleChecks, function (c) { return c.checked; }).map(function (c) { return c.value; });
+  var realName = document.getElementById("newRealName").value.trim();
   if (!u) { setStatus("아이디를 입력해주세요.", "err"); return; }
   if (p.length < 8) { setStatus("비밀번호는 8자 이상으로 정해주세요.", "err"); return; }
+  if (!roles.length) { setStatus("역할을 하나 이상 선택해주세요.", "err"); return; }
+  if (roles.indexOf("instructor") >= 0 && !realName) { setStatus("강사 역할은 실명을 입력해주세요.", "err"); return; }
   setStatus("만드는 중...");
-  post({ action: "create", username: u, password: p })
+  post({ action: "create", username: u, password: p, roles: roles.join(","), realName: realName })
     .then(function () {
       document.getElementById("newUser").value = "";
       document.getElementById("newPw").value = "";
+      document.getElementById("newRealName").value = "";
+      Array.prototype.forEach.call(roleChecks, function (c) { c.checked = false; });
+      syncRealNameVisibility();
       setStatus(u + " 계정을 만들었습니다.", "ok");
       load();
     })

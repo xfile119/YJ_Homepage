@@ -5,8 +5,16 @@ CREATE TABLE IF NOT EXISTS {prefix}admin_users (
   id INT AUTO_INCREMENT PRIMARY KEY,
   username VARCHAR(50) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
-  -- 'admin' = 전체 권한(원장), 'office' = 셔틀 명단만
-  role VARCHAR(20) NOT NULL DEFAULT 'admin',
+  -- 쉼표로 구분된 하나 이상의 역할 (겸직 가능), 예: "instructor,office"
+  -- 'admin' = 최고관리자(전체+계정관리), 'manager' = 사무실(전체, 계정관리 제외),
+  -- 'office' = 셔틀계정(셔틀 명단만), 'instructor' = 강사(본인 예약만 조회)
+  role VARCHAR(60) NOT NULL DEFAULT 'admin',
+  -- instructor 역할이 학사서버 예약을 본인 것만 걸러보기 위한 비공개 실명
+  -- (staff.name은 홈페이지에 공개되는 가명이라 여기 따로 둡니다. 계정 자동 생성 시
+  -- staff.real_name에서 복사됩니다.)
+  real_name VARCHAR(50) NULL DEFAULT NULL,
+  -- 임직원 등록 화면에서 자동 생성된 계정이면, 어느 staff 카드에서 만들어졌는지 연결
+  staff_id INT NULL DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

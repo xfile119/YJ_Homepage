@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>내 예약 조회 (비공개)</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<style>
+  body { background: var(--color-surface); }
+  .admin-shell { max-width: 720px; margin: 0 auto; padding: 32px 24px 80px; }
+  .admin-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  .admin-header h1 { font-size: 22px; font-weight: 800; color: var(--color-ink); }
+  .admin-warning {
+    background: #fff4e5; border: 1px solid #ffe1b3; color: #8a5910;
+    border-radius: var(--radius-md); padding: 16px 18px; font-size: 13.5px; line-height: 1.7; margin-bottom: 24px;
+  }
+  .ms-item {
+    display: flex; align-items: center; gap: 18px;
+    background: #fff; border: 1px solid var(--color-line); border-left: 5px solid var(--color-primary);
+    border-radius: var(--radius-md); padding: 20px 22px; margin-bottom: 12px;
+  }
+  .ms-item .ms-when { flex: none; text-align: center; min-width: 92px; }
+  .ms-item .ms-date { font-size: 12.5px; font-weight: 700; color: var(--color-muted); }
+  .ms-item .ms-time { font-size: 25px; font-weight: 900; color: var(--color-primary-dark); line-height: 1.25; }
+  .ms-item .ms-what { border-left: 1px solid var(--color-line); padding-left: 18px; flex: 1; }
+  .ms-item .ms-who { font-size: 17px; font-weight: 800; color: var(--color-ink); }
+  .ms-item .ms-license {
+    display: inline-block; font-size: 11.5px; font-weight: 800; color: var(--color-muted);
+    border: 1px solid var(--color-line); border-radius: 6px; padding: 2px 8px; margin-bottom: 6px;
+  }
+  .ms-item .ms-type {
+    display: inline-block; margin-top: 8px; background: var(--color-primary-light);
+    color: var(--color-primary-dark); font-size: 12.5px; font-weight: 800; border-radius: 999px; padding: 4px 11px;
+  }
+  .ms-item .ms-phone { display: block; margin-top: 7px; font-size: 12px; color: var(--color-muted); }
+  .ms-badge-today {
+    display: inline-block; background: var(--color-accent); color: var(--color-ink);
+    font-size: 11.5px; font-weight: 900; border-radius: 999px; padding: 3px 9px; margin-left: 6px;
+  }
+  .ms-empty {
+    background: #fff; border: 1px dashed var(--color-line); border-radius: var(--radius-md);
+    padding: 26px 24px; text-align: center; color: var(--color-muted); font-size: 13.5px;
+  }
+  #mainArea { display: none; }
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+  <div class="admin-header">
+    <h1>내 예약 조회</h1>
+    <a href="admin.html" class="btn btn-outline btn-sm">← 관리자 메인</a>
+  </div>
+
+  <div class="admin-warning">
+    <strong>이 페이지는 비공개 도구입니다.</strong> 로그인 계정에 등록된 실명과 학사서버 담당강사 이름이
+    일치하는 예약만 보여줍니다. 이름이 다르게 나오거나 조회가 안 되면 관리자에게 계정의 실명 등록을 요청해주세요.
+  </div>
+
+  <p id="loadingMsg">불러오는 중...</p>
+
+  <div id="mainArea">
+    <p id="headMsg" style="font-size:14px;font-weight:800;color:var(--color-ink);margin-bottom:14px;"></p>
+    <div id="list"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var loadingMsg = document.getElementById("loadingMsg");
+var mainArea = document.getElementById("mainArea");
+var headMsg = document.getElementById("headMsg");
+var listEl = document.getElementById("list");
+
+var EDU_LABEL = { "학과": "학과교육", "기능": "기능교육", "도로": "도로연수" };
+var LICENSE_LABEL = {
+  "1": "1종보통(수동)", "A": "1종보통(자동)",
+  "2": "2종보통(수동)", "3": "2종보통(자동)",
+  "4": "1종대형", "5": "대형견인", "6": "구난차",
+  "7": "2종소형", "8": "원자", "9": "소형견인"
+};
+function licenseLabel(code) {
+  if (!code) { return "면허 미지정"; }
+  return LICENSE_LABEL[code] || code;
+}
+
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function todayYmd() {
+  var d = new Date();
+  var m = String(d.getMonth() + 1), day = String(d.getDate());
+  return "" + d.getFullYear() + (m.length < 2 ? "0" + m : m) + (day.length < 2 ? "0" + day : day);
+}
+var WEEK = ["일", "월", "화", "수", "목", "금", "토"];
+function prettyDate(ymd) {
+  ymd = String(ymd || "");
+  if (ymd.length !== 8) { return ymd; }
+  var y = Number(ymd.slice(0, 4)), m = Number(ymd.slice(4, 6)), day = Number(ymd.slice(6, 8));
+  var d = new Date(y, m - 1, day);
+  return m + "월 " + day + "일 (" + WEEK[d.getDay()] + ")";
+}
+function prettyTime(hms) {
+  hms = String(hms || "");
+  if (hms.length < 4) { return hms; }
+  return hms.slice(0, 2) + ":" + hms.slice(2, 4);
+}
+
+function render(realName, schedule) {
+  var today = todayYmd();
+  headMsg.textContent = realName + " 강사님의 예정된 일정 " + schedule.length + "건";
+  if (!schedule.length) {
+    listEl.innerHTML = '<div class="ms-empty">예정된 일정이 없습니다.</div>';
+    return;
+  }
+  var html = "";
+  schedule.forEach(function(it){
+    var isToday = it.date === today;
+    var typeLabel = EDU_LABEL[it.eduType] || it.eduType;
+    html += '<div class="ms-item">'
+      + '<div class="ms-when">'
+      +   '<div class="ms-date">' + esc(prettyDate(it.date)) + (isToday ? '<span class="ms-badge-today">오늘</span>' : '') + '</div>'
+      +   '<div class="ms-time">' + esc(prettyTime(it.time)) + '</div>'
+      + '</div>'
+      + '<div class="ms-what">'
+      +   '<span class="ms-license">' + esc(licenseLabel(it.licenseType)) + '</span>'
+      +   '<div class="ms-who">' + esc(it.studentName) + '</div>'
+      +   '<span class="ms-type">' + esc(typeLabel) + '</span>'
+      +   (it.phone ? '<span class="ms-phone">연락처 ' + esc(it.phone) + '</span>' : '')
+      + '</div>'
+      + '</div>';
+  });
+  listEl.innerHTML = html;
+}
+
+fetch("api/auth.php").then(function(r){ return r.json(); }).then(function(res){
+  if (!res || !res.loggedIn) {
+    location.href = "admin.html";
+    return;
+  }
+  return fetch("api/my-schedule.php").then(function(r){ return r.json().then(function(data){ return { ok: r.ok, data: data }; }); })
+    .then(function(res2){
+      loadingMsg.style.display = "none";
+      if (!res2.ok || res2.data.error) {
+        loadingMsg.textContent = res2.data.error || "조회에 실패했습니다.";
+        loadingMsg.style.display = "block";
+        return;
+      }
+      mainArea.style.display = "block";
+      render(res2.data.realName, res2.data.schedule || []);
+    });
+}).catch(function(){
+  loadingMsg.textContent = "서버(api)에 접속할 수 없습니다.";
+});
+
+})();
+</script>
+</body>
+</html>

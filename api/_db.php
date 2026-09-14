@@ -70,16 +70,41 @@ function yj_require_login() {
     }
 }
 
-/* 현재 로그인한 계정의 권한: 'admin'(전체) 또는 'office'(셔틀 명단만) */
-function yj_role() {
-    return isset($_SESSION['yj_role']) ? $_SESSION['yj_role'] : 'admin';
+/* 현재 로그인한 계정의 역할들 (겸직 가능해서 쉼표로 구분된 하나 이상의 값):
+   'admin' = 최고관리자(전체+계정관리), 'manager' = 사무실(전체, 계정관리 제외),
+   'office' = 셔틀계정(셔틀 명단만), 'instructor' = 강사(본인 예약만 조회) */
+function yj_roles() {
+    $raw = isset($_SESSION['yj_role']) ? (string)$_SESSION['yj_role'] : 'admin';
+    $parts = array_filter(array_map('trim', explode(',', $raw)), function ($v) { return $v !== ''; });
+    return $parts ? array_values($parts) : ['admin'];
+}
+function yj_has_role($role) {
+    return in_array($role, yj_roles(), true);
 }
 
-/* 공지·수강료·임직원·업로드처럼 원장님만 손대야 하는 기능에 씁니다. */
+/* 계정 관리(다른 로그인 생성·삭제)처럼 최고관리자만 손대야 하는 기능에 씁니다. */
 function yj_require_admin() {
     yj_require_login();
-    if (yj_role() !== 'admin') {
-        yj_json(['error' => '이 작업은 관리자 계정만 할 수 있습니다.'], 403);
+    if (!yj_has_role('admin')) {
+        yj_json(['error' => '이 작업은 최고관리자 계정만 할 수 있습니다.'], 403);
+    }
+}
+
+/* 공지·수강료·임직원·업로드·문의메시지·면허가이드처럼, 계정 관리를 제외한
+   콘텐츠 전반을 다루는 기능에 씁니다 (최고관리자 + 사무실, 겸직도 통과). */
+function yj_require_content_admin() {
+    yj_require_login();
+    if (!yj_has_role('admin') && !yj_has_role('manager')) {
+        yj_json(['error' => '이 작업은 관리자 또는 사무실 계정만 할 수 있습니다.'], 403);
+    }
+}
+
+/* 셔틀 명단 작성/조회에 씁니다 (최고관리자 + 사무실 + 셔틀계정, 겸직도 통과).
+   강사 역할만 있는 계정은 셔틀 명단을 건드릴 필요가 없어 막습니다. */
+function yj_require_shuttle_admin() {
+    yj_require_login();
+    if (!yj_has_role('admin') && !yj_has_role('manager') && !yj_has_role('office')) {
+        yj_json(['error' => '이 작업은 관리자·사무실·셔틀 계정만 할 수 있습니다.'], 403);
     }
 }
 

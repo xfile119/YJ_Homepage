@@ -68,7 +68,7 @@ function yj_norm_vehicle($v) {
 }
 
 if ($method === 'GET') {
-    yj_require_login();
+    yj_require_shuttle_admin();
     $date = isset($_GET['date']) ? (string)$_GET['date'] : '';
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
         yj_json(['error' => '날짜 형식이 올바르지 않습니다 (YYYY-MM-DD).'], 400);
@@ -200,7 +200,7 @@ if ($action === 'lookup') {
 }
 
 /* ---------------- 명단 저장 (관리자) ---------------- */
-yj_require_login();
+yj_require_shuttle_admin();
 
 if ($action !== 'save_all') {
     yj_json(['error' => 'Bad request'], 400);
