@@ -72,6 +72,15 @@ body { background: var(--color-surface); }
   display: inline-block; font-size: 11px; font-weight: 800; color: var(--color-muted);
   border: 1px solid var(--color-line); border-radius: 6px; padding: 2px 7px; margin-bottom: 5px;
 }
+/* 면허종별 배지 색상 — 같은 종별(예: 1종보통 수동/자동)은 같은 색으로 묶습니다 */
+.item-card .tag.lic-blue    { background: #dde9f8; color: #1c477b; border-color: transparent; }
+.item-card .tag.lic-orange  { background: #fce7df; color: #863e22; border-color: transparent; }
+.item-card .tag.lic-aqua    { background: #dbf2ea; color: #146548; border-color: transparent; }
+.item-card .tag.lic-yellow  { background: #fcf0d6; color: #875e05; border-color: transparent; }
+.item-card .tag.lic-magenta { background: #fbeaf0; color: #85495f; border-color: transparent; }
+.item-card .tag.lic-green   { background: #d6ebd6; color: #054d05; border-color: transparent; }
+.item-card .tag.lic-violet  { background: #e2dff1; color: #2e2561; border-color: transparent; }
+.item-card .tag.lic-red     { background: #fbe2e2; color: #822d2d; border-color: transparent; }
 .item-card .type-badge {
   display: inline-block; margin-top: 6px; background: var(--color-primary-light);
   color: var(--color-primary-dark); font-size: 11.5px; font-weight: 800; border-radius: 999px; padding: 3px 10px;
@@ -282,6 +291,11 @@ tabs.forEach(function (t) {
     "4": "1종대형", "5": "대형견인", "6": "구난차", "7": "2종소형", "8": "원자", "9": "소형견인"
   };
   function licenseLabel(code) { if (!code) { return "면허 미지정"; } return LICENSE_LABEL[code] || code; }
+  var LICENSE_COLOR = {
+    "1": "lic-blue", "A": "lic-blue", "2": "lic-orange", "3": "lic-orange",
+    "4": "lic-aqua", "5": "lic-yellow", "6": "lic-magenta", "7": "lic-green", "8": "lic-violet", "9": "lic-red"
+  };
+  function licenseColorClass(code) { return LICENSE_COLOR[code] || ""; }
 
   phoneEl.addEventListener("input", function () { this.value = this.value.replace(/[^0-9]/g, "").slice(0, 4); });
 
@@ -314,7 +328,7 @@ tabs.forEach(function (t) {
       var staffNote = it.staffName ? '<span class="sub">담당 ' + esc(it.staffName) + '</span>' : '';
       html += '<div class="item-card">'
         + '<div class="when"><div class="date">' + esc(prettyDate8(it.date)) + (isToday ? '<span class="badge-today">오늘</span>' : '') + '</div><div class="time">' + esc(prettyTime4(it.time)) + '</div></div>'
-        + '<div class="what"><span class="tag">' + esc(licenseLabel(it.licenseType)) + '</span><div class="who">' + esc(typeLabel) + '</div><span class="type-badge">' + esc(typeLabel) + '</span>' + staffNote + '</div>'
+        + '<div class="what"><span class="tag ' + licenseColorClass(it.licenseType) + '">' + esc(licenseLabel(it.licenseType)) + '</span><div class="who">' + esc(typeLabel) + '</div><span class="type-badge">' + esc(typeLabel) + '</span>' + staffNote + '</div>'
         + '</div>';
     });
     resultsEl.innerHTML = html;
@@ -362,6 +376,11 @@ tabs.forEach(function (t) {
     "4": "1종대형", "5": "대형견인", "6": "구난차", "7": "2종소형", "8": "원자", "9": "소형견인"
   };
   function licenseLabel(code) { if (!code) { return "면허 미지정"; } return LICENSE_LABEL[code] || code; }
+  var LICENSE_COLOR = {
+    "1": "lic-blue", "A": "lic-blue", "2": "lic-orange", "3": "lic-orange",
+    "4": "lic-aqua", "5": "lic-yellow", "6": "lic-magenta", "7": "lic-green", "8": "lic-violet", "9": "lic-red"
+  };
+  function licenseColorClass(code) { return LICENSE_COLOR[code] || ""; }
 
   function renderSchedule(realName, schedule) {
     var today = todayYmd();
@@ -373,7 +392,7 @@ tabs.forEach(function (t) {
       var typeLabel = EDU_LABEL[it.eduType] || it.eduType;
       html += '<div class="item-card">'
         + '<div class="when"><div class="date">' + esc(prettyDate8(it.date)) + (isToday ? '<span class="badge-today">오늘</span>' : '') + '</div><div class="time">' + esc(prettyTime4(it.time)) + '</div></div>'
-        + '<div class="what"><span class="tag">' + esc(licenseLabel(it.licenseType)) + '</span><div class="who">' + esc(it.studentName) + '</div><span class="type-badge">' + esc(typeLabel) + '</span>'
+        + '<div class="what"><span class="tag ' + licenseColorClass(it.licenseType) + '">' + esc(licenseLabel(it.licenseType)) + '</span><div class="who">' + esc(it.studentName) + '</div><span class="type-badge">' + esc(typeLabel) + '</span>'
         + (it.phone ? '<span class="sub">연락처 ' + esc(it.phone) + '</span>' : '') + '</div>'
         + '</div>';
     });

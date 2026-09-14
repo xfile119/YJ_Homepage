@@ -32,6 +32,14 @@
     display: inline-block; font-size: 11.5px; font-weight: 800; color: var(--color-muted);
     border: 1px solid var(--color-line); border-radius: 6px; padding: 2px 8px; margin-bottom: 6px;
   }
+  .ms-item .ms-license.lic-blue    { background: #dde9f8; color: #1c477b; border-color: transparent; }
+  .ms-item .ms-license.lic-orange  { background: #fce7df; color: #863e22; border-color: transparent; }
+  .ms-item .ms-license.lic-aqua    { background: #dbf2ea; color: #146548; border-color: transparent; }
+  .ms-item .ms-license.lic-yellow  { background: #fcf0d6; color: #875e05; border-color: transparent; }
+  .ms-item .ms-license.lic-magenta { background: #fbeaf0; color: #85495f; border-color: transparent; }
+  .ms-item .ms-license.lic-green   { background: #d6ebd6; color: #054d05; border-color: transparent; }
+  .ms-item .ms-license.lic-violet  { background: #e2dff1; color: #2e2561; border-color: transparent; }
+  .ms-item .ms-license.lic-red     { background: #fbe2e2; color: #822d2d; border-color: transparent; }
   .ms-item .ms-type {
     display: inline-block; margin-top: 8px; background: var(--color-primary-light);
     color: var(--color-primary-dark); font-size: 12.5px; font-weight: 800; border-radius: 999px; padding: 4px 11px;
@@ -89,6 +97,13 @@ function licenseLabel(code) {
   if (!code) { return "면허 미지정"; }
   return LICENSE_LABEL[code] || code;
 }
+var LICENSE_COLOR = {
+  "1": "lic-blue", "A": "lic-blue", "2": "lic-orange", "3": "lic-orange",
+  "4": "lic-aqua", "5": "lic-yellow", "6": "lic-magenta", "7": "lic-green", "8": "lic-violet", "9": "lic-red"
+};
+function licenseColorClass(code) {
+  return LICENSE_COLOR[code] || "";
+}
 
 function esc(s) {
   return String(s == null ? "" : s)
@@ -130,7 +145,7 @@ function render(realName, schedule) {
       +   '<div class="ms-time">' + esc(prettyTime(it.time)) + '</div>'
       + '</div>'
       + '<div class="ms-what">'
-      +   '<span class="ms-license">' + esc(licenseLabel(it.licenseType)) + '</span>'
+      +   '<span class="ms-license ' + licenseColorClass(it.licenseType) + '">' + esc(licenseLabel(it.licenseType)) + '</span>'
       +   '<div class="ms-who">' + esc(it.studentName) + '</div>'
       +   '<span class="ms-type">' + esc(typeLabel) + '</span>'
       +   (it.phone ? '<span class="ms-phone">연락처 ' + esc(it.phone) + '</span>' : '')

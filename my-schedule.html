@@ -78,6 +78,15 @@
   display: inline-block; font-size: 11.5px; font-weight: 800; color: var(--color-muted);
   border: 1px solid var(--color-line); border-radius: 6px; padding: 2px 8px; margin-bottom: 6px;
 }
+/* 면허종류별 배지 색상 — 같은 종별(예: 1종보통 수동/자동)은 같은 색으로 묶습니다 */
+.ms-license.lic-blue    { background: #dde9f8; color: #1c477b; border-color: transparent; }
+.ms-license.lic-orange  { background: #fce7df; color: #863e22; border-color: transparent; }
+.ms-license.lic-aqua    { background: #dbf2ea; color: #146548; border-color: transparent; }
+.ms-license.lic-yellow  { background: #fcf0d6; color: #875e05; border-color: transparent; }
+.ms-license.lic-magenta { background: #fbeaf0; color: #85495f; border-color: transparent; }
+.ms-license.lic-green   { background: #d6ebd6; color: #054d05; border-color: transparent; }
+.ms-license.lic-violet  { background: #e2dff1; color: #2e2561; border-color: transparent; }
+.ms-license.lic-red     { background: #fbe2e2; color: #822d2d; border-color: transparent; }
 
 .ms-empty {
   background: var(--color-surface); border: 1px dashed var(--color-line); border-radius: var(--radius-md);
@@ -265,6 +274,16 @@ function licenseLabel(code) {
   if (!code) { return "면허 미지정"; }
   return LICENSE_LABEL[code] || code;
 }
+/* 종별 배지 색상 — 같은 색상 그룹(수동/자동 등)은 한 가지 색으로 묶어 구분합니다 */
+var LICENSE_COLOR = {
+  "1": "lic-blue", "A": "lic-blue",
+  "2": "lic-orange", "3": "lic-orange",
+  "4": "lic-aqua", "5": "lic-yellow", "6": "lic-magenta",
+  "7": "lic-green", "8": "lic-violet", "9": "lic-red"
+};
+function licenseColorClass(code) {
+  return LICENSE_COLOR[code] || "";
+}
 
 function esc(s) {
   return String(s == null ? "" : s)
@@ -345,7 +364,7 @@ function renderItems(items) {
     var isToday = it.date === today;
     var typeLabel = EDU_LABEL[it.eduType] || it.eduType;
     var staffNote = it.staffName ? '<span class="ms-staff">담당 ' + esc(it.staffName) + '</span>' : '';
-    var licenseNote = '<span class="ms-license">' + esc(licenseLabel(it.licenseType)) + '</span>';
+    var licenseNote = '<span class="ms-license ' + licenseColorClass(it.licenseType) + '">' + esc(licenseLabel(it.licenseType)) + '</span>';
     html += '<div class="ms-item">'
       + '<div class="ms-when">'
       +   '<div class="ms-date">' + esc(prettyDate(it.date)) + (isToday ? '<span class="ms-badge-today">오늘</span>' : '') + '</div>'
