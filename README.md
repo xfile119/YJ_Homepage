@@ -139,17 +139,17 @@
 
 ### 3. 업로드
 1. 카페24 호스팅센터 → FTP 정보로 접속(FTP 클라이언트 또는 웹FTP/파일관리자 사용).
-2. 웹 루트 아래 `new` 폴더를 만들고, 이 저장소의 **모든 파일**(방금 만든 `config.php` 포함)을 그 안에 업로드합니다.
+2. 웹 루트에, 이 저장소의 **모든 파일**(방금 만든 `config.php` 포함)을 업로드합니다.
 
 ### 4. 설치 스크립트 실행 (최초 1회)
-1. 브라우저에서 `https://yjcdrive.co.kr/new/db/setup.php` 접속.
+1. 브라우저에서 `https://yjcdrive.co.kr/db/setup.php` 접속.
 2. 자동으로 테이블 생성 + 공지사항/면허가이드 기본 데이터가 채워집니다.
 3. 화면에 나오는 폼에 원하는 **관리자 아이디/비밀번호**(8자 이상)를 입력하고 "관리자 계정 만들기".
 4. 완료 메시지가 뜨면 **`db/setup.php` 파일을 서버에서 삭제**하세요 (다시 실행되면 안 되므로).
 
 ### 5. 확인
-- `https://yjcdrive.co.kr/new/admin.html`에서 방금 만든 아이디/비밀번호로 로그인 → 공지사항/수강료 관리 화면이 열리는지 확인.
-- `https://yjcdrive.co.kr/new/notice.html`, `/new/license-guide.html`이 정상적으로 데이터를 보여주는지 확인.
+- `https://yjcdrive.co.kr/admin.html`에서 방금 만든 아이디/비밀번호로 로그인 → 공지사항/수강료 관리 화면이 열리는지 확인.
+- `https://yjcdrive.co.kr/notice.html`, `/license-guide.html`이 정상적으로 데이터를 보여주는지 확인.
 - 문제가 있으면 브라우저 개발자도구 Console/Network 탭에서 `api/*.php` 요청의 에러 메시지를 확인해주세요 (대부분 `config.php`의 DB 정보 오류입니다).
 
 ## license-guide.html (면허 취득 안내 위젯)
