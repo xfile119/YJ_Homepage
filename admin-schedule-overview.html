@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>전체 교육현황 (비공개)</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<style>
+  body { background: var(--color-surface); }
+  .admin-shell { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; }
+  .admin-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  .admin-header h1 { font-size: 22px; font-weight: 800; color: var(--color-ink); }
+  .panel {
+    background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-lg);
+    padding: 22px 24px; margin-bottom: 22px;
+  }
+  .date-row { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+  .date-row label { display: block; font-size: 13px; font-weight: 700; color: var(--color-ink); margin-bottom: 7px; }
+  .date-row input[type="date"] {
+    border: 1px solid var(--color-line); border-radius: var(--radius-sm);
+    padding: 10px 12px; font-size: 14px; font-family: inherit; color: var(--color-ink); background: #fff;
+  }
+  .status { margin-top: 14px; font-size: 13.5px; font-weight: 600; min-height: 18px; }
+  .status.err { color: #c53030; }
+  .status.ok { color: var(--color-muted); }
+
+  .grid-wrap { overflow-x: auto; }
+  table.overview-table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 13px; }
+  table.overview-table th, table.overview-table td {
+    border: 1px solid var(--color-line); padding: 8px 10px; text-align: center; white-space: nowrap;
+  }
+  table.overview-table thead th {
+    background: var(--color-surface); font-weight: 800; color: var(--color-ink); font-size: 12.5px;
+  }
+  table.overview-table thead th:first-child, table.overview-table tbody td:first-child {
+    text-align: left; font-weight: 800; position: sticky; left: 0; background: #fff; z-index: 1;
+  }
+  table.overview-table thead th:first-child { background: var(--color-surface); z-index: 2; }
+  table.overview-table tbody td { font-weight: 700; color: var(--color-ink); }
+
+  /* 면허종별 색상 — 사이트 전체에서 쓰는 것과 같은 배색입니다 */
+  td.lic-blue    { background: #dde9f8; color: #1c477b; }
+  td.lic-orange  { background: #fce7df; color: #863e22; }
+  td.lic-aqua    { background: #dbf2ea; color: #146548; }
+  td.lic-yellow  { background: #fcf0d6; color: #875e05; }
+  td.lic-magenta { background: #fbeaf0; color: #85495f; }
+  td.lic-green   { background: #d6ebd6; color: #054d05; }
+  td.lic-violet  { background: #e2dff1; color: #2e2561; }
+  td.lic-red     { background: #fbe2e2; color: #822d2d; }
+  td.lic-none    { background: #f1eeea; color: #5c554c; }
+
+  .overview-empty {
+    background: #fff; border: 1px dashed var(--color-line); border-radius: var(--radius-md);
+    padding: 26px 24px; text-align: center; color: var(--color-muted); font-size: 13.5px;
+  }
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+  <div class="admin-header">
+    <h1>전체 교육현황</h1>
+    <a href="admin.html" class="btn btn-outline btn-sm">← 관리자 메인</a>
+  </div>
+
+  <div class="panel">
+    <div class="date-row">
+      <div>
+        <label for="overviewDate">날짜</label>
+        <input type="date" id="overviewDate" />
+      </div>
+      <button type="button" id="btnLoad" class="btn btn-primary btn-sm">조회</button>
+    </div>
+    <p class="status" id="status"></p>
+  </div>
+
+  <div id="gridWrap"></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var dateEl = document.getElementById("overviewDate");
+var statusEl = document.getElementById("status");
+var gridWrap = document.getElementById("gridWrap");
+
+var LICENSE_COLOR = {
+  "1": "lic-blue", "A": "lic-blue", "2": "lic-orange", "3": "lic-orange",
+  "4": "lic-aqua", "5": "lic-yellow", "6": "lic-magenta", "7": "lic-green", "8": "lic-violet", "9": "lic-red"
+};
+
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function setStatus(msg, kind) {
+  statusEl.textContent = msg || "";
+  statusEl.className = "status" + (kind ? " " + kind : "");
+}
+function todayStr() {
+  var d = new Date();
+  var m = String(d.getMonth() + 1), day = String(d.getDate());
+  return d.getFullYear() + "-" + (m.length < 2 ? "0" + m : m) + (day.length < 2 ? "0" + day : day);
+}
+
+function cellColorClass(eduType, licenseType) {
+  if (!eduType) { return ""; }
+  if (eduType === "학과") { return "lic-none"; }
+  return LICENSE_COLOR[licenseType] || "lic-none";
+}
+
+function render(data) {
+  var periods = data.periods || [];
+  var staff = data.staff || [];
+
+  if (!staff.length) {
+    gridWrap.innerHTML = '<div class="overview-empty">이 날짜에 등록된 수업 일정이 없습니다.</div>';
+    return;
+  }
+
+  var html = '<div class="panel grid-wrap"><table class="overview-table"><thead><tr><th>강사이름</th>';
+  periods.forEach(function(p){
+    html += '<th>' + esc(p.label) + '(' + esc(p.time) + ')</th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  staff.forEach(function(row){
+    html += '<tr><td>' + esc(row.name) + '</td>';
+    row.cells.forEach(function(c){
+      var cls = cellColorClass(c.eduType, c.licenseType);
+      html += '<td class="' + cls + '">' + esc(c.label) + '</td>';
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  gridWrap.innerHTML = html;
+}
+
+function load() {
+  var date = dateEl.value;
+  if (!date) { setStatus("날짜를 선택해주세요.", "err"); return; }
+  setStatus("불러오는 중...");
+  gridWrap.innerHTML = "";
+  fetch("api/schedule-overview.php?date=" + encodeURIComponent(date), { credentials: "same-origin" })
+    .then(function (r) {
+      if (r.status === 401) { throw new Error("로그인이 필요합니다. 관리자 홈에서 로그인해주세요."); }
+      if (!r.ok) {
+        return r.json().catch(function () { return null; }).then(function (body) {
+          throw new Error(body && body.error ? body.error : "서버(api)에 접속할 수 없습니다. (HTTP " + r.status + ")");
+        });
+      }
+      return r.json();
+    })
+    .then(function (res) {
+      if (res.error) { throw new Error(res.error); }
+      setStatus(res.staff.length + "명의 강사, 총 " + periods_count(res) + "건의 교육현황을 불러왔습니다.", "ok");
+      render(res);
+    })
+    .catch(function (err) {
+      setStatus(err.message, "err");
+    });
+}
+function periods_count(res) {
+  var n = 0;
+  (res.staff || []).forEach(function(row){
+    row.cells.forEach(function(c){ if (c.eduType) { n++; } });
+  });
+  return n;
+}
+
+document.getElementById("btnLoad").addEventListener("click", load);
+dateEl.addEventListener("change", load);
+
+fetch("api/auth.php").then(function(r){ return r.json(); }).then(function(res){
+  if (!res || !res.loggedIn) {
+    location.href = "admin.html";
+    return;
+  }
+  var roles = res.roles || [];
+  if (roles.indexOf("admin") === -1 && roles.indexOf("manager") === -1) {
+    location.href = "admin.html";
+    return;
+  }
+  dateEl.value = todayStr();
+  load();
+}).catch(function(){
+  setStatus("서버(api)에 접속할 수 없습니다.", "err");
+});
+
+})();
+</script>
+</body>
+</html>
