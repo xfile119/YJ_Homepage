@@ -20,22 +20,30 @@ if ($realName === '') {
 
 $today = date('Ymd');
 $stmt = yj_db()->prepare(
-    "SELECT edu_type, license_type, reservation_date, reservation_time, name, phone, place
+    "SELECT edu_type, license_type, reservation_date, reservation_time, place
        FROM $table
       WHERE reservation_date >= ? AND staff_name = ?
       ORDER BY reservation_date ASC, reservation_time ASC"
 );
 $stmt->execute([$today, $realName]);
 
+/* 학과교육은 단체수업이라 같은 시간에 수강생 수만큼 행이 들어오는데, 강사는
+   교시별로 수업이 하나뿐이므로 같은 날짜+시간이면 한 건으로 묶어서 보여줍니다.
+   수강생 이름·연락처는 강사 화면에 필요 없어 아예 조회하지 않습니다. */
 $mine = [];
+$seen = [];
 foreach ($stmt->fetchAll() as $r) {
+    $key = $r['reservation_date'] . '|' . $r['reservation_time'];
+    if (isset($seen[$key])) {
+        continue;
+    }
+    $seen[$key] = true;
+    $eduType = $r['edu_type'];
     $mine[] = [
-        'eduType' => $r['edu_type'],
-        'licenseType' => $r['license_type'],
+        'eduType' => $eduType,
+        'licenseType' => $eduType === '학과' ? '' : $r['license_type'],
         'date' => $r['reservation_date'],
         'time' => $r['reservation_time'],
-        'studentName' => $r['name'],
-        'phone' => $r['phone'],
         'place' => $r['place'],
     ];
 }

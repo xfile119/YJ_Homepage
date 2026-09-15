@@ -390,10 +390,15 @@ tabs.forEach(function (t) {
     schedule.forEach(function (it) {
       var isToday = it.date === today;
       var typeLabel = EDU_LABEL[it.eduType] || it.eduType;
+      /* 학과교육은 단체수업이라 특정 학생 1명의 면허종류로 대표할 수 없어서
+         배지를 표시하지 않습니다. 수강생 이름·연락처는 강사 화면에 필요 없어
+         API에서부터 내려오지 않습니다. */
+      var licenseTag = it.licenseType
+        ? '<span class="tag ' + licenseColorClass(it.licenseType) + '">' + esc(licenseLabel(it.licenseType)) + '</span>'
+        : '';
       html += '<div class="item-card">'
         + '<div class="when"><div class="date">' + esc(prettyDate8(it.date)) + (isToday ? '<span class="badge-today">오늘</span>' : '') + '</div><div class="time">' + esc(prettyTime4(it.time)) + '</div></div>'
-        + '<div class="what"><span class="tag ' + licenseColorClass(it.licenseType) + '">' + esc(licenseLabel(it.licenseType)) + '</span><div class="who">' + esc(it.studentName) + '</div><span class="type-badge">' + esc(typeLabel) + '</span>'
-        + (it.phone ? '<span class="sub">연락처 ' + esc(it.phone) + '</span>' : '') + '</div>'
+        + '<div class="what">' + licenseTag + '<div class="who">' + esc(typeLabel) + '</div></div>'
         + '</div>';
     });
     inResults.innerHTML = html;

@@ -139,16 +139,20 @@ function render(realName, schedule) {
   schedule.forEach(function(it){
     var isToday = it.date === today;
     var typeLabel = EDU_LABEL[it.eduType] || it.eduType;
+    /* 학과교육은 단체수업이라 특정 학생 1명의 면허종류로 대표할 수 없어서
+       배지를 표시하지 않습니다. 수강생 이름·연락처는 강사 화면에 필요 없어
+       API에서부터 내려오지 않습니다. */
+    var licenseBadge = it.licenseType
+      ? '<span class="ms-license ' + licenseColorClass(it.licenseType) + '">' + esc(licenseLabel(it.licenseType)) + '</span>'
+      : '';
     html += '<div class="ms-item">'
       + '<div class="ms-when">'
       +   '<div class="ms-date">' + esc(prettyDate(it.date)) + (isToday ? '<span class="ms-badge-today">오늘</span>' : '') + '</div>'
       +   '<div class="ms-time">' + esc(prettyTime(it.time)) + '</div>'
       + '</div>'
       + '<div class="ms-what">'
-      +   '<span class="ms-license ' + licenseColorClass(it.licenseType) + '">' + esc(licenseLabel(it.licenseType)) + '</span>'
-      +   '<div class="ms-who">' + esc(it.studentName) + '</div>'
-      +   '<span class="ms-type">' + esc(typeLabel) + '</span>'
-      +   (it.phone ? '<span class="ms-phone">연락처 ' + esc(it.phone) + '</span>' : '')
+      +   licenseBadge
+      +   '<div class="ms-who">' + esc(typeLabel) + '</div>'
       + '</div>'
       + '</div>';
   });
