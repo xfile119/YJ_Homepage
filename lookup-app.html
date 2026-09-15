@@ -244,7 +244,7 @@ tabs.forEach(function (t) {
     var html = '<div class="results-head">' + esc(maskName(nameEl.value.trim())) + '님의 예정된 셔틀 ' + rides.length + '건</div>';
     rides.forEach(function (r) {
       var isToday = r.date === today;
-      var departNote = (r.departTime && r.departTime !== r.time) ? '<span class="sub">차량 출발 ' + esc(r.departTime) + '</span>' : '';
+      var departNote = (r.departTime && r.departTime !== r.time) ? '<span class="sub">수업시간 ' + esc(r.departTime) + '</span>' : '';
       var vehicle = r.vehicle ? '<span class="tag">' + esc(r.vehicle) + '</span>' : '';
       html += '<div class="item-card">'
         + '<div class="when"><div class="date">' + esc(prettyDateDash(r.date)) + (isToday ? '<span class="badge-today">오늘</span>' : '') + '</div><div class="time">' + esc(r.time) + '</div></div>'

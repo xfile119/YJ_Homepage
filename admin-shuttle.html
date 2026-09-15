@@ -140,7 +140,7 @@
     <h2>운행 날짜</h2>
     <p class="hint">날짜를 바꾸면 그 날짜의 명단을 불러옵니다. 저장은 <strong>선택한 날짜의 명단 전체를 교체</strong>합니다.<br>
       같은 시간에 여러 대가 나가면 <strong>운행 추가</strong>로 표를 하나 더 만들고 차량 호수를 다르게 적어주세요.
-      탑승 장소마다 태우는 시각이 다르면 <strong>사람별 탑승시간</strong>을 적으면 됩니다(비워두면 출발시간으로 안내됩니다).</p>
+      탑승 장소마다 태우는 시각이 다르면 <strong>사람별 탑승시간</strong>을 적으면 됩니다(비워두면 수업시간으로 안내됩니다).</p>
     <div class="date-row" style="margin-top:14px;">
       <div>
         <label for="rideDate">날짜</label>
@@ -163,7 +163,7 @@
   <div class="slot-grid" id="slotGrid"></div>
 </div>
 
-<!-- 자주 쓰는 출발 시간 (직접 입력도 됩니다) -->
+<!-- 자주 쓰는 수업 시간 (직접 입력도 됩니다) -->
 <datalist id="timeOptions">
   <option value="08:30"></option>
   <option value="09:30"></option>
@@ -296,12 +296,12 @@ function slotHtml(slot) {
   /* 시간으로 읽히지 않는 옛 값("미정" 등)은 지우지 않고 알려줍니다 */
   var time = normTime(slot.time);
   var legacy = (slot.time && time === "")
-    ? '<p class="slot-legacy">기존에 적혀 있던 값: "' + esc(slot.time) + '" — 출발 시간을 다시 지정해주세요.</p>'
+    ? '<p class="slot-legacy">기존에 적혀 있던 값: "' + esc(slot.time) + '" — 수업 시간을 다시 지정해주세요.</p>'
     : '';
 
   return '<div class="slot">'
     + '<div class="slot-head">'
-    +   '<div class="slot-field"><label>출발 시간</label>'
+    +   '<div class="slot-field"><label>수업 시간</label>'
     +     '<input type="text" class="slot-time yj-time" inputmode="numeric" '
     +       'list="timeOptions" placeholder="08:30" value="' + esc(time) + '" /></div>'
     +   '<div class="slot-field"><label>차량 (호수·번호)</label>'
@@ -345,8 +345,7 @@ function updateCounts() {
 gridEl.addEventListener("click", function (e) {
   var t = e.target;
   if (t.classList.contains("btn-del-row")) {
-    var tr = t.closest("tr");
-    [].forEach.call(tr.querySelectorAll("input"), function (i) { i.value = ""; });
+    t.closest("tr").remove();
     updateCounts();
   } else if (t.classList.contains("btn-add-row")) {
     var tbody = t.closest(".slot").querySelector("tbody");
@@ -382,7 +381,7 @@ function collect() {
       if (name === "") { return; }
       riders.push({
         name: name,
-        /* 비워두면 출발시간으로 안내됩니다 */
+        /* 비워두면 수업시간으로 안내됩니다 */
         boardTime: tr.querySelector(".f-time").value.trim(),
         place: tr.querySelector(".f-place").value.trim(),
         phone: tr.querySelector(".f-phone").value.trim()
@@ -494,7 +493,7 @@ dateEl.addEventListener("change", load);
 document.getElementById("btnAddSlot").addEventListener("click", function () {
   gridEl.insertAdjacentHTML("beforeend", slotHtml({ time: "", vehicle: "", riders: [] }));
   updateCounts();
-  /* 새로 만든 운행의 출발 시간 칸으로 바로 커서를 옮겨줍니다 */
+  /* 새로 만든 운행의 수업 시간 칸으로 바로 커서를 옮겨줍니다 */
   var last = gridEl.querySelector(".slot:last-child .slot-time");
   if (last) { last.focus(); last.scrollIntoView({ block: "center" }); }
 });
@@ -522,7 +521,7 @@ document.getElementById("btnSave").addEventListener("click", function () {
     dup.slots[0].scrollIntoView({ block: "center" });
     setStatus(
       "같은 시간(" + dup.time + ")에 같은 차량(" + dup.vehicle + ")이 " + dup.slots.length + "번 있습니다. " +
-      "차량 호수나 출발 시간을 다르게 적어주세요.",
+      "차량 호수나 수업 시간을 다르게 적어주세요.",
       "err"
     );
     return;
