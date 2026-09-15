@@ -202,6 +202,32 @@ if ($action === 'lookup') {
 /* ---------------- 명단 저장 (관리자) ---------------- */
 yj_require_shuttle_admin();
 
+/* ---------------- 과거 일정 일괄 삭제 (관리자) ----------------
+   오래된 명단이 DB에 계속 쌓이는 걸 정리하기 위한 기능입니다. 기준일은
+   클라이언트가 보내는 값을 절대 쓰지 않고 서버 시각(오늘)으로만 정해서,
+   요청을 조작해도 오늘·미래 일정은 지울 수 없도록 막습니다. */
+if ($action === 'delete_past') {
+    $today = date('Y-m-d');
+    $db = yj_db();
+    $db->beginTransaction();
+    try {
+        $delRiders = $db->prepare("DELETE FROM $table WHERE ride_date < ?");
+        $delRiders->execute([$today]);
+        $riderCount = $delRiders->rowCount();
+
+        $delSlots = $db->prepare("DELETE FROM $slotTable WHERE ride_date < ?");
+        $delSlots->execute([$today]);
+        $slotCount = $delSlots->rowCount();
+
+        $db->commit();
+    } catch (Exception $e) {
+        $db->rollBack();
+        if ($e instanceof PDOException) { yj_shuttle_db_error($e); }
+        yj_json(['error' => '삭제 실패: ' . $e->getMessage()], 500);
+    }
+    yj_json(['ok' => true, 'deletedSlots' => $slotCount, 'deletedRiders' => $riderCount]);
+}
+
 if ($action !== 'save_all') {
     yj_json(['error' => 'Bad request'], 400);
 }

@@ -148,6 +148,7 @@
       </div>
       <button type="button" id="btnLoad" class="btn btn-outline btn-sm">불러오기</button>
       <button type="button" id="btnAddSlot" class="btn btn-outline btn-sm">운행 추가 (차량 1대)</button>
+      <button type="button" id="btnDeletePast" class="btn btn-outline btn-sm">과거 일정 삭제</button>
     </div>
     <p class="status" id="status"></p>
   </div>
@@ -444,11 +445,13 @@ var loadSeq = 0;
 var addBtn = document.getElementById("btnAddSlot");
 var saveBtn = document.getElementById("btnSave");
 var loadBtn = document.getElementById("btnLoad");
+var deletePastBtn = document.getElementById("btnDeletePast");
 
 function setBusy(busy) {
   addBtn.disabled = busy;
   saveBtn.disabled = busy;
   loadBtn.disabled = busy;
+  deletePastBtn.disabled = busy;
 }
 
 function load() {
@@ -543,6 +546,34 @@ document.getElementById("btnSave").addEventListener("click", function () {
       setStatus(date + " 명단을 저장했습니다 (" + slots.length + "건의 운행, " + countRiders(slots) + "명).", "ok");
     })
     .catch(function (err) { setStatus(err.message, "err"); });
+});
+
+/* 오늘 이전 날짜의 명단을 한꺼번에 지웁니다. 기준일(오늘)은 서버가 직접 정하므로
+   여기서 날짜를 조작해 보내도 오늘·미래 일정은 지워지지 않습니다. */
+document.getElementById("btnDeletePast").addEventListener("click", function () {
+  if (!window.confirm("오늘 이전 날짜의 셔틀 명단을 전부 삭제할까요?\n(오늘·이후 일정은 지워지지 않습니다. 되돌릴 수 없습니다.)")) {
+    return;
+  }
+  setStatus("과거 일정 삭제 중...");
+  setBusy(true);
+  fetch("api/shuttle.php", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "delete_past" })
+  })
+    .then(function (r) {
+      if (r.status === 401) { throw new Error("로그인이 만료됐습니다. 관리자 홈에서 다시 로그인해주세요."); }
+      return r.json();
+    })
+    .then(function (res) {
+      if (res.error) { throw new Error(res.error); }
+      setStatus("과거 운행 " + res.deletedSlots + "건, 명단 " + res.deletedRiders + "명을 삭제했습니다.", "ok");
+      /* 지금 보고 있는 날짜가 과거였다면 화면도 비워진 상태로 다시 불러옵니다 */
+      if (dateEl.value && dateEl.value < todayStr()) { load(); }
+    })
+    .catch(function (err) { setStatus(err.message, "err"); })
+    .then(function () { setBusy(false); });
 });
 
 attachTimeHelpers(gridEl);
