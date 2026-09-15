@@ -386,15 +386,6 @@ function vehicleIcon(key){
   if(!inner) return "";
   return '<svg class="yjlg-opt-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>';
 }
-function bigVehicleIcon(key){
-  var inner=VEHICLE_ICONS[key];
-  if(!inner) return "";
-  return '<svg class="yjlg-tile-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>';
-}
-/* 첫 화면(ROOT)을 이미지 타일로 보여줄 때 쓰는 색 — 7개 옵션이 서로
-   다른 색으로 한눈에 구분되도록, 사이트 배지에 쓰는 것과 같은
-   고정 순서의 색상 팔레트를 그대로 적용합니다. */
-var ROOT_TILE_COLOR={ B2:"blue", B1:"orange", S2:"aqua", WD:"yellow", DH:"magenta", SG:"green", DG:"violet" };
 
 function renderQuestion(nodeId){
   var node=NODES[nodeId];
@@ -406,9 +397,9 @@ function renderQuestion(nodeId){
     html+='<div class="yjlg-tiles">';
     node.opts.forEach(function(opt,i){
       var cond=opt.go?VEHICLE_COND[opt.go]:"";
-      var color=opt.go?(ROOT_TILE_COLOR[opt.go]||"blue"):"blue";
-      html+='<button class="yjlg-tile yjlg-tile-'+color+'" onclick="__yjwiz.choose('+i+')">'
-        +'<span class="yjlg-tile-icon">'+(opt.go?bigVehicleIcon(opt.go):"")+'</span>'
+      var img=opt.go?("images/license-tiles/tile-"+opt.go.toLowerCase()+".png"):"";
+      html+='<button class="yjlg-tile" onclick="__yjwiz.choose('+i+')">'
+        +(img?'<img class="yjlg-tile-img" src="'+img+'" alt="" width="120" height="120">':'')
         +'<span class="yjlg-tile-title">'+opt.t+'</span>'
         +(cond?'<span class="yjlg-tile-cond">'+cond+'</span>':'')
         +'</button>';

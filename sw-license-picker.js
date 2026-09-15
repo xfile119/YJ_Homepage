@@ -4,11 +4,18 @@
    license-guide.html의 sw-license-guide.js와 같은 구조이며, 위저드 엔진
    (js/license-wizard.js)을 공유하므로 같이 캐시해둡니다. */
 
-var CACHE_NAME = "yj-license-picker-v1";
+var CACHE_NAME = "yj-license-picker-v2";
 var APP_SHELL = [
   "license-picker.html",
   "css/style.css",
-  "js/license-wizard.js"
+  "js/license-wizard.js",
+  "images/license-tiles/tile-b2.png",
+  "images/license-tiles/tile-b1.png",
+  "images/license-tiles/tile-s2.png",
+  "images/license-tiles/tile-wd.png",
+  "images/license-tiles/tile-dh.png",
+  "images/license-tiles/tile-sg.png",
+  "images/license-tiles/tile-dg.png"
 ];
 
 self.addEventListener("install", function (event) {
