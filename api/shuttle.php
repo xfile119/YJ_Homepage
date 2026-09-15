@@ -7,9 +7,9 @@
 
    "편성(slot)" 한 건 = 차량 한 대의 한 번 운행입니다. 같은 시간에 여러 대가
    동시에 나갈 수 있으므로 편성마다 차량(호수/번호)을 둡니다. 사람과 편성은
-   시간 문자열이 아니라 slot_no로 묶습니다 — 그래야 수업시간을 고쳐도 명단이
+   시간 문자열이 아니라 slot_no로 묶습니다 — 그래야 교육시간을 고쳐도 명단이
    그대로 따라옵니다. 탑승 장소마다 태우는 시각이 다르므로 탑승시간(board_time)은
-   사람마다 따로 적을 수 있고, 비워두면 편성의 수업시간을 씁니다.
+   사람마다 따로 적을 수 있고, 비워두면 편성의 교육시간을 씁니다.
 
    개인정보(이름·연락처)를 다루므로 lookup은 아래 원칙을 지킵니다.
    1) 이름과 전화번호 뒷 4자리가 모두 맞아야 하고,
@@ -184,7 +184,7 @@ if ($action === 'lookup') {
     $mine = [];
     foreach ($stmt->fetchAll() as $r) {
         if (substr(yj_digits($r['phone']), -4) === $tail) {
-            /* 개인 탑승시간이 적혀 있으면 그 시간을, 없으면 편성 수업시간을 안내합니다 */
+            /* 개인 탑승시간이 적혀 있으면 그 시간을, 없으면 편성 교육시간을 안내합니다 */
             $boardTime = trim((string)$r['board_time']);
             $mine[] = [
                 'date' => $r['ride_date'],
@@ -225,7 +225,7 @@ foreach (array_values($slots) as $slot) {
     if (isset($seenSlotKeys[$key])) {
         yj_json(['error' =>
             '같은 시간(' . $nTime . ')에 같은 차량(' . trim((string)$slot['vehicle']) . ')이 두 번 있습니다. ' .
-            '차량 호수나 수업 시간을 다르게 적어주세요.'
+            '차량 호수나 교육시간을 다르게 적어주세요.'
         ], 400);
     }
     $seenSlotKeys[$key] = true;
@@ -265,7 +265,7 @@ try {
             if ($name === '') { continue; }
             $place = trim((string)(isset($r['place']) ? $r['place'] : ''));
             $phone = trim((string)(isset($r['phone']) ? $r['phone'] : ''));
-            /* 개인 탑승시간. 비워두면 편성 수업시간을 그대로 씁니다 */
+            /* 개인 탑승시간. 비워두면 편성 교육시간을 그대로 씁니다 */
             $boardTime = trim((string)(isset($r['boardTime']) ? $r['boardTime'] : ''));
             $insert->execute([$date, $slotIndex, $time, $boardTime, $name, $place, $phone, $rowIndex, $_SESSION['yj_admin']]);
             $rowIndex++;

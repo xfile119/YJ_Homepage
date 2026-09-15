@@ -275,9 +275,9 @@ function renderRides(rides) {
   var html = '<div class="sh-results-head">' + esc(maskName(nameEl.value.trim())) + '님의 예정된 셔틀 ' + rides.length + '건</div>';
   rides.forEach(function (r) {
     var isToday = r.date === today;
-    /* 개인 탑승시간이 수업시간과 다르면(중간에서 타는 경우) 수업시간도 함께 알려줍니다 */
+    /* 개인 탑승시간이 교육시간과 다르면(중간에서 타는 경우) 교육시간도 함께 알려줍니다 */
     var departNote = (r.departTime && r.departTime !== r.time)
-      ? '<span class="sh-depart">수업시간 ' + esc(r.departTime) + '</span>' : '';
+      ? '<span class="sh-depart">교육시간 ' + esc(r.departTime) + '</span>' : '';
     var vehicle = r.vehicle ? '<span class="sh-vehicle">' + esc(r.vehicle) + '</span>' : '';
     html += '<div class="sh-ride">'
       + '<div class="sh-when">'
