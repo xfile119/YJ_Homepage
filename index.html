@@ -789,12 +789,21 @@ function updateFrames(){
   var bestDiff = 999;
   var bestIndex = 0;
 
+  /* 인원이 많아 itemSize가 150px보다 줄어든 경우, 맨 앞(포커스)에 온 사진만큼은
+     사무실처럼 인원이 적을 때와 같은 150px 크기로 보이도록 확대해줍니다.
+     각도가 앞면 슬롯(±angle/2)을 벗어나면 확대가 사라져, 옆/뒤로 물러난
+     사진들은 원래의 촘촘한 간격(겹침 방지)을 그대로 유지합니다. */
+  var FRONT_TARGET_SIZE = 150;
+  var maxBoost = Math.max(0, FRONT_TARGET_SIZE / itemSize - 1);
+
   items.forEach(function(item, i){
     var base = i * angle;
     var eff = normalizeDelta(base + rotation);
     var diff = Math.abs(eff);
     var t = Math.min(diff / 100, 1);
-    var scale = 1 - t * 0.72;
+    var frontZone = Math.max(0, 1 - diff / (angle / 2));
+    var boost = 1 + frontZone * maxBoost;
+    var scale = (1 - t * 0.72) * boost;
     var opacity = 1 - t * 0.88;
     /* 인원 수가 짝수(특히 2명)일 때 정반대(180도) 위치의 사람이 화면상 앞사람과 완전히 같은
        좌표에서 겹쳐 보이지 않도록, 뒤쪽(정면 기준 ±90도를 넘어선) 인물만 위/아래로 살짝 어긋나게 표시합니다. */
