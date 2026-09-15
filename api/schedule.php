@@ -61,6 +61,16 @@ $stmt = yj_db()->prepare(
 );
 $stmt->execute([$today, $nameKey]);
 
+/* 학사서버 담당강사 이름은 실명이라 수강생 화면에는 그대로 노출하지 않고,
+   임직원 등록 화면에 실명을 등록해둔 경우에 한해 가명(staff.name)으로
+   바꿔서 보여줍니다. 등록이 안 되어 있으면 실명이 새 나가지 않도록
+   빈 값으로 둡니다(화면에서는 담당 강사 표시가 그냥 생략됩니다). */
+$staffTable = yj_table('staff');
+$pseudonymByRealName = [];
+foreach (yj_db()->query("SELECT real_name, name FROM $staffTable WHERE real_name IS NOT NULL AND real_name != ''") as $s) {
+    $pseudonymByRealName[$s['real_name']] = $s['name'];
+}
+
 $mine = [];
 foreach ($stmt->fetchAll() as $r) {
     if (substr(yj_sched_digits($r['phone']), -4) === $tail) {
@@ -69,7 +79,7 @@ foreach ($stmt->fetchAll() as $r) {
             'licenseType' => $r['license_type'],
             'date' => $r['reservation_date'],
             'time' => $r['reservation_time'],
-            'staffName' => $r['staff_name'],
+            'staffName' => isset($pseudonymByRealName[$r['staff_name']]) ? $pseudonymByRealName[$r['staff_name']] : '',
             'place' => $r['place'],
         ];
     }
