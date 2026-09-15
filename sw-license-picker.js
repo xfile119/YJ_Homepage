@@ -1,11 +1,12 @@
-/* 면허 탐색기 전용 오프라인 캐시입니다.
-   license-guide.html에서 scope:"license-guide.html"로 좁혀서 등록하므로
-   이 파일이 사이트의 다른 페이지(관리자 화면 포함)에 영향을 주지 않습니다.
-   PHP 서버 없이도 마지막으로 받은 화면·데이터로 켤 수 있게 하는 게 목적입니다. */
+/* 면허 이미지로 찾기 전용 오프라인 캐시입니다.
+   license-picker.html에서 scope:"license-picker.html"로 좁혀서 등록하므로
+   이 파일이 사이트의 다른 페이지에 영향을 주지 않습니다.
+   license-guide.html의 sw-license-guide.js와 같은 구조이며, 위저드 엔진
+   (js/license-wizard.js)을 공유하므로 같이 캐시해둡니다. */
 
-var CACHE_NAME = "yj-license-guide-v2";
+var CACHE_NAME = "yj-license-picker-v1";
 var APP_SHELL = [
-  "license-guide.html",
+  "license-picker.html",
   "css/style.css",
   "js/license-wizard.js"
 ];
@@ -56,7 +57,7 @@ self.addEventListener("fetch", function (event) {
     return;
   }
 
-  /* 화면(html)·스타일(css)은 캐시를 우선 보여주되, 뒤에서 조용히 최신본으로 갱신해둡니다 */
+  /* 화면(html)·스타일(css)·위저드 엔진(js)은 캐시를 우선 보여주되, 뒤에서 조용히 최신본으로 갱신해둡니다 */
   var isAppShell = APP_SHELL.some(function (path) {
     return url.pathname.indexOf(path) !== -1;
   });
