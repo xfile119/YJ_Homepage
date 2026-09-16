@@ -74,7 +74,7 @@ if ($method === 'GET') {
         yj_json(['error' => '날짜 형식이 올바르지 않습니다 (YYYY-MM-DD).'], 400);
     }
     try {
-        $stmt = yj_db()->prepare("SELECT slot_no, depart_time, board_time, name, place, phone, updated_by FROM $table WHERE ride_date = ? ORDER BY sort_order ASC, id ASC");
+        $stmt = yj_db()->prepare("SELECT slot_no, depart_time, board_time, name, place, phone, updated_by, notified_at, notify_status, notify_error FROM $table WHERE ride_date = ? ORDER BY sort_order ASC, id ASC");
         $stmt->execute([$date]);
         $rows = $stmt->fetchAll();
     } catch (PDOException $e) {
@@ -121,10 +121,14 @@ if ($method === 'GET') {
                     'place' => $r['place'],
                     'phone' => $r['phone'],
                     'boardTime' => $r['board_time'],
+                    'notifiedAt' => $r['notified_at'],
+                    'notifyStatus' => $r['notify_status'],
+                    'notifyError' => $r['notify_error'],
                 ];
             }
         }
         $slots[] = [
+            'slotNo' => $sr['slot_no'],
             'time' => $sr['depart_time'],
             'vehicle' => $sr['vehicle'],
             'riders' => $list,
@@ -228,6 +232,73 @@ if ($action === 'delete_past') {
     yj_json(['ok' => true, 'deletedSlots' => $slotCount, 'deletedRiders' => $riderCount]);
 }
 
+/* ---------------- 카카오 알림톡 발송 (관리자) ----------------
+   체크된 차량(운행, slot_no)에 속한 사람들에게 알림톡을 보내고 사람별로
+   결과를 기록합니다. 실제 발송 함수는 api/_notify.php에 있고, 대행업체
+   연동 전에는 항상 실패로 기록되어 화면에 "설정 필요"로 보입니다. */
+if ($action === 'notify_send') {
+    require __DIR__ . '/_notify.php';
+
+    $nDate = isset($body['date']) ? (string)$body['date'] : '';
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $nDate)) {
+        yj_json(['error' => '날짜 형식이 올바르지 않습니다 (YYYY-MM-DD).'], 400);
+    }
+    $slotNos = isset($body['slotNos']) && is_array($body['slotNos']) ? array_map('intval', $body['slotNos']) : [];
+    if (empty($slotNos)) {
+        yj_json(['error' => '발송할 차량을 선택해주세요.'], 400);
+    }
+
+    $db = yj_db();
+    $placeholders = implode(',', array_fill(0, count($slotNos), '?'));
+    $stmt = $db->prepare(
+        "SELECT id, depart_time, board_time, name, place, phone
+           FROM $table
+          WHERE ride_date = ? AND slot_no IN ($placeholders)
+          ORDER BY sort_order ASC, id ASC"
+    );
+    $stmt->execute(array_merge([$nDate], $slotNos));
+    $riders = $stmt->fetchAll();
+
+    if (empty($riders)) {
+        yj_json(['error' => '선택한 차량에 명단이 없습니다.'], 400);
+    }
+
+    $updateStmt = $db->prepare("UPDATE $table SET notified_at = ?, notify_status = ?, notify_error = ? WHERE id = ?");
+    $results = [];
+    foreach ($riders as $r) {
+        $phone = trim((string)$r['phone']);
+        if ($phone === '') {
+            $status = 'failed';
+            $error = '연락처가 없습니다.';
+            $notifiedAt = null;
+        } else {
+            $effectiveTime = $r['board_time'] !== '' ? $r['board_time'] : $r['depart_time'];
+            $send = yj_send_shuttle_alimtalk($phone, [
+                'name' => $r['name'],
+                'date' => $nDate,
+                'time' => $effectiveTime,
+                'place' => $r['place'],
+            ]);
+            if (!empty($send['ok'])) {
+                $status = 'sent';
+                $error = '';
+                $notifiedAt = date('Y-m-d H:i:s');
+            } else {
+                $status = 'failed';
+                $error = yj_cut((string)(isset($send['error']) ? $send['error'] : '발송 실패'), 200);
+                $notifiedAt = null;
+            }
+        }
+        $updateStmt->execute([$notifiedAt, $status, $error, $r['id']]);
+        $results[] = ['id' => (int)$r['id'], 'name' => $r['name'], 'status' => $status, 'error' => $error];
+    }
+
+    $sentCount = 0;
+    foreach ($results as $res) { if ($res['status'] === 'sent') { $sentCount++; } }
+
+    yj_json(['ok' => true, 'sent' => $sentCount, 'failed' => count($results) - $sentCount, 'results' => $results]);
+}
+
 if ($action !== 'save_all') {
     yj_json(['error' => 'Bad request'], 400);
 }
@@ -260,12 +331,31 @@ foreach (array_values($slots) as $slot) {
 $db = yj_db();
 $db->beginTransaction();
 try {
+    /* 알림톡 발송 상태는 사람별로 남아야 하는데, save_all이 그 날짜 명단을
+       통째로 지우고 다시 넣기 때문에(행 id가 매번 바뀜), 지우기 전에
+       "이름+연락처"로 이전 상태를 미리 기억해뒀다가 새로 넣을 때 이어받습니다.
+       탑승시간·장소까지 그대로인 경우에만 이어받고, 뭔가 바뀌었으면 그 사람은
+       다시 "미발송"으로 돌아가서 재발송이 필요하다는 걸 알 수 있게 합니다. */
+    $prevStmt = $db->prepare("SELECT depart_time, board_time, name, place, phone, notified_at, notify_status, notify_error FROM $table WHERE ride_date = ?");
+    $prevStmt->execute([$date]);
+    $prevByKey = [];
+    foreach ($prevStmt->fetchAll() as $pr) {
+        $pKey = preg_replace('/\s+/u', '', (string)$pr['name']) . '|' . yj_digits($pr['phone']);
+        $pEffectiveTime = $pr['board_time'] !== '' ? $pr['board_time'] : $pr['depart_time'];
+        $prevByKey[$pKey] = [
+            'contentKey' => $pEffectiveTime . '|' . $pr['place'],
+            'notified_at' => $pr['notified_at'],
+            'notify_status' => $pr['notify_status'],
+            'notify_error' => $pr['notify_error'],
+        ];
+    }
+
     /* 해당 날짜의 시간대와 명단을 통째로 교체합니다 */
     $db->prepare("DELETE FROM $table WHERE ride_date = ?")->execute([$date]);
     $db->prepare("DELETE FROM $slotTable WHERE ride_date = ?")->execute([$date]);
 
     $slotIns = $db->prepare("INSERT INTO $slotTable (ride_date, slot_no, depart_time, vehicle, sort_order) VALUES (?, ?, ?, ?, ?)");
-    $insert = $db->prepare("INSERT INTO $table (ride_date, slot_no, depart_time, board_time, name, place, phone, sort_order, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $insert = $db->prepare("INSERT INTO $table (ride_date, slot_no, depart_time, board_time, name, place, phone, sort_order, updated_by, notified_at, notify_status, notify_error) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
     $slotIndex = 0;
     $rowIndex = 0;
@@ -293,7 +383,23 @@ try {
             $phone = trim((string)(isset($r['phone']) ? $r['phone'] : ''));
             /* 개인 탑승시간. 비워두면 편성 교육시간을 그대로 씁니다 */
             $boardTime = trim((string)(isset($r['boardTime']) ? $r['boardTime'] : ''));
-            $insert->execute([$date, $slotIndex, $time, $boardTime, $name, $place, $phone, $rowIndex, $_SESSION['yj_admin']]);
+
+            $rKey = preg_replace('/\s+/u', '', $name) . '|' . yj_digits($phone);
+            $rEffectiveTime = $boardTime !== '' ? $boardTime : $time;
+            $rContentKey = $rEffectiveTime . '|' . $place;
+            $carryNotifiedAt = null;
+            $carryNotifyStatus = '';
+            $carryNotifyError = '';
+            if (isset($prevByKey[$rKey]) && $prevByKey[$rKey]['contentKey'] === $rContentKey) {
+                $carryNotifiedAt = $prevByKey[$rKey]['notified_at'];
+                $carryNotifyStatus = $prevByKey[$rKey]['notify_status'];
+                $carryNotifyError = $prevByKey[$rKey]['notify_error'];
+            }
+
+            $insert->execute([
+                $date, $slotIndex, $time, $boardTime, $name, $place, $phone, $rowIndex, $_SESSION['yj_admin'],
+                $carryNotifiedAt, $carryNotifyStatus, $carryNotifyError,
+            ]);
             $rowIndex++;
         }
         $slotIndex++;

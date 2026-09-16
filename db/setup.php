@@ -167,6 +167,14 @@ yj_ensure_column($pdo, $prefix . 'shuttle_riders', 'board_time', "VARCHAR(10) NO
 yj_ensure_column($pdo, $prefix . 'shuttle_slots', 'slot_no', 'INT NOT NULL DEFAULT -1');
 yj_ensure_column($pdo, $prefix . 'shuttle_slots', 'vehicle', "VARCHAR(40) NOT NULL DEFAULT ''");
 
+/* 2026-09: 셔틀 카카오 알림톡 발송 상태 (사람별로 남습니다).
+   save_all이 그 날짜 명단을 통째로 지우고 다시 넣기 때문에, 이름+연락처가 같고
+   탑승시간·장소도 그대로인 사람만 이 상태를 이어받고, 뭔가 바뀐 사람은
+   다시 "미발송"으로 돌아갑니다 (api/shuttle.php의 save_all 참고). */
+yj_ensure_column($pdo, $prefix . 'shuttle_riders', 'notified_at', 'DATETIME NULL DEFAULT NULL');
+yj_ensure_column($pdo, $prefix . 'shuttle_riders', 'notify_status', "VARCHAR(10) NOT NULL DEFAULT ''");
+yj_ensure_column($pdo, $prefix . 'shuttle_riders', 'notify_error', "VARCHAR(200) NOT NULL DEFAULT ''");
+
 /* 옛 데이터 이어붙이기: 편성 번호가 없던 기존 행에 번호를 매깁니다. 여러 번 실행해도 안전합니다. */
 $pdo->exec("UPDATE {$prefix}shuttle_slots SET slot_no = sort_order WHERE slot_no < 0");
 $pdo->exec(
