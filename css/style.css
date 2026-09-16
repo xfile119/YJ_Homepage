@@ -33,6 +33,17 @@
 * { box-sizing: border-box; min-width: 0; }
 html { scroll-behavior: smooth; overflow-x: hidden; }
 
+/* 키보드로 탐색하는 방문자가 상단바·메뉴를 다 거치지 않고 바로 본문으로
+   건너뛸 수 있게 합니다. 평소엔 화면 밖에 숨어있다가 Tab 키로 포커스가
+   오면 화면 위에 나타납니다. */
+.skip-link {
+  position: absolute; left: 8px; top: -60px; z-index: 999;
+  background: var(--color-primary); color: #fff; font-weight: 700; font-size: 14px;
+  padding: 10px 18px; border-radius: var(--radius-sm);
+  text-decoration: none; transition: top .15s ease;
+}
+.skip-link:focus { top: 8px; }
+
 body {
   margin: 0;
   font-family: "Noto Sans KR", "Pretendard", -apple-system, BlinkMacSystemFont,
