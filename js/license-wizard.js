@@ -394,6 +394,7 @@ function renderQuestion(nodeId){
   html+='<h2 class="yjlg-question">'+node.q+'</h2>';
 
   if(nodeId==="ROOT" && window.YJLG_ROOT_MODE==="images"){
+    html+='<p class="yjlg-mode-switch">면허 이름을 이미 알고 계세요? <a href="license-guide.html">텍스트로 찾기</a></p>';
     html+='<div class="yjlg-tiles">';
     node.opts.forEach(function(opt,i){
       var cond=opt.go?VEHICLE_COND[opt.go]:"";
@@ -405,17 +406,16 @@ function renderQuestion(nodeId){
         +'</button>';
     });
     html+='</div>';
-    html+='<p class="yjlg-mode-switch">면허 이름을 이미 알고 계세요? <a href="license-guide.html">텍스트로 찾기</a></p>';
   } else {
+    if(nodeId==="ROOT"){
+      html+='<p class="yjlg-mode-switch">그림으로 편하게 고르고 싶으세요? <a href="license-picker.html">이미지로 찾기</a></p>';
+    }
     html+='<div class="yjlg-options">';
     node.opts.forEach(function(opt,i){
       var cond=opt.go?VEHICLE_COND[opt.go]:null;
       html+='<button class="yjlg-opt" onclick="__yjwiz.choose('+i+')"><span class="yjlg-opt-left">'+(opt.go?vehicleIcon(opt.go):"")+'<span class="yjlg-opt-text"><span class="yjlg-opt-title">'+opt.t+'</span>'+(cond?'<span class="yjlg-opt-cond">'+cond+'</span>':"")+'</span></span>'+svgChevron()+'</button>';
     });
     html+='</div>';
-    if(nodeId==="ROOT"){
-      html+='<p class="yjlg-mode-switch">그림으로 편하게 고르고 싶으세요? <a href="license-picker.html">이미지로 찾기</a></p>';
-    }
   }
 
   var card=document.getElementById("yjlg-card");
