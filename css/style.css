@@ -786,6 +786,7 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
   gap: 10px;
 }
 .footer-legal { display: flex; gap: 14px; flex-wrap: wrap; }
+.footer-version { opacity: 0.6; font-size: 11px; }
 
 /* ---------- Floating helpers ---------- */
 .floating-actions {
