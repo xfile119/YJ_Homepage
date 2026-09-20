@@ -125,3 +125,79 @@ CREATE TABLE IF NOT EXISTS {prefix}written_exam (
   updated_by VARCHAR(50) NOT NULL DEFAULT '',
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- ── 필기시험 예약 시스템 (feature/written-exam-booking) ──────────────────
+-- 위 written_exam(안내장 앱 전용, 학생당 최신 한 건)과는 별개입니다. 수강생이
+-- 홈페이지에서 직접 신청·변경·취소하는 정식 예약 시스템으로, 셔틀과 같은 구조
+-- (관리자가 회차를 만들고, 수강생이 그 회차에 붙음)입니다.
+-- 설계 근거: docs-11-written-exam-db.md, docs-12-written-exam-screens.md
+-- (yj-academy-messaging 저장소)
+
+CREATE TABLE IF NOT EXISTS {prefix}written_exam_slots (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  exam_date VARCHAR(10) NOT NULL,
+  -- 그날의 몇 번째 회차인지. 출발시간이 바뀌어도 신청자의 소속이 유지되도록
+  -- 시간이 아니라 번호로 묶습니다 (셔틀 slot_no와 같은 방식).
+  slot_no INT NOT NULL DEFAULT 0,
+  depart_time VARCHAR(10) NOT NULL DEFAULT '',
+  -- 수업 겹침 판정에 쓰는 예상 복귀 시각 ('12:30' 등)
+  return_time VARCHAR(10) NOT NULL DEFAULT '',
+  exam_place VARCHAR(20) NOT NULL DEFAULT '',
+  capacity INT NOT NULL DEFAULT 8,
+  -- 관리자가 더 이상 신청을 안 받고 싶을 때 1로 둡니다 (정원이 남아도 마감)
+  closed TINYINT NOT NULL DEFAULT 0,
+  memo VARCHAR(200) NOT NULL DEFAULT '',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_slot (exam_date, slot_no),
+  INDEX idx_exam_date (exam_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS {prefix}written_exam_bookings (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  exam_date VARCHAR(10) NOT NULL,
+  -- 회차 번호. 개인방문(셔틀 안 탐)이면 -1이고 정원에 포함되지 않습니다.
+  slot_no INT NOT NULL DEFAULT -1,
+  -- '학원출발' = 셔틀로 함께, '개인방문' = 각자 시험장으로
+  depart_type VARCHAR(10) NOT NULL DEFAULT '학원출발',
+  name VARCHAR(50) NOT NULL DEFAULT '',
+  phone VARCHAR(30) NOT NULL DEFAULT '',
+  -- 관리자 "이름+생년월일" 조회, 동명이인 구분용
+  birth_date VARCHAR(10) NOT NULL DEFAULT '',
+  -- 학사DB StudentID. 안내장 앱에서 넣으면 채워지고, 수강생이 직접 신청하면 비어 있습니다.
+  student_key VARCHAR(50) NOT NULL DEFAULT '',
+  -- 수강생이 자기 예약을 변경·취소할 때 본인 확인에 쓰는 임의 문자열 (지금은 미사용, 자리만)
+  edit_token VARCHAR(64) NOT NULL DEFAULT '',
+  memo VARCHAR(200) NOT NULL DEFAULT '',
+  updated_by VARCHAR(50) NOT NULL DEFAULT '',   -- '수강생' 또는 관리자 아이디
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  -- 같은 사람이 같은 날 두 번 신청하는 것을 DB 차원에서 막습니다 (버튼 두 번 누르기 방지).
+  -- 다른 날짜로 두 건 잡는 것은 애플리케이션 레벨 잠금(GET_LOCK)으로 막습니다.
+  UNIQUE KEY uq_person_day (exam_date, name, phone),
+  INDEX idx_slot (exam_date, slot_no),
+  INDEX idx_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- 셔틀 담당자용 변경 이력. "그런 얘기 못 들었다"가 안 생기게 신청/취소/변경을 남기고,
+-- 확인 여부를 표시합니다.
+CREATE TABLE IF NOT EXISTS {prefix}written_exam_log (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  exam_date VARCHAR(10) NOT NULL,
+  slot_no INT NOT NULL DEFAULT -1,
+  action VARCHAR(10) NOT NULL DEFAULT '',   -- '신청' / '취소' / '변경'
+  name VARCHAR(50) NOT NULL DEFAULT '',
+  detail VARCHAR(200) NOT NULL DEFAULT '',  -- '10-13 → 10-10' 같은 설명
+  actor VARCHAR(50) NOT NULL DEFAULT '',    -- '수강생' 또는 관리자 아이디
+  seen_by VARCHAR(50) NOT NULL DEFAULT '',  -- 확인한 사람
+  seen_at DATETIME NULL DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_exam_date (exam_date),
+  INDEX idx_seen (seen_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- 공휴일 표. 설·추석 등은 계산으로 안 나와서 표로 관리합니다. 달력에 빨간 표시 +
+-- 일괄 회차 생성에서 자동 제외하는 데 씁니다.
+CREATE TABLE IF NOT EXISTS {prefix}holidays (
+  holiday_date VARCHAR(10) PRIMARY KEY,   -- 'YYYY-MM-DD'
+  name VARCHAR(50) NOT NULL DEFAULT ''    -- '추석', '대체공휴일'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

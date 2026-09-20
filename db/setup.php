@@ -131,6 +131,118 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}written_exam (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
+/* ── 필기시험 예약 시스템 (feature/written-exam-booking) ──────────────────
+   설계 근거: docs-11/docs-12 (yj-academy-messaging 저장소). 위 written_exam
+   (안내장 앱 전용, 학생당 최신 한 건)과는 별개의 정식 예약 시스템입니다. */
+$pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}written_exam_slots (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  exam_date VARCHAR(10) NOT NULL,
+  slot_no INT NOT NULL DEFAULT 0,
+  depart_time VARCHAR(10) NOT NULL DEFAULT '',
+  return_time VARCHAR(10) NOT NULL DEFAULT '',
+  exam_place VARCHAR(20) NOT NULL DEFAULT '',
+  capacity INT NOT NULL DEFAULT 8,
+  closed TINYINT NOT NULL DEFAULT 0,
+  memo VARCHAR(200) NOT NULL DEFAULT '',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_slot (exam_date, slot_no),
+  INDEX idx_exam_date (exam_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+$pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}written_exam_bookings (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  exam_date VARCHAR(10) NOT NULL,
+  slot_no INT NOT NULL DEFAULT -1,
+  depart_type VARCHAR(10) NOT NULL DEFAULT '학원출발',
+  name VARCHAR(50) NOT NULL DEFAULT '',
+  phone VARCHAR(30) NOT NULL DEFAULT '',
+  birth_date VARCHAR(10) NOT NULL DEFAULT '',
+  student_key VARCHAR(50) NOT NULL DEFAULT '',
+  edit_token VARCHAR(64) NOT NULL DEFAULT '',
+  memo VARCHAR(200) NOT NULL DEFAULT '',
+  updated_by VARCHAR(50) NOT NULL DEFAULT '',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_person_day (exam_date, name, phone),
+  INDEX idx_slot (exam_date, slot_no),
+  INDEX idx_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+$pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}written_exam_log (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  exam_date VARCHAR(10) NOT NULL,
+  slot_no INT NOT NULL DEFAULT -1,
+  action VARCHAR(10) NOT NULL DEFAULT '',
+  name VARCHAR(50) NOT NULL DEFAULT '',
+  detail VARCHAR(200) NOT NULL DEFAULT '',
+  actor VARCHAR(50) NOT NULL DEFAULT '',
+  seen_by VARCHAR(50) NOT NULL DEFAULT '',
+  seen_at DATETIME NULL DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_exam_date (exam_date),
+  INDEX idx_seen (seen_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+$pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}holidays (
+  holiday_date VARCHAR(10) PRIMARY KEY,
+  name VARCHAR(50) NOT NULL DEFAULT ''
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+/* 2026~2027년 공휴일 기본값. 인터넷 검색으로 확인한 날짜지만, 특히 2026년에
+   새로 생긴 노동절(5/1)·제헌절(7/17) 공휴일 지정과 그 대체공휴일 적용 여부는
+   법 개정이 최근이라 실제 시행 여부를 한 번 더 확인해주시고, 다르면 관리자
+   화면에서 직접 고치시면 됩니다(추가·삭제 가능). 토요일에 걸치는 노동절·
+   제헌절·한글날의 대체공휴일 여부가 불확실해 일부러 안 넣은 해가 있습니다. */
+$holidays2026_2027 = [
+  ['2026-01-01', '신정'],
+  ['2026-02-16', '설날 연휴'],
+  ['2026-02-17', '설날'],
+  ['2026-02-18', '설날 연휴'],
+  ['2026-03-01', '삼일절'],
+  ['2026-03-02', '대체공휴일(삼일절)'],
+  ['2026-05-01', '노동절'],
+  ['2026-05-05', '어린이날'],
+  ['2026-05-24', '부처님오신날'],
+  ['2026-05-25', '대체공휴일(부처님오신날)'],
+  ['2026-06-03', '전국동시지방선거일'],
+  ['2026-06-06', '현충일'],
+  ['2026-07-17', '제헌절'],
+  ['2026-08-15', '광복절'],
+  ['2026-08-17', '대체공휴일(광복절)'],
+  ['2026-09-24', '추석 연휴'],
+  ['2026-09-25', '추석'],
+  ['2026-09-26', '추석 연휴'],
+  ['2026-10-03', '개천절'],
+  ['2026-10-05', '대체공휴일(개천절)'],
+  ['2026-10-09', '한글날'],
+  ['2026-12-25', '성탄절'],
+  ['2027-01-01', '신정'],
+  ['2027-02-06', '설날 연휴'],
+  ['2027-02-07', '설날'],
+  ['2027-02-08', '설날 연휴'],
+  ['2027-02-09', '대체공휴일(설날)'],
+  ['2027-03-01', '삼일절'],
+  ['2027-05-01', '노동절'],
+  ['2027-05-05', '어린이날'],
+  ['2027-05-13', '부처님오신날'],
+  ['2027-06-06', '현충일'],
+  ['2027-06-07', '대체공휴일(현충일)'],
+  ['2027-07-17', '제헌절'],
+  ['2027-08-15', '광복절'],
+  ['2027-08-16', '대체공휴일(광복절)'],
+  ['2027-09-14', '추석 연휴'],
+  ['2027-09-15', '추석'],
+  ['2027-09-16', '추석 연휴'],
+  ['2027-10-03', '개천절'],
+  ['2027-10-04', '대체공휴일(개천절)'],
+  ['2027-10-09', '한글날'],
+  ['2027-12-25', '성탄절'],
+];
+$holidayIns = $pdo->prepare("INSERT IGNORE INTO {$prefix}holidays (holiday_date, name) VALUES (?, ?)");
+foreach ($holidays2026_2027 as $h) {
+    $holidayIns->execute($h);
+}
+
 /* 이미 만들어진 notices 테이블에 content/image 컬럼이 없으면 추가합니다.
    (기존에 db/setup.php를 이미 한 번 실행한 사이트를 위한 안전한 마이그레이션 — 여러 번 실행해도 안전합니다.) */
 function yj_ensure_column($pdo, $table, $column, $definition) {
