@@ -117,6 +117,8 @@ CREATE TABLE IF NOT EXISTS {prefix}shuttle_slots (
 CREATE TABLE IF NOT EXISTS {prefix}written_exam (
   student_id INT PRIMARY KEY,
   student_name VARCHAR(50) NOT NULL DEFAULT '',
+  -- 수강생 본인 조회(written-exam.html)에서 이름+연락처 뒷4자리로 본인 확인할 때 씁니다.
+  student_phone VARCHAR(30) NOT NULL DEFAULT '',
   exam_date VARCHAR(10) NOT NULL DEFAULT '',
   exam_time VARCHAR(20) NOT NULL DEFAULT '',
   place VARCHAR(100) NOT NULL DEFAULT '나주',

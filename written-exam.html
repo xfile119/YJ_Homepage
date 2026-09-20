@@ -3,20 +3,20 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>셔틀버스 조회 | 영진자동차운전전문학원</title>
+<title>필기시험 조회 | 영진자동차운전전문학원</title>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-<meta name="description" content="영진자동차운전전문학원 수강생 셔틀버스 조회 - 이름과 전화번호 뒷 4자리로 본인의 셔틀 탑승 시간과 장소를 확인하실 수 있습니다." />
+<meta name="description" content="영진자동차운전전문학원 필기시험 조회 - 이름과 전화번호 뒷 4자리로 등록된 필기시험 날짜를 확인하실 수 있습니다." />
 <meta name="robots" content="noindex" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="영진자동차운전전문학원" />
 <meta property="og:locale" content="ko_KR" />
-<meta property="og:title" content="셔틀버스 조회 | 영진자동차운전전문학원" />
-<meta property="og:description" content="영진자동차운전전문학원 수강생 셔틀버스 조회 - 이름과 전화번호 뒷 4자리로 본인의 셔틀 탑승 시간과 장소를 확인하실 수 있습니다." />
-<meta property="og:url" content="https://www.yjcdrive.co.kr/shuttle.html" />
+<meta property="og:title" content="필기시험 조회 | 영진자동차운전전문학원" />
+<meta property="og:description" content="영진자동차운전전문학원 필기시험 조회 - 이름과 전화번호 뒷 4자리로 등록된 필기시험 날짜를 확인하실 수 있습니다." />
+<meta property="og:url" content="https://www.yjcdrive.co.kr/written-exam.html" />
 <!-- 공유 이미지: 이 페이지 전용 배너가 생기면 아래 줄의 파일명만 바꾸세요
-     (권장 이름: images/og-shuttle.jpg · 크기 1200x630) -->
+     (권장 이름: images/og-written-exam.jpg · 크기 1200x630) -->
 <meta property="og:image" content="https://www.yjcdrive.co.kr/images/og-cover-2026.jpg" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
@@ -26,68 +26,61 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css" />
 <style>
-.sh-wrap { max-width: 640px; margin: 0 auto; }
+.we-wrap { max-width: 640px; margin: 0 auto; }
 
-.sh-form-card {
+.we-form-card {
   background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-lg);
   padding: 30px 30px 26px; box-shadow: var(--shadow-sm);
 }
-.sh-form-card h2 { font-size: 19px; font-weight: 800; color: var(--color-ink); }
-.sh-form-card > p { margin-top: 8px; font-size: 14px; color: var(--color-muted); line-height: 1.7; }
-.sh-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 22px; }
-@media (max-width: 560px) { .sh-fields { grid-template-columns: 1fr; } }
-.sh-field label { display: block; font-size: 13px; font-weight: 700; color: var(--color-ink); margin-bottom: 7px; }
-.sh-field input {
+.we-form-card h2 { font-size: 19px; font-weight: 800; color: var(--color-ink); }
+.we-form-card > p { margin-top: 8px; font-size: 14px; color: var(--color-muted); line-height: 1.7; }
+.we-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 22px; }
+@media (max-width: 560px) { .we-fields { grid-template-columns: 1fr; } }
+.we-field label { display: block; font-size: 13px; font-weight: 700; color: var(--color-ink); margin-bottom: 7px; }
+.we-field input {
   width: 100%; border: 1px solid var(--color-line); border-radius: var(--radius-sm);
   padding: 13px 14px; font-size: 15px; font-family: inherit; color: var(--color-ink); background: #fff;
   transition: border-color .15s ease, box-shadow .15s ease;
 }
-.sh-field input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
-.sh-field .sh-help { font-size: 12px; color: var(--color-muted); margin-top: 6px; }
+.we-field input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
+.we-field .we-help { font-size: 12px; color: var(--color-muted); margin-top: 6px; }
 
-.sh-status { margin-top: 16px; font-size: 13.5px; font-weight: 600; min-height: 20px; }
-.sh-status.err { color: #c53030; }
+.we-status { margin-top: 16px; font-size: 13.5px; font-weight: 600; min-height: 20px; }
+.we-status.err { color: #c53030; }
 
 /* 결과 */
-.sh-results { margin-top: 26px; display: none; }
-.sh-results.show { display: block; }
-.sh-results-head { font-size: 14px; font-weight: 800; color: var(--color-ink); margin-bottom: 14px; }
-.sh-ride {
+.we-results { margin-top: 26px; display: none; }
+.we-results.show { display: block; }
+.we-results-head { font-size: 14px; font-weight: 800; color: var(--color-ink); margin-bottom: 14px; }
+.we-card {
   display: flex; align-items: center; gap: 18px;
   background: #fff; border: 1px solid var(--color-line); border-left: 5px solid var(--color-primary);
-  border-radius: var(--radius-md); padding: 20px 22px; margin-bottom: 12px;
+  border-radius: var(--radius-md); padding: 20px 22px;
 }
-.sh-ride .sh-when { flex: none; text-align: center; min-width: 92px; }
-.sh-ride .sh-date { font-size: 12.5px; font-weight: 700; color: var(--color-muted); }
-.sh-ride .sh-time { font-size: 25px; font-weight: 900; color: var(--color-primary-dark); line-height: 1.25; letter-spacing: -0.01em; }
-.sh-ride .sh-where { border-left: 1px solid var(--color-line); padding-left: 18px; flex: 1; }
-.sh-ride .sh-where .k { font-size: 12px; font-weight: 700; color: var(--color-muted); }
-.sh-ride .sh-where .v { font-size: 17px; font-weight: 800; color: var(--color-ink); margin-top: 3px; }
-/* 같은 시간에 여러 대가 나가므로 어느 차를 타는지 함께 알려줍니다 */
-.sh-ride .sh-vehicle {
-  display: inline-block; margin-top: 8px; background: var(--color-primary-light);
-  color: var(--color-primary-dark); font-size: 12.5px; font-weight: 800;
-  border-radius: 999px; padding: 4px 11px;
-}
-.sh-ride .sh-depart { display: block; margin-top: 7px; font-size: 12px; color: var(--color-muted); }
+.we-card .we-when { flex: none; text-align: center; min-width: 92px; }
+.we-card .we-date { font-size: 12.5px; font-weight: 700; color: var(--color-muted); }
+.we-card .we-time { font-size: 21px; font-weight: 900; color: var(--color-primary-dark); line-height: 1.3; letter-spacing: -0.01em; }
+.we-card .we-where { border-left: 1px solid var(--color-line); padding-left: 18px; flex: 1; }
+.we-card .we-where .k { font-size: 12px; font-weight: 700; color: var(--color-muted); }
+.we-card .we-where .v { font-size: 17px; font-weight: 800; color: var(--color-ink); margin-top: 3px; }
 @media (max-width: 560px) {
-  .sh-ride { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .sh-ride .sh-when { text-align: left; min-width: 0; }
-  .sh-ride .sh-where { border-left: none; padding-left: 0; }
+  .we-card { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .we-card .we-when { text-align: left; min-width: 0; }
+  .we-card .we-where { border-left: none; padding-left: 0; }
 }
-.sh-badge-today {
+.we-badge-today {
   display: inline-block; background: var(--color-accent); color: var(--color-ink);
   font-size: 11.5px; font-weight: 900; border-radius: 999px; padding: 3px 9px; margin-left: 6px;
 }
 
-.sh-empty {
+.we-empty {
   background: var(--color-surface); border: 1px dashed var(--color-line); border-radius: var(--radius-md);
   padding: 26px 24px; text-align: center;
 }
-.sh-empty p { font-size: 14.5px; font-weight: 700; color: var(--color-ink); }
-.sh-empty span { display: block; margin-top: 8px; font-size: 13px; color: var(--color-muted); line-height: 1.7; }
+.we-empty p { font-size: 14.5px; font-weight: 700; color: var(--color-ink); }
+.we-empty span { display: block; margin-top: 8px; font-size: 13px; color: var(--color-muted); line-height: 1.7; }
 
-.sh-note {
+.we-note {
   margin-top: 22px; font-size: 12.5px; color: var(--color-muted); line-height: 1.8;
   background: var(--color-surface); border-radius: var(--radius-md); padding: 16px 18px;
 }
@@ -134,44 +127,44 @@
 
 <div class="page-header">
   <div class="container">
-    <div class="breadcrumb"><a href="index.html">홈</a> / 셔틀 조회</div>
-    <h1>셔틀버스 조회</h1>
-    <p>이름과 전화번호 뒷 4자리를 입력하시면 본인의 셔틀 탑승 시간과 장소를 확인하실 수 있어요.</p>
+    <div class="breadcrumb"><a href="index.html">홈</a> / 필기시험 조회</div>
+    <h1>필기시험 조회</h1>
+    <p>이름과 전화번호 뒷 4자리를 입력하시면 등록된 필기시험 날짜를 확인하실 수 있어요.</p>
   </div>
 </div>
 
 <main id="main-content">
   <section class="section">
     <div class="container">
-      <div class="sh-wrap">
+      <div class="we-wrap">
 
-        <div class="sh-form-card">
-          <h2>내 셔틀 시간 확인하기</h2>
-          <p>수강 신청 시 등록하신 이름과 연락처로 조회합니다. 본인 정보만 조회되며, 다른 분의 명단은 표시되지 않습니다.</p>
+        <div class="we-form-card">
+          <h2>내 필기시험 날짜 확인하기</h2>
+          <p>수강 신청 시 등록하신 이름과 연락처로 조회합니다. 본인 정보만 조회되며, 다른 분의 정보는 표시되지 않습니다.</p>
 
-          <form id="shForm" autocomplete="off">
-            <div class="sh-fields">
-              <div class="sh-field">
-                <label for="shName">이름</label>
-                <input type="text" id="shName" placeholder="홍길동" required />
+          <form id="weForm" autocomplete="off">
+            <div class="we-fields">
+              <div class="we-field">
+                <label for="weName">이름</label>
+                <input type="text" id="weName" placeholder="홍길동" required />
               </div>
-              <div class="sh-field">
-                <label for="shPhone">전화번호 뒷 4자리</label>
-                <input type="text" id="shPhone" placeholder="5678" inputmode="numeric" maxlength="4" required />
-                <p class="sh-help">010-1234-<strong>5678</strong> 이면 5678</p>
+              <div class="we-field">
+                <label for="wePhone">전화번호 뒷 4자리</label>
+                <input type="text" id="wePhone" placeholder="5678" inputmode="numeric" maxlength="4" required />
+                <p class="we-help">010-1234-<strong>5678</strong> 이면 5678</p>
               </div>
             </div>
-            <button type="submit" class="btn btn-accent btn-block" style="margin-top:20px;" id="shSubmit">조회하기</button>
+            <button type="submit" class="btn btn-accent btn-block" style="margin-top:20px;" id="weSubmit">조회하기</button>
           </form>
 
-          <p class="sh-status" id="shStatus"></p>
+          <p class="we-status" id="weStatus"></p>
         </div>
 
-        <div class="sh-results" id="shResults"></div>
+        <div class="we-results" id="weResults"></div>
 
-        <p class="sh-note">
-          · 명단은 학원에서 운행 전날 정리해 등록합니다. 아직 등록 전이면 조회되지 않을 수 있어요.<br>
-          · 탑승 장소나 시간을 바꾸시려면 <a href="tel:062-951-5100" style="color:var(--color-primary);font-weight:700;">062-951-5100</a>으로 연락 주세요.<br>
+        <p class="we-note">
+          · 필기시험 날짜는 사무실에서 상담 후 등록해드립니다. 아직 상담 전이면 조회되지 않을 수 있어요.<br>
+          · 날짜나 시각을 바꾸시려면 <a href="tel:062-951-5100" style="color:var(--color-primary);font-weight:700;">062-951-5100</a>으로 연락 주세요.<br>
           · 조회가 안 되시면 수강 신청 시 적어주신 이름·연락처와 같은지 확인해주세요.
         </p>
 
@@ -248,12 +241,12 @@
 (function () {
 "use strict";
 
-var form = document.getElementById("shForm");
-var nameEl = document.getElementById("shName");
-var phoneEl = document.getElementById("shPhone");
-var statusEl = document.getElementById("shStatus");
-var resultsEl = document.getElementById("shResults");
-var submitBtn = document.getElementById("shSubmit");
+var form = document.getElementById("weForm");
+var nameEl = document.getElementById("weName");
+var phoneEl = document.getElementById("wePhone");
+var statusEl = document.getElementById("weStatus");
+var resultsEl = document.getElementById("weResults");
+var submitBtn = document.getElementById("weSubmit");
 
 function esc(s) {
   return String(s == null ? "" : s)
@@ -268,7 +261,7 @@ function maskName(name) {
 }
 function setStatus(msg, kind) {
   statusEl.textContent = msg || "";
-  statusEl.className = "sh-status" + (kind ? " " + kind : "");
+  statusEl.className = "we-status" + (kind ? " " + kind : "");
 }
 function todayStr() {
   var d = new Date();
@@ -288,37 +281,28 @@ phoneEl.addEventListener("input", function () {
   this.value = this.value.replace(/[^0-9]/g, "").slice(0, 4);
 });
 
-function renderRides(rides) {
+function renderResult(data) {
   var today = todayStr();
-  var html = '<div class="sh-results-head">' + esc(maskName(nameEl.value.trim())) + '님의 예정된 셔틀 ' + rides.length + '건</div>';
-  rides.forEach(function (r) {
-    var isToday = r.date === today;
-    /* 개인 탑승시간이 교육시간과 다르면(중간에서 타는 경우) 교육시간도 함께 알려줍니다 */
-    var departNote = (r.departTime && r.departTime !== r.time)
-      ? '<span class="sh-depart">교육시간 ' + esc(r.departTime) + '</span>' : '';
-    var vehicle = r.vehicle ? '<span class="sh-vehicle">' + esc(r.vehicle) + '</span>' : '';
-    html += '<div class="sh-ride">'
-      + '<div class="sh-when">'
-      +   '<div class="sh-date">' + esc(prettyDate(r.date)) + (isToday ? '<span class="sh-badge-today">오늘</span>' : '') + '</div>'
-      +   '<div class="sh-time">' + esc(r.time) + '</div>'
-      +   '<div class="sh-date">탑승시간</div>'
-      + '</div>'
-      + '<div class="sh-where">'
-      +   '<div class="k">탑승 장소</div>'
-      +   '<div class="v">' + (r.place ? esc(r.place) : '학원에 문의해주세요') + '</div>'
-      +   vehicle
-      +   departNote
-      + '</div>'
-      + '</div>';
-  });
+  var isToday = data.examDate === today;
+  var html = '<div class="we-results-head">' + esc(maskName(nameEl.value.trim())) + '님의 필기시험 정보</div>';
+  html += '<div class="we-card">'
+    + '<div class="we-when">'
+    +   '<div class="we-date">' + esc(prettyDate(data.examDate)) + (isToday ? '<span class="we-badge-today">오늘</span>' : '') + '</div>'
+    +   '<div class="we-time">' + esc(data.examTime || '시각 미정') + '</div>'
+    + '</div>'
+    + '<div class="we-where">'
+    +   '<div class="k">장소</div>'
+    +   '<div class="v">' + (data.place ? esc(data.place) : '학원에 문의해주세요') + '</div>'
+    + '</div>'
+    + '</div>';
   resultsEl.innerHTML = html;
   resultsEl.classList.add("show");
 }
 
 function renderEmpty() {
-  resultsEl.innerHTML = '<div class="sh-empty">'
-    + '<p>예정된 셔틀 탑승 정보가 없습니다.</p>'
-    + '<span>아직 명단이 등록되지 않았거나, 입력하신 이름·전화번호가 신청서와 다를 수 있어요.<br>'
+  resultsEl.innerHTML = '<div class="we-empty">'
+    + '<p>등록된 필기시험 정보가 없습니다.</p>'
+    + '<span>아직 상담 전이거나, 입력하신 이름·전화번호가 신청서와 다를 수 있어요.<br>'
     + '자세한 내용은 062-951-5100으로 문의해주세요.</span>'
     + '</div>';
   resultsEl.classList.add("show");
@@ -336,7 +320,7 @@ form.addEventListener("submit", function (e) {
   submitBtn.disabled = true;
   resultsEl.classList.remove("show");
 
-  fetch("api/shuttle.php", {
+  fetch("api/written-exam.php", {
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
@@ -348,7 +332,7 @@ form.addEventListener("submit", function (e) {
         throw new Error(res.body.error || "조회에 실패했습니다.");
       }
       setStatus("");
-      if (res.body.found && res.body.rides.length) { renderRides(res.body.rides); }
+      if (res.body.found) { renderResult(res.body); }
       else { renderEmpty(); }
     })
     .catch(function () {

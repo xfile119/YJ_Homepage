@@ -123,6 +123,7 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}shuttle_slots (
 $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}written_exam (
   student_id INT PRIMARY KEY,
   student_name VARCHAR(50) NOT NULL DEFAULT '',
+  student_phone VARCHAR(30) NOT NULL DEFAULT '',
   exam_date VARCHAR(10) NOT NULL DEFAULT '',
   exam_time VARCHAR(20) NOT NULL DEFAULT '',
   place VARCHAR(100) NOT NULL DEFAULT '나주',
@@ -145,6 +146,7 @@ yj_ensure_column($pdo, $prefix . 'staff', 'greeting', 'VARCHAR(200) NULL');
 yj_ensure_column($pdo, $prefix . 'admin_users', 'role', "VARCHAR(20) NOT NULL DEFAULT 'admin'");
 yj_ensure_column($pdo, $prefix . 'shuttle_riders', 'updated_by', "VARCHAR(50) NOT NULL DEFAULT ''");
 yj_ensure_column($pdo, $prefix . 'student_schedule', 'license_type', "VARCHAR(30) NOT NULL DEFAULT ''");
+yj_ensure_column($pdo, $prefix . 'written_exam', 'student_phone', "VARCHAR(30) NOT NULL DEFAULT ''");
 
 /* 역할 세분화(최고관리자/사무실/셔틀/강사, 한 사람이 여러 역할을 겸직할 수 있어
    role 컬럼은 이제 쉼표로 구분된 여러 값을 담습니다, 예: "instructor,office").
