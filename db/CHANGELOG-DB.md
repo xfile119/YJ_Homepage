@@ -30,7 +30,7 @@ FTP로 파일만 올리면 되는 변경인지, **`db/setup.php`를 한 번 더 
 | `yj_shuttle_slots` | 셔틀 운행 편성(날짜별 차량·출발시간) | 셔틀 명단 관리 |
 | `yj_student_schedule` | 학사서버에서 받아온 예약 일정 사본 | 내 일정 조회 |
 | `yj_contact_messages` | 홈페이지 문의 메시지 | 문의 관리 |
-| `yj_written_exam` | 필기시험 (학생당 최신 한 건) | 안내장 앱(guide-print) 전용 — 화면 없음 |
+| `yj_written_exam` | 필기시험 (학생당 최신 한 건) | 안내장 앱(guide-print) 저장 + 필기시험 조회 페이지 |
 
 `yj_`는 `config.php`의 `table_prefix` 값입니다. 설정을 바꿨다면 그 값으로 읽으세요.
 
@@ -44,6 +44,13 @@ FTP로 파일만 올리면 되는 변경인지, **`db/setup.php`를 한 번 더 
 ---
 
 ## 변경 이력 (최신순)
+
+### 2026-09-20 — `3f8ab0f` · setup.php 실행 필요
+
+`yj_written_exam`에 `student_phone` 컬럼 추가 — 필기시험 조회 페이지
+(`written-exam.html`)에서 이름+연락처 뒷4자리로 본인 확인할 때 씁니다.
+기존에 이미 `db/setup.php`를 실행해서 이 테이블을 만들어두셨어도, 다시
+실행하면 안전하게 컬럼만 추가됩니다(데이터는 그대로 유지).
 
 ### 2026-09-20 — `e513074` · setup.php 실행 필요
 

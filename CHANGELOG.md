@@ -11,6 +11,23 @@ FTP 업로드 후 이 값이 아래 최신 항목과 일치하는지 보면, 실
 
 ---
 
+## 2026-09-20 08:20 KST — `3f8ab0f`
+**필기시험 조회 페이지(`written-exam.html`) 신설** — 이름+전화번호 뒷 4자리로
+등록된 필기시험 날짜를 확인할 수 있습니다. 셔틀 조회와 같은 자리(상단바·
+푸터)에 나란히 추가했습니다. 아직 조회만 되고, 신청·변경·취소는 없습니다
+(사무실에서 안내장 앱으로 등록해드립니다).
+
+**FTP로 올릴 파일**: `written-exam.html`(새 파일), `api/written-exam.php`,
+그리고 링크가 추가된 15개 페이지(`about.html`, `contact.html`,
+`driving-lessons.html`, `education-hours.html`, `index.html`,
+`large-vehicle-training.html`, `license-guide.html`, `license-picker.html`,
+`location.html`, `medical-checkup-hospitals.html`, `my-schedule.html`,
+`notice-detail.html`, `notice.html`, `privacy.html`, `shuttle.html`).
+
+**`db/setup.php`를 한 번 더 실행해주세요** — `yj_written_exam` 테이블에
+`student_phone` 컬럼이 추가됩니다. 자세한 내용은
+[`db/CHANGELOG-DB.md`](db/CHANGELOG-DB.md) 참고.
+
 ## 2026-09-20 07:10 KST — `e513074`
 필기시험 저장 API(`api/written-exam.php`) 신설 — **화면상 눈에 보이는 변화는
 없습니다.** 사무실에서 쓰는 안내장 앱(guide-print)이 상담 후 정한 필기시험
