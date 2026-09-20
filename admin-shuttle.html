@@ -230,6 +230,37 @@ function syncPrintSelection() {
 }
 window.addEventListener("beforeprint", syncPrintSelection);
 
+/* ---------- 인쇄용 연락처 줄이기 ----------
+   연락처 칸이 좁아 "010-1234-5678"이 잘려 보이는 문제 — 누구나 010으로
+   시작하니 인쇄할 때만 앞자리를 빼고 짧게 보여줍니다. 화면에서 입력하던
+   값이나 저장되는 값은 그대로 두고, 인쇄 직전에만 잠깐 바꿨다가 인쇄가
+   끝나면 원래대로 되돌립니다(afterprint). 010으로 시작하지 않는 번호는
+   혹시 모를 실수 방지로 그대로 둡니다. */
+function shortenPhoneForPrint(phone) {
+  var digits = String(phone || "").replace(/[^0-9]/g, "");
+  if (digits.indexOf("010") !== 0) { return phone; }
+  var rest = digits.slice(3);
+  if (rest.length === 8) { return rest.slice(0, 4) + "-" + rest.slice(4); }
+  if (rest.length === 7) { return rest.slice(0, 3) + "-" + rest.slice(3); }
+  return rest;
+}
+function shortenPhonesForPrint() {
+  [].forEach.call(document.querySelectorAll(".f-phone"), function (inp) {
+    inp.dataset.fullPhone = inp.value;
+    inp.value = shortenPhoneForPrint(inp.value);
+  });
+}
+function restorePhonesAfterPrint() {
+  [].forEach.call(document.querySelectorAll(".f-phone"), function (inp) {
+    if (inp.dataset.fullPhone !== undefined) {
+      inp.value = inp.dataset.fullPhone;
+      delete inp.dataset.fullPhone;
+    }
+  });
+}
+window.addEventListener("beforeprint", shortenPhonesForPrint);
+window.addEventListener("afterprint", restorePhonesAfterPrint);
+
 function esc(s) {
   return String(s == null ? "" : s)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
