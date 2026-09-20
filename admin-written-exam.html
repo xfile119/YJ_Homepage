@@ -118,6 +118,17 @@
   table.we-slot-mgmt-table td.actions { white-space: nowrap; text-align: right; }
   table.we-slot-mgmt-table td.actions .btn { margin-left: 4px; }
   .we-tag-closed { display: inline-block; background: #fdeeee; color: #c53030; font-size: 11px; font-weight: 800; border-radius: 999px; padding: 2px 8px; }
+
+  /* ── 최근 변경 패널 ── */
+  .we-badge-count { display: inline-block; background: var(--color-primary); color: #fff; font-size: 11px; font-weight: 800; border-radius: 999px; padding: 2px 9px; }
+  .we-change-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 9px 4px; border-bottom: 1px solid var(--color-line); font-size: 13px; color: var(--color-ink); }
+  .we-change-row:last-child { border-bottom: none; }
+  .we-change-row .icon { font-weight: 900; width: 14px; text-align: center; }
+  .we-change-row .icon.new { color: #1c8a4f; }
+  .we-change-row .icon.cancel { color: #c53030; }
+  .we-change-row .icon.change { color: var(--color-primary); }
+  .we-change-row .who { color: var(--color-muted); font-size: 12px; }
+  .we-change-row .sp2 { flex: 1; }
 </style>
 </head>
 <body>
@@ -142,6 +153,18 @@
 
   <!-- ═══════════ 탭 1: 달력 ═══════════ -->
   <div class="we-tab-panel" id="tabCalendar">
+    <div class="panel" id="recentChangesPanel">
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <h2 style="margin-bottom:0;">🔔 최근 변경</h2>
+        <span class="we-badge-count" id="recentChangesCount" style="display:none;"></span>
+        <span class="sp" style="flex:1;"></span>
+        <button type="button" id="btnRecentAckAll" class="btn btn-outline btn-sm" style="display:none;">전체 확인</button>
+        <button type="button" id="btnRecentRefresh" class="btn btn-outline btn-sm">새로고침</button>
+      </div>
+      <p class="hint" style="margin-top:6px;">수강생이 스스로 신청·변경·취소한 내역과 관리자 처리 내역 중, 아직 "확인"을 안 누른 것만 모아 보여줍니다 (최근 30건).</p>
+      <div id="recentChangesList" style="margin-top:10px;"></div>
+    </div>
+
     <div class="panel">
       <h2>회차 현황 달력</h2>
       <p class="hint">칸을 누르면 그 회차의 예약자 목록이 아래에 열립니다. 초록=여유, 노랑=거의 마감(7/8 이상), 빨강=마감·만석.</p>
@@ -353,6 +376,54 @@ function editRowHtml(b) {
     + '</div></td></tr>';
 }
 
+/* ═══════════ 최근 변경 (탭 1 상단) ═══════════ */
+
+function changeRowHtml(c) {
+  var iconCls = c.action === '신청' ? 'new' : (c.action === '취소' ? 'cancel' : 'change');
+  var icon = c.action === '신청' ? '+' : (c.action === '취소' ? '−' : '→');
+  return '<div class="we-change-row" data-id="' + c.id + '">'
+    + '<span class="icon ' + iconCls + '">' + icon + '</span>'
+    + '<strong>' + esc(prettyDate(c.exam_date)) + '</strong>'
+    + '<span>' + esc(c.name) + ' ' + esc(c.action) + (c.detail ? ' — ' + esc(c.detail) : '') + '</span>'
+    + '<span class="sp2"></span>'
+    + '<span class="who">' + esc(c.actor) + '</span>'
+    + '<button type="button" class="btn btn-outline btn-sm change-ack">확인했음</button>'
+    + '</div>';
+}
+
+function loadRecentChanges() {
+  apiGet("action=admin_recent_changes").then(function (res) {
+    var changes = res.changes || [];
+    var listEl = document.getElementById("recentChangesList");
+    var countEl = document.getElementById("recentChangesCount");
+    var ackAllBtn = document.getElementById("btnRecentAckAll");
+    if (!changes.length) {
+      listEl.innerHTML = '<p class="hint">확인 안 한 변경 내역이 없습니다.</p>';
+      countEl.style.display = "none";
+      ackAllBtn.style.display = "none";
+      return;
+    }
+    countEl.textContent = changes.length + "건";
+    countEl.style.display = "inline-block";
+    ackAllBtn.style.display = "inline-block";
+    listEl.innerHTML = changes.map(changeRowHtml).join("");
+  }).catch(function () { /* 로그인 전일 수 있음 — 달력 패널 쪽에서 이미 로그인 안내를 하므로 여기선 조용히 넘어감 */ });
+}
+document.getElementById("recentChangesList").addEventListener("click", function (e) {
+  if (!e.target.classList.contains("change-ack")) { return; }
+  var id = Number(e.target.closest(".we-change-row").getAttribute("data-id"));
+  apiPost({ action: "admin_ack_change", id: id }).then(loadRecentChanges)
+    .catch(function (err) { window.alert(err.error || "확인 처리에 실패했습니다."); });
+});
+document.getElementById("btnRecentRefresh").addEventListener("click", loadRecentChanges);
+document.getElementById("btnRecentAckAll").addEventListener("click", function () {
+  apiGet("action=admin_recent_changes").then(function (res) {
+    var ids = (res.changes || []).map(function (c) { return c.id; });
+    return Promise.all(ids.map(function (id) { return apiPost({ action: "admin_ack_change", id: id }); }));
+  }).then(loadRecentChanges)
+    .catch(function (err) { window.alert(err.error || "확인 처리에 실패했습니다."); });
+});
+
 /* ═══════════ 탭 1: 달력 ═══════════ */
 
 var calState = { month: startOfMonth(new Date()), slotsByDate: {}, holidaysByDate: {} };
@@ -452,7 +523,12 @@ function openCalDetail(examDate, slotNo) {
 }
 
 /* 회차 상세 + 예약자 목록 + (마감/수정/삭제) 를 그립니다. 탭1(달력)과 탭2(날짜 조회)에서 함께 씁니다. */
-function renderSlotBlock(container, examDate, slotNo, meta, bookings, onChanged) {
+function renderSlotBlock(container, examDate, slotNo, meta, bookings, onChangedRaw) {
+  /* 이 블록에서 일어나는 모든 변경(신청·변경·취소·회차 수정 등)은 수강생 자가
+     처리분과 함께 최근 변경 목록에도 로그가 쌓이므로, 호출부마다 따로 챙기지
+     않도록 여기서 한 번에 새로고침해줍니다. */
+  var onChanged = function () { loadRecentChanges(); onChangedRaw(); };
+
   /* meta.capacity가 없으면(이름 조회에서 개별 예약 한 건만 보여줄 때) 회차 전체를
      관리하는 마감/수정/삭제 버튼은 의미가 없으므로 아예 그리지 않습니다. */
   var isFullSlot = !!(meta && meta.capacity != null);
@@ -874,6 +950,7 @@ document.getElementById("btnDeleteOld").addEventListener("click", function () {
 });
 
 /* ── 시작 ── */
+loadRecentChanges();
 loadCalMonth(startOfMonth(new Date()));
 loadHolidays();
 refreshManageMonth();
