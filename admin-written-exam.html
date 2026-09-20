@@ -1,0 +1,845 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>필기시험 관리 (비공개)</title>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<style>
+  body { background: var(--color-surface); }
+  .admin-shell { max-width: 1180px; margin: 0 auto; padding: 32px 24px 80px; }
+  .admin-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  .admin-header h1 { font-size: 22px; font-weight: 800; color: var(--color-ink); }
+  .admin-header p { font-size: 13.5px; color: var(--color-muted); margin-top: 4px; }
+  .admin-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .panel { background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-lg); padding: 22px 24px; margin-bottom: 20px; }
+  .panel h2 { font-size: 15px; font-weight: 800; color: var(--color-ink); margin-bottom: 6px; }
+  .panel h3 { font-size: 14px; font-weight: 800; color: var(--color-ink); margin: 18px 0 10px; }
+  .panel .hint { font-size: 12.5px; color: var(--color-muted); line-height: 1.7; }
+
+  .status { font-size: 13.5px; font-weight: 600; margin-top: 12px; min-height: 20px; }
+  .status.ok { color: #1c8a4f; }
+  .status.err { color: #c53030; }
+
+  /* ── 탭 ── */
+  .we-tabs { display: flex; gap: 4px; margin-bottom: 18px; border-bottom: 1px solid var(--color-line); }
+  .we-tab-btn {
+    background: none; border: none; padding: 11px 18px; font-size: 14px; font-weight: 700;
+    color: var(--color-muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+    font-family: inherit;
+  }
+  .we-tab-btn.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+  .we-tab-panel[hidden] { display: none; }
+
+  /* ── 달력 (관리자용) ── */
+  .we-cal-head { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 6px; }
+  .we-cal-head button {
+    background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 999px;
+    width: 32px; height: 32px; font-size: 13px; font-weight: 800; color: var(--color-ink); cursor: pointer;
+  }
+  .we-cal-head button:hover { background: var(--color-primary-light); color: var(--color-primary-dark); }
+  .we-cal-title { font-size: 16px; font-weight: 800; color: var(--color-ink); min-width: 110px; text-align: center; }
+  .we-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 12px; }
+  .we-cal-dow { text-align: center; font-size: 11.5px; font-weight: 800; color: var(--color-muted); padding-bottom: 5px; }
+  .we-cal-dow.sun { color: #c53030; }
+  .we-cal-dow.sat { color: #2b6cb0; }
+  .we-cal-cell { min-height: 80px; border: 1px solid var(--color-line); border-radius: var(--radius-sm); padding: 5px 5px 6px; background: var(--color-surface); }
+  .we-cal-cell.empty { border: none; background: transparent; }
+  .we-cal-daynum { font-size: 12px; font-weight: 700; color: var(--color-ink); display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; }
+  .we-cal-daynum.sun, .we-cal-daynum.holiday { color: #c53030; }
+  .we-cal-daynum.sat { color: #2b6cb0; }
+  .we-cal-daynum.today { border-radius: 999px; background: var(--color-ink); color: #fff; }
+  .we-cal-holiday-name { display: block; font-size: 9px; color: #c53030; line-height: 1.3; }
+  .we-cal-slot { display: block; width: 100%; margin-top: 4px; border: none; border-radius: 5px; padding: 3px 4px; font-size: 10px; font-weight: 800; line-height: 1.3; text-align: left; cursor: pointer; }
+  .we-cal-slot.ok { background: #e6f6ec; color: #1c8a4f; }
+  .we-cal-slot.warn { background: #fff6db; color: #8a6d00; }
+  .we-cal-slot.full { background: #fdeeee; color: #c53030; }
+  .we-cal-slot.selected { outline: 2px solid var(--color-primary-dark); }
+  .we-cal-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font-size: 11.5px; color: var(--color-muted); }
+  .we-cal-legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .we-cal-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+  /* ── 회차 상세 / 예약자 목록 ── */
+  .we-slot-block { border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: 16px 18px; margin-top: 14px; }
+  .we-slot-block-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .we-slot-block-head .t { font-size: 15px; font-weight: 800; color: var(--color-ink); }
+  .we-slot-block-head .n { font-size: 12.5px; color: var(--color-muted); }
+  .we-slot-block-head .sp { flex: 1; }
+  .we-slot-block-head .memo { font-size: 12px; color: var(--color-muted); flex-basis: 100%; }
+
+  table.we-book-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+  table.we-book-table th { font-size: 11.5px; font-weight: 700; color: var(--color-muted); background: var(--color-surface); padding: 7px 6px; border-bottom: 1px solid var(--color-line); text-align: left; }
+  table.we-book-table td { padding: 8px 6px; border-bottom: 1px solid var(--color-line); font-size: 13px; color: var(--color-ink); vertical-align: middle; }
+  table.we-book-table td.actions { white-space: nowrap; text-align: right; }
+  table.we-book-table td.actions .btn { margin-left: 4px; }
+  .we-empty-row td { color: var(--color-muted); font-size: 12.5px; padding: 10px 6px; }
+
+  .we-edit-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; background: var(--color-primary-light); padding: 10px; border-radius: var(--radius-sm); margin: 6px 0; }
+  .we-edit-row input, .we-edit-row select {
+    border: 1px solid var(--color-line); border-radius: 6px; padding: 7px 9px;
+    font-family: inherit; font-size: 13px; color: var(--color-ink); background: #fff;
+  }
+  .we-edit-row .lbl { font-size: 11px; font-weight: 700; color: var(--color-primary-dark); margin-right: -4px; }
+
+  .we-class-list { margin-top: 8px; font-size: 12.5px; color: var(--color-muted); line-height: 1.9; }
+  .we-class-list .warn { color: #c53030; font-weight: 700; }
+
+  /* ── 조회 탭 ── */
+  .we-lookup-form { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .we-lookup-form .f label { display: block; font-size: 12px; font-weight: 700; color: var(--color-muted); margin-bottom: 5px; }
+  .we-lookup-form .f input { border: 1px solid var(--color-line); border-radius: var(--radius-sm); padding: 9px 11px; font-family: inherit; font-size: 14px; color: var(--color-ink); }
+  .we-person-pick { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .we-person-pick button { border: 1px solid var(--color-line); background: #fff; border-radius: var(--radius-sm); padding: 8px 12px; font-size: 13px; font-family: inherit; cursor: pointer; }
+  .we-person-pick button:hover { border-color: var(--color-primary); color: var(--color-primary-dark); }
+
+  /* ── 시험날짜 관리 탭 ── */
+  .we-rule-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; background: var(--color-surface); padding: 10px 12px; border-radius: var(--radius-sm); margin-bottom: 8px; }
+  .we-rule-row select, .we-rule-row input { border: 1px solid var(--color-line); border-radius: 6px; padding: 7px 9px; font-family: inherit; font-size: 13px; color: var(--color-ink); background: #fff; }
+  .we-rule-row input.tt { width: 76px; }
+  .we-rule-row input.cap { width: 56px; }
+  .we-rule-row input.place { width: 140px; }
+  .we-preview-box { background: var(--color-surface); border-radius: var(--radius-sm); padding: 12px 14px; margin-top: 10px; font-size: 12.5px; color: var(--color-body); max-height: 180px; overflow-y: auto; }
+  .we-preview-box div { padding: 2px 0; }
+
+  .we-holiday-chip { display: inline-flex; align-items: center; gap: 6px; background: #fdeeee; color: #c53030; border-radius: 999px; padding: 4px 6px 4px 12px; font-size: 12px; font-weight: 700; margin: 3px 6px 3px 0; }
+  .we-holiday-chip button { background: none; border: none; color: #c53030; cursor: pointer; font-size: 13px; font-weight: 900; padding: 2px 5px; }
+
+  table.we-slot-mgmt-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  table.we-slot-mgmt-table th { font-size: 11.5px; font-weight: 700; color: var(--color-muted); background: var(--color-surface); padding: 7px 6px; border-bottom: 1px solid var(--color-line); text-align: left; }
+  table.we-slot-mgmt-table td { padding: 8px 6px; border-bottom: 1px solid var(--color-line); font-size: 13px; color: var(--color-ink); }
+  table.we-slot-mgmt-table td.actions { white-space: nowrap; text-align: right; }
+  table.we-slot-mgmt-table td.actions .btn { margin-left: 4px; }
+  .we-tag-closed { display: inline-block; background: #fdeeee; color: #c53030; font-size: 11px; font-weight: 800; border-radius: 999px; padding: 2px 8px; }
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+  <div class="admin-header">
+    <div>
+      <h1>필기시험 관리</h1>
+      <p>시험 회차(날짜·시각·시험장·정원)를 만들고, 신청자를 조회·변경·취소합니다. 수강생은 <strong>필기시험 조회·신청</strong> 페이지에서 직접 신청해요.</p>
+    </div>
+    <div class="admin-actions">
+      <a href="admin.html" class="btn btn-outline btn-sm">관리자 홈</a>
+      <a href="written-exam.html" class="btn btn-outline btn-sm" target="_blank" rel="noopener">신청 화면 보기</a>
+    </div>
+  </div>
+
+  <div class="we-tabs">
+    <button type="button" class="we-tab-btn active" data-tab="calendar">달력</button>
+    <button type="button" class="we-tab-btn" data-tab="lookup">조회</button>
+    <button type="button" class="we-tab-btn" data-tab="manage">시험날짜 관리</button>
+  </div>
+
+  <!-- ═══════════ 탭 1: 달력 ═══════════ -->
+  <div class="we-tab-panel" id="tabCalendar">
+    <div class="panel">
+      <h2>회차 현황 달력</h2>
+      <p class="hint">칸을 누르면 그 회차의 예약자 목록이 아래에 열립니다. 초록=여유, 노랑=거의 마감(7/8 이상), 빨강=마감·만석.</p>
+      <div class="we-cal-head">
+        <button type="button" id="calPrev" aria-label="이전 달">◀</button>
+        <div class="we-cal-title" id="calTitle"></div>
+        <button type="button" id="calNext" aria-label="다음 달">▶</button>
+      </div>
+      <p class="status" id="calStatus"></p>
+      <div class="we-cal-grid" id="calGrid"></div>
+      <div class="we-cal-legend">
+        <span><i style="background:#e6f6ec;"></i>여유</span>
+        <span><i style="background:#fff6db;"></i>거의 마감</span>
+        <span><i style="background:#fdeeee;"></i>마감·만석</span>
+      </div>
+      <div id="calDetail"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 탭 2: 조회 ═══════════ -->
+  <div class="we-tab-panel" id="tabLookup" hidden>
+    <div class="panel">
+      <h2>날짜로 조회</h2>
+      <p class="hint">그 날짜에 등록된 모든 회차와 신청자, 개인방문자를 한 번에 봅니다.</p>
+      <div class="we-lookup-form">
+        <div class="f"><label for="dateLookupDate">날짜</label><input type="date" id="dateLookupDate" /></div>
+        <button type="button" id="btnDateLookup" class="btn btn-outline btn-sm">조회</button>
+      </div>
+      <p class="status" id="dateLookupStatus"></p>
+      <div id="dateLookupResult"></div>
+    </div>
+
+    <div class="panel">
+      <h2>이름 + 생년월일로 조회</h2>
+      <p class="hint">이름만 넣어도 검색됩니다 — 동명이인이 있으면 생년월일로 좁히거나 목록에서 골라주세요.</p>
+      <div class="we-lookup-form">
+        <div class="f"><label for="nameLookupName">이름</label><input type="text" id="nameLookupName" placeholder="홍길동" /></div>
+        <div class="f"><label for="nameLookupBirth">생년월일 6자리 (선택)</label><input type="text" id="nameLookupBirth" placeholder="900312" inputmode="numeric" maxlength="6" /></div>
+        <button type="button" id="btnNameLookup" class="btn btn-outline btn-sm">조회</button>
+      </div>
+      <p class="status" id="nameLookupStatus"></p>
+      <div class="we-person-pick" id="namePersonPick"></div>
+      <div id="nameLookupResult"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ 탭 3: 시험날짜 관리 ═══════════ -->
+  <div class="we-tab-panel" id="tabManage" hidden>
+    <div class="panel">
+      <h2>하나씩 추가</h2>
+      <div class="we-lookup-form">
+        <div class="f"><label for="addDate">날짜</label><input type="date" id="addDate" /></div>
+        <div class="f"><label for="addDepart">출발</label><input type="text" id="addDepart" class="tt" placeholder="08:50" style="width:76px" /></div>
+        <div class="f"><label for="addReturn">복귀</label><input type="text" id="addReturn" class="tt" placeholder="11:30" style="width:76px" /></div>
+        <div class="f"><label for="addPlace">시험장</label><input type="text" id="addPlace" list="placeOptions" placeholder="나주 면허시험장" style="width:160px" /></div>
+        <div class="f"><label for="addCapacity">정원</label><input type="number" id="addCapacity" value="8" style="width:64px" /></div>
+        <button type="button" id="btnAddSlot" class="btn btn-primary btn-sm">추가</button>
+      </div>
+      <p class="status" id="addSlotStatus"></p>
+    </div>
+
+    <div class="panel">
+      <h2>한 달치 한 번에 만들기</h2>
+      <p class="hint">요일 규칙을 만들어두면 그 달의 해당 요일에 자동으로 회차가 생깁니다. 공휴일은 자동으로 제외됩니다.
+        이미 있는 회차는 건드리지 않지만, 같은 규칙을 두 번 만들면 중복될 수 있으니 <strong>미리보기</strong>로 꼭 확인하세요.</p>
+      <div class="we-lookup-form" style="margin-top:12px;">
+        <div class="f"><label for="bulkYear">연도</label><input type="number" id="bulkYear" style="width:80px" /></div>
+        <div class="f"><label for="bulkMonth">월</label><input type="number" id="bulkMonth" min="1" max="12" style="width:60px" /></div>
+      </div>
+      <div id="ruleRows" style="margin-top:12px;"></div>
+      <button type="button" id="btnAddRule" class="btn btn-outline btn-sm">+ 규칙 추가</button>
+      <div style="margin-top:14px; display:flex; gap:8px;">
+        <button type="button" id="btnBulkPreview" class="btn btn-outline btn-sm">미리보기</button>
+        <button type="button" id="btnBulkCreate" class="btn btn-primary btn-sm" disabled>만들기</button>
+      </div>
+      <p class="status" id="bulkStatus"></p>
+      <div class="we-preview-box" id="bulkPreviewBox" style="display:none;"></div>
+    </div>
+
+    <div class="panel">
+      <h2>공휴일</h2>
+      <p class="hint">일괄 생성 시 자동으로 제외됩니다. 임시공휴일·학원 휴무일도 추가할 수 있어요. (위에서 고른 연·월 기준)</p>
+      <div id="holidayChips" style="margin-top:10px;"></div>
+      <div class="we-lookup-form" style="margin-top:12px;">
+        <div class="f"><label for="holidayDate">날짜</label><input type="date" id="holidayDate" /></div>
+        <div class="f"><label for="holidayName">이름</label><input type="text" id="holidayName" placeholder="임시공휴일" style="width:140px" /></div>
+        <button type="button" id="btnAddHoliday" class="btn btn-outline btn-sm">추가</button>
+      </div>
+      <p class="status" id="holidayStatus"></p>
+    </div>
+
+    <div class="panel">
+      <h2>등록된 회차 (위에서 고른 연·월)</h2>
+      <table class="we-slot-mgmt-table" id="slotMgmtTable">
+        <thead><tr>
+          <th>날짜</th><th>회차</th><th>출발~복귀</th><th>시험장</th><th>정원</th><th>신청</th><th>상태</th><th></th>
+        </tr></thead>
+        <tbody id="slotMgmtBody"></tbody>
+      </table>
+      <p class="status" id="slotMgmtStatus"></p>
+    </div>
+  </div>
+</div>
+
+<datalist id="placeOptions">
+  <option value="나주 면허시험장"></option>
+  <option value="용봉동 면허시험장"></option>
+</datalist>
+
+<script>
+(function () {
+"use strict";
+
+var API = "api/written-exam-booking.php";
+
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function pad2(n) { n = Number(n); return n < 10 ? "0" + n : "" + n; }
+function fmtYMD(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+function parseYMD(s) { var p = String(s).split("-"); return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2])); }
+function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+function addMonths(d, n) { return new Date(d.getFullYear(), d.getMonth() + n, 1); }
+function daysInMonth(d) { return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); }
+function todayStr() { return fmtYMD(new Date()); }
+var WEEK = ["일", "월", "화", "수", "목", "금", "토"];
+function prettyDate(ymd) {
+  var p = String(ymd).split("-");
+  if (p.length !== 3) { return ymd; }
+  var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  return Number(p[1]) + "월 " + Number(p[2]) + "일 (" + WEEK[d.getDay()] + ")";
+}
+function digitsOnly(s) { return String(s || "").replace(/[^0-9]/g, ""); }
+function setStatusOn(el, msg, kind) { el.textContent = msg || ""; el.className = "status" + (kind ? " " + kind : ""); }
+
+function apiGet(qs) {
+  return fetch(API + "?" + qs, { credentials: "same-origin" }).then(handleResp);
+}
+function apiPost(payload) {
+  return fetch(API, {
+    method: "POST", credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  }).then(handleResp);
+}
+function handleResp(r) {
+  if (r.status === 401) { throw { error: "로그인이 필요합니다. 관리자 홈에서 로그인해주세요." }; }
+  return r.json().then(function (j) {
+    if (!r.ok || j.error) { throw j || { error: "요청 처리 중 오류가 발생했습니다." }; }
+    return j;
+  });
+}
+
+/* ═══════════ 탭 전환 ═══════════ */
+var tabBtns = [].slice.call(document.querySelectorAll(".we-tab-btn"));
+var tabPanels = { calendar: document.getElementById("tabCalendar"), lookup: document.getElementById("tabLookup"), manage: document.getElementById("tabManage") };
+tabBtns.forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    tabBtns.forEach(function (b) { b.classList.toggle("active", b === btn); });
+    var name = btn.getAttribute("data-tab");
+    Object.keys(tabPanels).forEach(function (k) { tabPanels[k].hidden = (k !== name); });
+  });
+});
+
+/* ═══════════ 예약자 행 / 편집 폼 (여러 탭에서 공용) ═══════════ */
+
+function bookingRowHtml(b) {
+  return '<tr data-id="' + b.id + '">'
+    + '<td>' + esc(b.name) + '</td>'
+    + '<td>' + esc(b.phone) + '</td>'
+    + '<td>' + esc(b.birth_date || b.birthDate || '') + '</td>'
+    + '<td>' + esc(b.depart_type || b.departType || '') + '</td>'
+    + '<td class="actions">'
+    +   '<button type="button" class="btn btn-outline btn-sm btn-edit-booking">변경</button>'
+    +   '<button type="button" class="btn btn-outline btn-sm btn-del-booking">삭제</button>'
+    + '</td></tr>';
+}
+
+function editRowHtml(b) {
+  var isPersonal = (b.depart_type || b.departType) === '개인방문';
+  return '<tr data-id="' + b.id + '"><td colspan="5">'
+    + '<div class="we-edit-row">'
+    +   '<span class="lbl">날짜</span><input type="date" class="ee-date" value="' + esc(b.exam_date || b.examDate || '') + '" />'
+    +   '<span class="lbl">회차</span><input type="number" class="ee-slot" value="' + (isPersonal ? -1 : (b.slot_no != null ? b.slot_no : b.slotNo)) + '" style="width:56px" title="개인방문은 -1" />'
+    +   '<select class="ee-depart"><option value="학원출발"' + (isPersonal ? '' : ' selected') + '>학원출발</option><option value="개인방문"' + (isPersonal ? ' selected' : '') + '>개인방문</option></select>'
+    +   '<span class="lbl">연락처</span><input type="tel" class="ee-phone" value="' + esc(b.phone) + '" style="width:130px" />'
+    +   '<span class="lbl">생년월일</span><input type="text" class="ee-birth" value="' + esc(b.birth_date || b.birthDate || '') + '" style="width:90px" maxlength="6" />'
+    +   '<button type="button" class="btn btn-primary btn-sm btn-save-booking">저장</button>'
+    +   '<button type="button" class="btn btn-outline btn-sm btn-cancel-edit">취소</button>'
+    + '</div></td></tr>';
+}
+
+/* ═══════════ 탭 1: 달력 ═══════════ */
+
+var calState = { month: startOfMonth(new Date()), slotsByDate: {}, holidaysByDate: {} };
+var calGrid = document.getElementById("calGrid");
+var calStatusEl = document.getElementById("calStatus");
+var calDetailEl = document.getElementById("calDetail");
+
+function setCalStatus(msg, kind) { setStatusOn(calStatusEl, msg, kind); }
+
+function slotColorClass(s) {
+  if (s.closed || s.booked >= s.capacity) { return "full"; }
+  if (s.capacity > 0 && s.booked / s.capacity >= 0.875) { return "warn"; }
+  return "ok";
+}
+
+function loadCalMonth(monthDate) {
+  calState.month = monthDate;
+  var from = fmtYMD(startOfMonth(monthDate));
+  var to = fmtYMD(new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0));
+  setCalStatus("불러오는 중...");
+  calDetailEl.innerHTML = "";
+  Promise.all([
+    apiGet("action=admin_calendar&from=" + from + "&to=" + to),
+    apiGet("action=holidays&from=" + from + "&to=" + to)
+  ]).then(function (res) {
+    calState.slotsByDate = {};
+    (res[0].slots || []).forEach(function (s) {
+      if (!calState.slotsByDate[s.examDate]) { calState.slotsByDate[s.examDate] = []; }
+      calState.slotsByDate[s.examDate].push(s);
+    });
+    calState.holidaysByDate = {};
+    (res[1].holidays || []).forEach(function (h) { calState.holidaysByDate[h.holiday_date] = h.name; });
+    renderCal();
+    setCalStatus("");
+  }).catch(function (err) { setCalStatus(err.error || "달력을 불러오지 못했습니다.", "err"); });
+}
+
+function renderCal() {
+  var m = calState.month;
+  document.getElementById("calTitle").textContent = m.getFullYear() + "년 " + (m.getMonth() + 1) + "월";
+  var first = startOfMonth(m);
+  var startWeekday = first.getDay();
+  var totalDays = daysInMonth(m);
+  var todayY = todayStr();
+
+  var html = "";
+  for (var i = 0; i < 7; i++) { html += '<div class="we-cal-dow' + (i === 0 ? ' sun' : (i === 6 ? ' sat' : '')) + '">' + WEEK[i] + '</div>'; }
+  for (var i = 0; i < startWeekday; i++) { html += '<div class="we-cal-cell empty"></div>'; }
+
+  for (var day = 1; day <= totalDays; day++) {
+    var d = new Date(m.getFullYear(), m.getMonth(), day);
+    var ymd = fmtYMD(d);
+    var wd = d.getDay();
+    var isHoliday = !!calState.holidaysByDate[ymd];
+    var numClass = "we-cal-daynum" + ((wd === 0 || isHoliday) ? " sun holiday" : (wd === 6 ? " sat" : "")) + (ymd === todayY ? " today" : "");
+
+    html += '<div class="we-cal-cell">';
+    html += '<span class="' + numClass + '">' + day + '</span>';
+    if (isHoliday) { html += '<span class="we-cal-holiday-name">' + esc(calState.holidaysByDate[ymd]) + '</span>'; }
+    var daySlots = calState.slotsByDate[ymd] || [];
+    daySlots.forEach(function (s) {
+      html += '<button type="button" class="we-cal-slot ' + slotColorClass(s) + '" data-date="' + esc(ymd) + '" data-slot="' + s.slotNo + '">'
+        + esc(s.departTime) + ' ' + esc(s.examPlace) + '<br>' + s.booked + '/' + s.capacity + (s.closed ? ' 마감' : '') + '</button>';
+    });
+    html += '</div>';
+  }
+  calGrid.innerHTML = html;
+
+  [].forEach.call(calGrid.querySelectorAll(".we-cal-slot"), function (btn) {
+    btn.addEventListener("click", function () {
+      [].forEach.call(calGrid.querySelectorAll(".we-cal-slot.selected"), function (b) { b.classList.remove("selected"); });
+      btn.classList.add("selected");
+      openCalDetail(btn.getAttribute("data-date"), Number(btn.getAttribute("data-slot")));
+    });
+  });
+}
+
+function findSlotMeta(examDate, slotNo) {
+  var list = calState.slotsByDate[examDate] || [];
+  for (var i = 0; i < list.length; i++) { if (list[i].slotNo === slotNo) { return list[i]; } }
+  return null;
+}
+
+function openCalDetail(examDate, slotNo) {
+  var meta = findSlotMeta(examDate, slotNo);
+  calDetailEl.innerHTML = '<div class="we-slot-block" id="calDetailBlock"><p class="hint">불러오는 중...</p></div>';
+  apiGet("action=admin_slot_detail&examDate=" + encodeURIComponent(examDate) + "&slotNo=" + slotNo)
+    .then(function (res) {
+      renderSlotBlock(document.getElementById("calDetailBlock"), examDate, slotNo, meta, res.bookings || [], function () {
+        loadCalMonth(calState.month);
+        openCalDetail(examDate, slotNo);
+      });
+    })
+    .catch(function (err) {
+      calDetailEl.innerHTML = '<p class="status err">' + esc(err.error || "예약자 목록을 불러오지 못했습니다.") + '</p>';
+    });
+}
+
+/* 회차 상세 + 예약자 목록 + (마감/수정/삭제) 를 그립니다. 탭1(달력)과 탭2(날짜 조회)에서 함께 씁니다. */
+function renderSlotBlock(container, examDate, slotNo, meta, bookings, onChanged) {
+  /* meta.capacity가 없으면(이름 조회에서 개별 예약 한 건만 보여줄 때) 회차 전체를
+     관리하는 마감/수정/삭제 버튼은 의미가 없으므로 아예 그리지 않습니다. */
+  var isFullSlot = !!(meta && meta.capacity != null);
+  var head = '<div class="we-slot-block-head">'
+    + '<span class="t">' + esc(prettyDate(examDate)) + (meta ? ' · ' + esc(meta.departTime) + ' · ' + esc(meta.examPlace) : '') + '</span>'
+    + '<span class="n">' + bookings.length + (isFullSlot ? ' / ' + meta.capacity : '') + '명</span>'
+    + '<span class="sp"></span>';
+  if (isFullSlot) {
+    head += '<button type="button" class="btn btn-outline btn-sm sb-toggle-close">' + (meta.closed ? '마감 해제' : '마감하기') + '</button>'
+      + '<button type="button" class="btn btn-outline btn-sm sb-edit-slot">회차 수정</button>'
+      + '<button type="button" class="btn btn-outline btn-sm sb-del-slot">회차 삭제</button>';
+    if (meta.memo) { head += '<div class="memo">메모: ' + esc(meta.memo) + '</div>'; }
+  }
+  head += '</div>';
+
+  var rows = bookings.length
+    ? bookings.map(bookingRowHtml).join("")
+    : '<tr class="we-empty-row"><td colspan="5">신청자가 없습니다.</td></tr>';
+
+  var html = head
+    + '<table class="we-book-table"><thead><tr><th>이름</th><th>연락처</th><th>생년월일</th><th>방식</th><th></th></tr></thead>'
+    + '<tbody>' + rows + '</tbody></table>'
+    + '<button type="button" class="btn btn-outline btn-sm sb-add-booking" style="margin-top:10px;">+ 수강생 추가</button>'
+    + '<div class="sb-add-form" style="display:none;"></div>';
+
+  container.innerHTML = html;
+
+  var tbody = container.querySelector("tbody");
+  tbody.addEventListener("click", function (e) {
+    var tr = e.target.closest("tr");
+    if (!tr) { return; }
+    var id = Number(tr.getAttribute("data-id"));
+    var b = bookings.filter(function (x) { return x.id === id; })[0];
+    if (!b) { return; }
+
+    if (e.target.classList.contains("btn-edit-booking")) {
+      tr.outerHTML = editRowHtml(b);
+    } else if (e.target.classList.contains("btn-cancel-edit")) {
+      tr.outerHTML = bookingRowHtml(b);
+    } else if (e.target.classList.contains("btn-del-booking")) {
+      if (!window.confirm(esc(b.name) + '님의 ' + prettyDate(examDate) + ' 신청을 삭제할까요?')) { return; }
+      apiPost({ action: "admin_cancel", name: b.name, bookingId: id }).then(onChanged)
+        .catch(function (err) { window.alert(err.error || "삭제에 실패했습니다."); });
+    } else if (e.target.classList.contains("btn-save-booking")) {
+      var row = e.target.closest(".we-edit-row");
+      var examDate2 = row.querySelector(".ee-date").value;
+      var slotNo2 = Number(row.querySelector(".ee-slot").value);
+      var departType2 = row.querySelector(".ee-depart").value;
+      var phone2 = row.querySelector(".ee-phone").value.trim();
+      var birth2 = digitsOnly(row.querySelector(".ee-birth").value);
+      if (!examDate2) { window.alert("날짜를 입력해주세요."); return; }
+      apiPost({ action: "admin_change", bookingId: id, name: b.name, examDate: examDate2, slotNo: slotNo2, departType: departType2, phone: phone2, birthDate: birth2 })
+        .then(onChanged)
+        .catch(function (err) { window.alert(err.error || "저장에 실패했습니다."); });
+    }
+  });
+
+  if (isFullSlot) {
+    container.querySelector(".sb-toggle-close").addEventListener("click", function () {
+      apiPost({ action: "admin_close_slot", examDate: examDate, slotNo: slotNo, closed: !meta.closed })
+        .then(onChanged)
+        .catch(function (err) { window.alert(err.error || "처리에 실패했습니다."); });
+    });
+    container.querySelector(".sb-del-slot").addEventListener("click", function () {
+      if (!window.confirm(prettyDate(examDate) + ' 회차를 삭제할까요?')) { return; }
+      apiPost({ action: "admin_delete_slot", examDate: examDate, slotNo: slotNo })
+        .then(onChanged)
+        .catch(function (err) {
+          if (err.bookedCount) {
+            if (window.confirm(err.error + ' 정말 지우시겠습니까?')) {
+              apiPost({ action: "admin_delete_slot", examDate: examDate, slotNo: slotNo, force: true }).then(onChanged)
+                .catch(function (e2) { window.alert(e2.error || "삭제에 실패했습니다."); });
+            }
+          } else { window.alert(err.error || "삭제에 실패했습니다."); }
+        });
+    });
+    container.querySelector(".sb-edit-slot").addEventListener("click", function () {
+      var f = container.querySelector(".sb-add-form");
+      f.style.display = "block";
+      f.innerHTML = '<div class="we-edit-row">'
+        + '<span class="lbl">출발</span><input type="text" class="es-depart" value="' + esc(meta.departTime) + '" style="width:70px" />'
+        + '<span class="lbl">복귀</span><input type="text" class="es-return" value="' + esc(meta.returnTime || '') + '" style="width:70px" />'
+        + '<span class="lbl">시험장</span><input type="text" class="es-place" value="' + esc(meta.examPlace) + '" style="width:140px" />'
+        + '<span class="lbl">정원</span><input type="number" class="es-cap" value="' + meta.capacity + '" style="width:56px" />'
+        + '<span class="lbl">메모</span><input type="text" class="es-memo" value="' + esc(meta.memo || '') + '" style="width:140px" />'
+        + '<button type="button" class="btn btn-primary btn-sm es-save">저장</button>'
+        + '</div>';
+      f.querySelector(".es-save").addEventListener("click", function () {
+        apiPost({
+          action: "admin_save_slot", examDate: examDate, slotNo: slotNo,
+          departTime: f.querySelector(".es-depart").value.trim(),
+          returnTime: f.querySelector(".es-return").value.trim(),
+          examPlace: f.querySelector(".es-place").value.trim(),
+          capacity: Number(f.querySelector(".es-cap").value) || 0,
+          memo: f.querySelector(".es-memo").value.trim()
+        }).then(onChanged).catch(function (err) { window.alert(err.error || "저장에 실패했습니다."); });
+      });
+    });
+  }
+
+  container.querySelector(".sb-add-booking").addEventListener("click", function () {
+    var f = container.querySelector(".sb-add-form");
+    var showing = f.style.display === "block";
+    if (showing) { f.style.display = "none"; return; }
+    f.style.display = "block";
+    f.innerHTML = '<div class="we-edit-row">'
+      + '<span class="lbl">이름</span><input type="text" class="ab-name" style="width:100px" />'
+      + '<span class="lbl">연락처</span><input type="tel" class="ab-phone" placeholder="010-0000-0000" style="width:130px" />'
+      + '<span class="lbl">생년월일</span><input type="text" class="ab-birth" placeholder="900312" style="width:90px" maxlength="6" />'
+      + '<select class="ab-depart"><option value="학원출발">학원출발</option><option value="개인방문">개인방문</option></select>'
+      + '<button type="button" class="btn btn-primary btn-sm ab-save">추가</button>'
+      + '</div>';
+    f.querySelector(".ab-save").addEventListener("click", function () {
+      var name = f.querySelector(".ab-name").value.trim();
+      if (name === "") { window.alert("이름을 입력해주세요."); return; }
+      apiPost({
+        action: "admin_book", name: name,
+        phone: f.querySelector(".ab-phone").value.trim(),
+        birthDate: digitsOnly(f.querySelector(".ab-birth").value),
+        examDate: examDate, slotNo: slotNo,
+        departType: f.querySelector(".ab-depart").value
+      }).then(onChanged).catch(function (err) { window.alert(err.error || "추가에 실패했습니다."); });
+    });
+  });
+}
+
+document.getElementById("calPrev").addEventListener("click", function () { loadCalMonth(addMonths(calState.month, -1)); });
+document.getElementById("calNext").addEventListener("click", function () { loadCalMonth(addMonths(calState.month, 1)); });
+
+/* ═══════════ 탭 2: 조회 ═══════════ */
+
+/* (가) 날짜로 조회 */
+var dateLookupResultEl = document.getElementById("dateLookupResult");
+document.getElementById("btnDateLookup").addEventListener("click", function () {
+  var date = document.getElementById("dateLookupDate").value;
+  if (!date) { setStatusOn(document.getElementById("dateLookupStatus"), "날짜를 선택해주세요.", "err"); return; }
+  setStatusOn(document.getElementById("dateLookupStatus"), "불러오는 중...");
+  dateLookupResultEl.innerHTML = "";
+  apiGet("action=admin_calendar&from=" + date + "&to=" + date)
+    .then(function (res) {
+      setStatusOn(document.getElementById("dateLookupStatus"), "");
+      var slots = res.slots || [];
+      var blocks = slots.map(function () { return null; });
+      dateLookupResultEl.innerHTML = slots.length
+        ? slots.map(function (s, i) { return '<div class="we-slot-block" id="dlBlock' + i + '"></div>'; }).join("")
+        : '<p class="hint" style="margin-top:10px;">그 날짜에 등록된 회차가 없습니다.</p>';
+      slots.forEach(function (s, i) {
+        apiGet("action=admin_slot_detail&examDate=" + date + "&slotNo=" + s.slotNo).then(function (r2) {
+          renderSlotBlock(document.getElementById("dlBlock" + i), date, s.slotNo, s, r2.bookings || [], function () {
+            document.getElementById("btnDateLookup").click();
+          });
+        });
+      });
+      /* 개인방문(slot_no = -1) — 실제 회차가 아니므로 신청자가 있을 때만 보여줍니다 */
+      apiGet("action=admin_slot_detail&examDate=" + date + "&slotNo=-1").then(function (r3) {
+        if (!r3.bookings || !r3.bookings.length) { return; }
+        var box = document.createElement("div");
+        box.className = "we-slot-block";
+        dateLookupResultEl.appendChild(box);
+        renderSlotBlock(box, date, -1, null, r3.bookings, function () { document.getElementById("btnDateLookup").click(); });
+      });
+    })
+    .catch(function (err) { setStatusOn(document.getElementById("dateLookupStatus"), err.error || "조회에 실패했습니다.", "err"); });
+});
+
+/* (나) 이름 + 생년월일로 조회 */
+var namePickEl = document.getElementById("namePersonPick");
+var nameResultEl = document.getElementById("nameLookupResult");
+document.getElementById("nameLookupBirth").addEventListener("input", function () { this.value = digitsOnly(this.value).slice(0, 6); });
+
+document.getElementById("btnNameLookup").addEventListener("click", function () {
+  var name = document.getElementById("nameLookupName").value.trim();
+  var birth = digitsOnly(document.getElementById("nameLookupBirth").value);
+  if (name === "") { setStatusOn(document.getElementById("nameLookupStatus"), "이름을 입력해주세요.", "err"); return; }
+  setStatusOn(document.getElementById("nameLookupStatus"), "조회 중...");
+  namePickEl.innerHTML = "";
+  nameResultEl.innerHTML = "";
+  apiPost({ action: "admin_lookup", name: name, birthDate: birth })
+    .then(function (res) {
+      var bookings = res.bookings || [];
+      setStatusOn(document.getElementById("nameLookupStatus"), bookings.length ? "" : "신청 내역이 없습니다.");
+      if (bookings.length <= 1) {
+        if (bookings.length === 1) { renderNameDetail(name, bookings[0]); }
+        return;
+      }
+      var distinctBirths = {};
+      bookings.forEach(function (b) { distinctBirths[b.birthDate] = true; });
+      if (Object.keys(distinctBirths).length > 1) {
+        setStatusOn(document.getElementById("nameLookupStatus"), "같은 이름이 " + Object.keys(distinctBirths).length + "명 있습니다. 생년월일로 골라주세요.");
+        namePickEl.innerHTML = bookings.map(function (b, i) {
+          return '<button type="button" data-i="' + i + '">' + esc(name) + ' · ' + esc(b.birthDate || '생년월일 미상') + ' · ' + esc(b.examDate) + '</button>';
+        }).join("");
+        [].forEach.call(namePickEl.querySelectorAll("button"), function (btn) {
+          btn.addEventListener("click", function () { renderNameDetail(name, bookings[Number(btn.getAttribute("data-i"))]); });
+        });
+      } else {
+        /* 생년월일은 같은데 예약이 여러 건 — 전부 보여줍니다 */
+        nameResultEl.innerHTML = bookings.map(function () { return ''; }).join("");
+        bookings.forEach(function (b) { renderNameDetail(name, b, true); });
+      }
+    })
+    .catch(function (err) { setStatusOn(document.getElementById("nameLookupStatus"), err.error || "조회에 실패했습니다.", "err"); });
+});
+
+function renderNameDetail(name, booking, append) {
+  var box = document.createElement("div");
+  box.className = "we-slot-block";
+  if (append) { nameResultEl.appendChild(box); } else { nameResultEl.innerHTML = ""; nameResultEl.appendChild(box); }
+
+  var classesHtml = "";
+  if (booking.classes && booking.classes.length) {
+    classesHtml = '<div class="we-class-list"><strong>그 밖의 교육 일정 (학사DB)</strong><br>'
+      + booking.classes.map(function (c) {
+          var t = c.time ? (String(c.time).replace(/^(\d{1,2})(\d{2})$/, "$1:$2")) : c.time;
+          return (c.overlap ? '<span class="warn">⚠ ' : '<span>') + esc(c.eduType) + ' ' + esc(t) + (c.overlap ? ' (필기시험과 겹침)' : '') + '</span>';
+        }).join('<br>')
+      + '</div>';
+  }
+
+  renderSlotBlock(box, booking.examDate, booking.slotNo, {
+    departTime: booking.departTime, examPlace: booking.examPlace, capacity: null
+  }, [{
+    id: booking.id, name: name, phone: booking.phone, birth_date: booking.birthDate, depart_type: booking.departType,
+    exam_date: booking.examDate, slot_no: booking.slotNo
+  }], function () { document.getElementById("btnNameLookup").click(); });
+
+  /* capacity를 null로 넘겼으므로 회차 전체 관리 버튼(마감/수정/삭제)은 renderSlotBlock이
+     아예 그리지 않습니다. "+ 수강생 추가"만 여기서는 의미가 없어 따로 숨깁니다. */
+  box.querySelector(".sb-add-booking").style.display = "none";
+  box.insertAdjacentHTML("beforeend", classesHtml);
+}
+
+/* ═══════════ 탭 3: 시험날짜 관리 ═══════════ */
+
+document.getElementById("addDate").value = todayStr();
+document.getElementById("btnAddSlot").addEventListener("click", function () {
+  var st = document.getElementById("addSlotStatus");
+  var examDate = document.getElementById("addDate").value;
+  var examPlace = document.getElementById("addPlace").value.trim();
+  if (!examDate || examPlace === "") { setStatusOn(st, "날짜와 시험장을 입력해주세요.", "err"); return; }
+  setStatusOn(st, "추가 중...");
+  apiPost({
+    action: "admin_save_slot", examDate: examDate,
+    departTime: document.getElementById("addDepart").value.trim(),
+    returnTime: document.getElementById("addReturn").value.trim(),
+    examPlace: examPlace,
+    capacity: Number(document.getElementById("addCapacity").value) || 8
+  }).then(function () {
+    setStatusOn(st, "추가했습니다.", "ok");
+    refreshManageMonth();
+  }).catch(function (err) { setStatusOn(st, err.error || "추가에 실패했습니다.", "err"); });
+});
+
+/* ── 한 달치 일괄 생성 ── */
+var ruleRowsEl = document.getElementById("ruleRows");
+function ruleRowHtml() {
+  return '<div class="we-rule-row">'
+    + '<select class="r-weekday">' + WEEK.map(function (w, i) { return '<option value="' + i + '">' + w + '요일</option>'; }).join("") + '</select>'
+    + '출발 <input type="text" class="tt r-depart" placeholder="08:50" />'
+    + '복귀 <input type="text" class="tt r-return" placeholder="11:30" />'
+    + '<input type="text" class="place r-place" list="placeOptions" placeholder="나주 면허시험장" />'
+    + '정원 <input type="number" class="cap r-cap" value="8" />'
+    + '<button type="button" class="btn btn-outline btn-sm r-del">삭제</button>'
+    + '</div>';
+}
+document.getElementById("btnAddRule").addEventListener("click", function () {
+  ruleRowsEl.insertAdjacentHTML("beforeend", ruleRowHtml());
+});
+ruleRowsEl.addEventListener("click", function (e) {
+  if (e.target.classList.contains("r-del")) { e.target.closest(".we-rule-row").remove(); }
+});
+ruleRowsEl.insertAdjacentHTML("beforeend", ruleRowHtml());
+
+var now = new Date();
+document.getElementById("bulkYear").value = now.getFullYear();
+document.getElementById("bulkMonth").value = now.getMonth() + 1;
+
+function collectRules() {
+  return [].map.call(ruleRowsEl.querySelectorAll(".we-rule-row"), function (row) {
+    return {
+      weekday: Number(row.querySelector(".r-weekday").value),
+      departTime: row.querySelector(".r-depart").value.trim(),
+      returnTime: row.querySelector(".r-return").value.trim(),
+      examPlace: row.querySelector(".r-place").value.trim(),
+      capacity: Number(row.querySelector(".r-cap").value) || 8
+    };
+  }).filter(function (r) { return r.examPlace !== ""; });
+}
+
+document.getElementById("btnBulkPreview").addEventListener("click", function () {
+  var st = document.getElementById("bulkStatus");
+  var year = Number(document.getElementById("bulkYear").value);
+  var month = Number(document.getElementById("bulkMonth").value);
+  var rules = collectRules();
+  if (!rules.length) { setStatusOn(st, "규칙을 한 개 이상 입력해주세요 (시험장은 필수).", "err"); return; }
+  setStatusOn(st, "미리보기 계산 중...");
+  document.getElementById("btnBulkCreate").disabled = true;
+  apiPost({ action: "admin_bulk_create", year: year, month: month, rules: rules, preview: true })
+    .then(function (res) {
+      setStatusOn(st, "새로 만들 회차 " + res.toCreate + "건 · 공휴일 " + res.skippedHoliday + "건 제외. 아래 목록에서 기존 회차와 겹치지 않는지 확인 후 [만들기]를 눌러주세요.", "ok");
+      var box = document.getElementById("bulkPreviewBox");
+      box.style.display = res.preview.length ? "block" : "none";
+      box.innerHTML = res.preview.map(function (p) {
+        return '<div>' + esc(prettyDate(p.examDate)) + ' · ' + esc(p.departTime) + ' · ' + esc(p.examPlace) + ' · 정원 ' + p.capacity + '</div>';
+      }).join("");
+      document.getElementById("btnBulkCreate").disabled = (res.toCreate === 0);
+      document.getElementById("btnBulkCreate").setAttribute("data-year", year);
+      document.getElementById("btnBulkCreate").setAttribute("data-month", month);
+    })
+    .catch(function (err) { setStatusOn(st, err.error || "미리보기에 실패했습니다.", "err"); });
+});
+
+document.getElementById("btnBulkCreate").addEventListener("click", function () {
+  var st = document.getElementById("bulkStatus");
+  var year = Number(this.getAttribute("data-year"));
+  var month = Number(this.getAttribute("data-month"));
+  var rules = collectRules();
+  setStatusOn(st, "만드는 중...");
+  apiPost({ action: "admin_bulk_create", year: year, month: month, rules: rules, preview: false })
+    .then(function (res) {
+      setStatusOn(st, res.created + "건 만들었습니다.", "ok");
+      document.getElementById("btnBulkCreate").disabled = true;
+      document.getElementById("bulkPreviewBox").style.display = "none";
+      refreshManageMonth();
+    })
+    .catch(function (err) { setStatusOn(st, err.error || "만들기에 실패했습니다.", "err"); });
+});
+
+/* ── 공휴일 ── */
+function loadHolidays() {
+  var year = Number(document.getElementById("bulkYear").value);
+  var month = Number(document.getElementById("bulkMonth").value);
+  var from = year + "-" + pad2(month) + "-01";
+  var to = year + "-" + pad2(month) + "-" + pad2(new Date(year, month, 0).getDate());
+  apiGet("action=holidays&from=" + from + "&to=" + to).then(function (res) {
+    var chips = document.getElementById("holidayChips");
+    var list = res.holidays || [];
+    chips.innerHTML = list.length
+      ? list.map(function (h) { return '<span class="we-holiday-chip">' + esc(prettyDate(h.holiday_date)) + ' ' + esc(h.name) + '<button type="button" data-date="' + esc(h.holiday_date) + '">×</button></span>'; }).join("")
+      : '<p class="hint">이 달에 등록된 공휴일이 없습니다.</p>';
+    [].forEach.call(chips.querySelectorAll("button"), function (btn) {
+      btn.addEventListener("click", function () {
+        apiPost({ action: "admin_delete_holiday", date: btn.getAttribute("data-date") }).then(loadHolidays)
+          .catch(function (err) { window.alert(err.error || "삭제에 실패했습니다."); });
+      });
+    });
+  });
+}
+document.getElementById("btnAddHoliday").addEventListener("click", function () {
+  var st = document.getElementById("holidayStatus");
+  var date = document.getElementById("holidayDate").value;
+  var name = document.getElementById("holidayName").value.trim();
+  if (!date) { setStatusOn(st, "날짜를 선택해주세요.", "err"); return; }
+  apiPost({ action: "admin_save_holiday", date: date, name: name }).then(function () {
+    setStatusOn(st, "추가했습니다.", "ok");
+    document.getElementById("holidayName").value = "";
+    loadHolidays();
+  }).catch(function (err) { setStatusOn(st, err.error || "추가에 실패했습니다.", "err"); });
+});
+
+/* ── 등록된 회차 목록 ── */
+function refreshManageMonth() {
+  var year = Number(document.getElementById("bulkYear").value);
+  var month = Number(document.getElementById("bulkMonth").value);
+  var from = year + "-" + pad2(month) + "-01";
+  var to = year + "-" + pad2(month) + "-" + pad2(new Date(year, month, 0).getDate());
+  var st = document.getElementById("slotMgmtStatus");
+  var body = document.getElementById("slotMgmtBody");
+  setStatusOn(st, "불러오는 중...");
+  apiGet("action=admin_calendar&from=" + from + "&to=" + to).then(function (res) {
+    var slots = res.slots || [];
+    setStatusOn(st, "");
+    body.innerHTML = slots.length ? "" : '<tr class="we-empty-row"><td colspan="8">등록된 회차가 없습니다.</td></tr>';
+    slots.forEach(function (s) {
+      var tr = document.createElement("tr");
+      tr.innerHTML = '<td>' + esc(prettyDate(s.examDate)) + '</td>'
+        + '<td>' + s.slotNo + '</td>'
+        + '<td>' + esc(s.departTime) + (s.returnTime ? ' ~ ' + esc(s.returnTime) : '') + '</td>'
+        + '<td>' + esc(s.examPlace) + '</td>'
+        + '<td>' + s.capacity + '</td>'
+        + '<td>' + s.booked + '명</td>'
+        + '<td>' + (s.closed ? '<span class="we-tag-closed">마감</span>' : '') + '</td>'
+        + '<td class="actions">'
+        +   '<button type="button" class="btn btn-outline btn-sm sm-view">보기</button>'
+        + '</td>';
+      tr.querySelector(".sm-view").addEventListener("click", function () {
+        [].forEach.call(tabBtns, function (b) { b.classList.toggle("active", b.getAttribute("data-tab") === "calendar"); });
+        Object.keys(tabPanels).forEach(function (k) { tabPanels[k].hidden = (k !== "calendar"); });
+        loadCalMonth(startOfMonth(parseYMD(s.examDate)));
+        setTimeout(function () { openCalDetail(s.examDate, s.slotNo); }, 400);
+      });
+      body.appendChild(tr);
+    });
+  }).catch(function (err) { setStatusOn(st, err.error || "불러오지 못했습니다.", "err"); });
+}
+
+document.getElementById("bulkYear").addEventListener("change", function () { loadHolidays(); refreshManageMonth(); });
+document.getElementById("bulkMonth").addEventListener("change", function () { loadHolidays(); refreshManageMonth(); });
+
+/* ── 시작 ── */
+loadCalMonth(startOfMonth(new Date()));
+loadHolidays();
+refreshManageMonth();
+
+})();
+</script>
+</body>
+</html>
