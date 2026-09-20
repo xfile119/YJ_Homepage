@@ -18,7 +18,7 @@ FTP로 파일만 올리면 되는 변경인지, **`db/setup.php`를 한 번 더 
 
 ---
 
-## 지금 쓰고 있는 테이블 (총 8개)
+## 지금 쓰고 있는 테이블 (총 9개)
 
 | 테이블 | 무엇이 들어있나 | 어디서 쓰나 |
 |---|---|---|
@@ -30,6 +30,7 @@ FTP로 파일만 올리면 되는 변경인지, **`db/setup.php`를 한 번 더 
 | `yj_shuttle_slots` | 셔틀 운행 편성(날짜별 차량·출발시간) | 셔틀 명단 관리 |
 | `yj_student_schedule` | 학사서버에서 받아온 예약 일정 사본 | 내 일정 조회 |
 | `yj_contact_messages` | 홈페이지 문의 메시지 | 문의 관리 |
+| `yj_written_exam` | 필기시험 (학생당 최신 한 건) | 안내장 앱(guide-print) 전용 — 화면 없음 |
 
 `yj_`는 `config.php`의 `table_prefix` 값입니다. 설정을 바꿨다면 그 값으로 읽으세요.
 
@@ -43,6 +44,15 @@ FTP로 파일만 올리면 되는 변경인지, **`db/setup.php`를 한 번 더 
 ---
 
 ## 변경 이력 (최신순)
+
+### 2026-09-20 — `e513074` · setup.php 실행 필요
+
+필기시험 저장용 `yj_written_exam` 테이블 신설. 안내장 앱(guide-print)이
+`api/written-exam.php`를 통해서만 쓰고 읽습니다 — 홈페이지 화면에는 아직
+아무것도 노출되지 않습니다(나중에 수강생 조회 화면을 만들 때 여기 데이터를
+그대로 씁니다). `config.php`에 `written_exam_sync_key`를 새로 설정해야
+안내장 앱이 인증됩니다(`config.example.php` 참고, `schedule_sync_key`와는
+별도의 값으로).
 
 ### 2026-09-16 12:32 — `6703024` · setup.php 실행 필요
 > ⚠️ 아직 `feature/shuttle-kakao-notify` 브랜치에만 있습니다. main에는 없으므로

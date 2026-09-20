@@ -11,6 +11,20 @@ FTP 업로드 후 이 값이 아래 최신 항목과 일치하는지 보면, 실
 
 ---
 
+## 2026-09-20 07:10 KST — `e513074`
+필기시험 저장 API(`api/written-exam.php`) 신설 — **화면상 눈에 보이는 변화는
+없습니다.** 사무실에서 쓰는 안내장 앱(guide-print)이 상담 후 정한 필기시험
+날짜를 이 API를 통해 저장/조회/삭제합니다. 셔틀과 같은 방식(홈페이지 DB에
+저장)이고, 학사DB(neoinfo)는 전혀 건드리지 않습니다.
+
+**FTP로 `api/written-exam.php`, `api/_db.php`를 올리고, `db/setup.php`를
+한 번 더 실행해주세요** (새 테이블 `yj_written_exam` 생성). 자세한 내용은
+[`db/CHANGELOG-DB.md`](db/CHANGELOG-DB.md) 참고.
+
+또한 `config.php`에 `written_exam_sync_key`를 새로 추가해야 합니다
+(`config.example.php` 참고) — 안내장 앱 쪽 `config.json`에도 같은 값을
+넣어야 서로 인증됩니다.
+
 ## 2026-09-17 15:20 KST — `0c4850d` 이후
 공유 이미지가 없던 4개 페이지에 추가 — 셔틀버스 조회, 내 일정 조회,
 신체검사 병원 안내, 셔틀/일정 조회 앱. 이제 이 주소들을 카톡으로 보내도
