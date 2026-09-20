@@ -109,3 +109,17 @@ CREATE TABLE IF NOT EXISTS {prefix}shuttle_slots (
   sort_order INT NOT NULL DEFAULT 0,
   INDEX idx_slot_date (ride_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- 필기시험은 학사DB(neoinfo)에 자료가 없어, 상담 후 안내장 앱(guide-print)이
+-- api/written-exam.php를 통해 저장/수정/삭제합니다. 한 학생당 최신 한 건만
+-- 관리합니다(예약 이력이 아니라 "지금 정해진 다음 필기시험" 하나). 주민번호 등은
+-- 다루지 않습니다.
+CREATE TABLE IF NOT EXISTS {prefix}written_exam (
+  student_id INT PRIMARY KEY,
+  student_name VARCHAR(50) NOT NULL DEFAULT '',
+  exam_date VARCHAR(10) NOT NULL DEFAULT '',
+  exam_time VARCHAR(20) NOT NULL DEFAULT '',
+  place VARCHAR(100) NOT NULL DEFAULT '나주',
+  updated_by VARCHAR(50) NOT NULL DEFAULT '',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

@@ -120,6 +120,16 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}shuttle_slots (
   INDEX idx_slot_date (ride_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
+$pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}written_exam (
+  student_id INT PRIMARY KEY,
+  student_name VARCHAR(50) NOT NULL DEFAULT '',
+  exam_date VARCHAR(10) NOT NULL DEFAULT '',
+  exam_time VARCHAR(20) NOT NULL DEFAULT '',
+  place VARCHAR(100) NOT NULL DEFAULT '나주',
+  updated_by VARCHAR(50) NOT NULL DEFAULT '',
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
 /* 이미 만들어진 notices 테이블에 content/image 컬럼이 없으면 추가합니다.
    (기존에 db/setup.php를 이미 한 번 실행한 사이트를 위한 안전한 마이그레이션 — 여러 번 실행해도 안전합니다.) */
 function yj_ensure_column($pdo, $table, $column, $definition) {

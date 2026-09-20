@@ -108,11 +108,13 @@ function yj_require_shuttle_admin() {
     }
 }
 
-/* 학사서버의 동기화 프로그램처럼, 로그인 세션이 없는 서버-투-서버 호출을 인증할 때 씁니다.
-   요청 헤더 X-Sync-Key 값이 config.php의 schedule_sync_key와 일치해야 통과합니다. */
-function yj_require_sync_key() {
+/* 학사서버의 자동화 프로그램처럼, 로그인 세션이 없는 서버-투-서버 호출을 인증할 때
+   씁니다. 요청 헤더 X-Sync-Key 값이 config.php의 $configKey 값과 일치해야 통과합니다.
+   프로그램마다 용도별로 다른 config 키를 쓰면(예: schedule_sync_key, written_exam_sync_key)
+   하나가 새어나가도 다른 프로그램에는 영향이 없습니다. */
+function yj_require_sync_key($configKey = 'schedule_sync_key') {
     $c = yj_config();
-    $expected = isset($c['schedule_sync_key']) ? (string)$c['schedule_sync_key'] : '';
+    $expected = isset($c[$configKey]) ? (string)$c[$configKey] : '';
     /* $_SERVER의 HTTP_X_SYNC_KEY는 웹서버 종류(Apache/nginx+PHP-FPM 등)와 무관하게
        항상 쓸 수 있어서, getallheaders()보다 더 안전합니다. */
     $given = isset($_SERVER['HTTP_X_SYNC_KEY']) ? (string)$_SERVER['HTTP_X_SYNC_KEY'] : '';
