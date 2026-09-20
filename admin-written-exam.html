@@ -250,6 +250,17 @@
       </table>
       <p class="status" id="slotMgmtStatus"></p>
     </div>
+
+    <div class="panel">
+      <h2>오래된 자료 정리</h2>
+      <p class="hint">수강생 조회에는 애초에 지난 시험 자료가 안 보이지만(오늘 이후 것만 조회됨),
+        이름·연락처·생년월일을 DB에 필요 이상 오래 남겨두지 않기 위해 <strong>시험일이 3개월 지난
+        회차·신청자는 통째로 지울 수 있습니다.</strong> 변경·취소 이력(누가 언제 무엇을 했는지)은
+        분쟁 확인용으로 계속 남겨둡니다. 기준일은 서버가 직접 계산하므로 항상 정확히 3개월 전까지만
+        지워집니다.</p>
+      <button type="button" id="btnDeleteOld" class="btn btn-outline btn-sm" style="margin-top:10px;">3개월 지난 자료 삭제</button>
+      <p class="status" id="deleteOldStatus"></p>
+    </div>
   </div>
 </div>
 
@@ -847,6 +858,20 @@ function refreshManageMonth() {
 
 document.getElementById("bulkYear").addEventListener("change", refreshManageMonth);
 document.getElementById("bulkMonth").addEventListener("change", refreshManageMonth);
+
+/* ── 오래된 자료 정리 ── */
+document.getElementById("btnDeleteOld").addEventListener("click", function () {
+  var st = document.getElementById("deleteOldStatus");
+  if (!window.confirm("시험일이 3개월 지난 회차·신청자를 전부 지울까요?\n(변경·취소 이력은 남습니다. 되돌릴 수 없습니다.)")) { return; }
+  setStatusOn(st, "삭제 중...");
+  apiPost({ action: "admin_delete_old" })
+    .then(function (res) {
+      setStatusOn(st, res.cutoff + " 이전 회차 " + res.deletedSlots + "건, 신청자 " + res.deletedBookings + "명을 삭제했습니다.", "ok");
+      loadCalMonth(calState.month);
+      refreshManageMonth();
+    })
+    .catch(function (err) { setStatusOn(st, err.error || "삭제에 실패했습니다.", "err"); });
+});
 
 /* ── 시작 ── */
 loadCalMonth(startOfMonth(new Date()));

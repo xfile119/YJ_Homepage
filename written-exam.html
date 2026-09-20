@@ -105,6 +105,9 @@
 }
 .we-cal-cell.empty { border: none; background: transparent; }
 .we-cal-cell.mine { border: 2px solid var(--color-primary); background: #fff; }
+/* 지난 날짜는 신청 대상이 아님을 한눈에 알 수 있도록 칸 전체를 죽입니다 (버튼 색만으론 부족) */
+.we-cal-cell.past { background: #f3f1f6; opacity: .55; }
+.we-cal-cell.past .we-cal-daynum { color: var(--color-muted) !important; }
 .we-cal-daynum {
   font-size: 12.5px; font-weight: 700; color: var(--color-ink);
   display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;
@@ -651,13 +654,14 @@ function renderCalendar() {
     var wd = d.getDay();
     var isHoliday = !!state.holidaysByDate[ymd];
     var isMine = !!(state.existing && state.existing.examDate === ymd);
+    var isPast = ymd < todayY;
 
     var numClass = "we-cal-daynum";
     if (wd === 0 || isHoliday) { numClass += " sun holiday"; }
     else if (wd === 6) { numClass += " sat"; }
     if (ymd === todayY) { numClass += " today"; }
 
-    html += '<div class="we-cal-cell' + (isMine ? ' mine' : '') + '">';
+    html += '<div class="we-cal-cell' + (isMine ? ' mine' : '') + (isPast ? ' past' : '') + '">';
     if (isMine) { html += '<span class="we-cal-mine-tag">내 예약</span>'; }
     html += '<span class="' + numClass + '">' + day + '</span>';
     if (isHoliday) { html += '<span class="we-cal-holiday-name">' + esc(state.holidaysByDate[ymd]) + '</span>'; }

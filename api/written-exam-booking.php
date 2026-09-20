@@ -603,4 +603,32 @@ if ($method === 'POST' && $action === 'admin_ack_change') {
     yj_json(['ok' => true]);
 }
 
+/* 오래된(3개월 지난) 회차·신청자 일괄 삭제 — 개인정보 최소보관을 위한 정리.
+   수강생 조회는 애초에 exam_date >= 오늘만 보여주므로 지난 자료는 화면에
+   보일 일이 없고, 이 삭제는 순수히 DB에 개인정보(이름·연락처·생년월일)를
+   불필요하게 오래 남겨두지 않기 위한 것입니다. 기준일은 셔틀 delete_past와
+   같은 이유로 클라이언트가 아닌 서버 시각으로만 정합니다. 변경 이력
+   (written_exam_log)은 이름 정도만 담고 있고 분쟁 확인용으로 계속 쓰이므로
+   여기서는 지우지 않습니다. */
+if ($method === 'POST' && $action === 'admin_delete_old') {
+    $cutoff = date('Y-m-d', strtotime('-3 months'));
+    $db = yj_db();
+    $db->beginTransaction();
+    try {
+        $delBookings = $db->prepare("DELETE FROM $bookingsTable WHERE exam_date < ?");
+        $delBookings->execute([$cutoff]);
+        $bookingCount = $delBookings->rowCount();
+
+        $delSlots = $db->prepare("DELETE FROM $slotsTable WHERE exam_date < ?");
+        $delSlots->execute([$cutoff]);
+        $slotCount = $delSlots->rowCount();
+
+        $db->commit();
+    } catch (Exception $e) {
+        $db->rollBack();
+        yj_json(['error' => '삭제 실패: ' . $e->getMessage()], 500);
+    }
+    yj_json(['ok' => true, 'cutoff' => $cutoff, 'deletedSlots' => $slotCount, 'deletedBookings' => $bookingCount]);
+}
+
 yj_json(['error' => 'Bad request'], 400);
