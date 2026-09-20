@@ -18,9 +18,10 @@ $method = $_SERVER['REQUEST_METHOD'];
 $table = yj_table('written_exam');
 
 $DATE_RE = '/^\d{4}-\d{2}-\d{2}$/';
-/* 관리자 화면이 생기기 전까지는 이 두 가지 중에서만 고를 수 있습니다.
-   guide-print/app.py의 WRITTEN_EXAM_TIMES와 반드시 같게 유지하세요. */
-$ALLOWED_TIMES = ['오전 09:00', '오후 13:30'];
+/* 예전엔 관리자 화면이 없어 "오전 09:00"/"오후 13:30" 두 가지로 고정해뒀지만,
+   이제 필기시험 관리 화면(admin-written-exam.html)에서 회차 시각을 자유롭게
+   정하고, 안내장 앱은 그 실제 값을 미니 달력으로 보여주며 이 칸을 채웁니다.
+   그래서 고정 목록 대신 형식만 느슨하게 검사합니다. */
 
 function yj_digits($s) {
     return preg_replace('/[^0-9]/', '', (string)$s);
@@ -134,8 +135,9 @@ if ($studentName === '') {
 if (!preg_match($DATE_RE, $examDate)) {
     yj_json(['error' => '날짜 형식이 올바르지 않습니다.'], 400);
 }
-if ($examTime !== '' && !in_array($examTime, $ALLOWED_TIMES, true)) {
-    yj_json(['error' => '시각은 목록에 있는 것만 고를 수 있습니다.'], 400);
+/* exam_time 컬럼이 VARCHAR(20)이라 길이만 지킵니다 (db/schema.sql 참고) */
+if (mb_strlen($examTime) > 20) {
+    yj_json(['error' => '시각 문구가 너무 깁니다 (20자 이내로 적어주세요).'], 400);
 }
 
 $stmt = yj_db()->prepare(
