@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>필기시험 조회 | 영진자동차운전전문학원</title>
+<title>필기시험 조회·신청 | 영진자동차운전전문학원</title>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-<meta name="description" content="영진자동차운전전문학원 필기시험 조회 - 이름과 전화번호 뒷 4자리로 등록된 필기시험 날짜를 확인하실 수 있습니다." />
+<meta name="description" content="영진자동차운전전문학원 필기시험 조회·신청 - 이름과 생년월일로 신청 내역을 확인하고, 달력에서 원하는 회차를 골라 신청·변경·취소할 수 있습니다." />
 <meta name="robots" content="noindex" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="영진자동차운전전문학원" />
 <meta property="og:locale" content="ko_KR" />
-<meta property="og:title" content="필기시험 조회 | 영진자동차운전전문학원" />
-<meta property="og:description" content="영진자동차운전전문학원 필기시험 조회 - 이름과 전화번호 뒷 4자리로 등록된 필기시험 날짜를 확인하실 수 있습니다." />
+<meta property="og:title" content="필기시험 조회·신청 | 영진자동차운전전문학원" />
+<meta property="og:description" content="영진자동차운전전문학원 필기시험 조회·신청 - 이름과 생년월일로 신청 내역을 확인하고, 달력에서 원하는 회차를 골라 신청·변경·취소할 수 있습니다." />
 <meta property="og:url" content="https://www.yjcdrive.co.kr/written-exam.html" />
 <!-- 공유 이미지: 이 페이지 전용 배너가 생기면 아래 줄의 파일명만 바꾸세요
      (권장 이름: images/og-written-exam.jpg · 크기 1200x630) -->
@@ -26,7 +26,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css" />
 <style>
-.we-wrap { max-width: 640px; margin: 0 auto; }
+.we-wrap { max-width: 720px; margin: 0 auto; }
 
 .we-form-card {
   background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-lg);
@@ -47,10 +47,10 @@
 
 .we-status { margin-top: 16px; font-size: 13.5px; font-weight: 600; min-height: 20px; }
 .we-status.err { color: #c53030; }
+.we-status.ok { color: #1c8a4f; }
 
-/* 결과 */
-.we-results { margin-top: 26px; display: none; }
-.we-results.show { display: block; }
+/* 기존 신청 내역 카드 (Step 2-A) */
+.we-existing { margin-top: 22px; background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-lg); padding: 26px 28px; }
 .we-results-head { font-size: 14px; font-weight: 800; color: var(--color-ink); margin-bottom: 14px; }
 .we-card {
   display: flex; align-items: center; gap: 18px;
@@ -73,6 +73,70 @@
   font-size: 11.5px; font-weight: 900; border-radius: 999px; padding: 3px 9px; margin-left: 6px;
 }
 
+.we-phone-confirm { margin-top: 18px; }
+.we-phone-confirm label { display: block; font-size: 13px; font-weight: 700; color: var(--color-ink); margin-bottom: 7px; }
+.we-phone-confirm input {
+  width: 100%; max-width: 260px; border: 1px solid var(--color-line); border-radius: var(--radius-sm);
+  padding: 12px 13px; font-size: 15px; font-family: inherit; color: var(--color-ink);
+}
+.we-phone-confirm input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
+.we-existing .we-actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.we-cutoff-note { margin-top: 16px; font-size: 12.5px; color: #c53030; font-weight: 700; line-height: 1.7; }
+
+/* 달력 (Step 2-B) */
+.we-calendar-wrap { margin-top: 22px; background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-lg); padding: 26px 26px 20px; }
+.we-cal-head { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 6px; }
+.we-cal-head button {
+  background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 999px;
+  width: 34px; height: 34px; font-size: 14px; font-weight: 800; color: var(--color-ink); cursor: pointer;
+}
+.we-cal-head button:hover { background: var(--color-primary-light); color: var(--color-primary-dark); }
+.we-cal-head button:disabled { opacity: .35; cursor: not-allowed; }
+.we-cal-title { font-size: 17px; font-weight: 800; color: var(--color-ink); min-width: 120px; text-align: center; }
+
+.we-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 14px; }
+.we-cal-dow { text-align: center; font-size: 12px; font-weight: 800; color: var(--color-muted); padding-bottom: 6px; }
+.we-cal-dow.sun { color: #c53030; }
+.we-cal-dow.sat { color: #2b6cb0; }
+
+.we-cal-cell {
+  min-height: 96px; border: 1px solid var(--color-line); border-radius: var(--radius-sm);
+  padding: 6px 6px 8px; position: relative; background: var(--color-surface);
+}
+.we-cal-cell.empty { border: none; background: transparent; }
+.we-cal-cell.mine { border: 2px solid var(--color-primary); background: #fff; }
+.we-cal-daynum {
+  font-size: 12.5px; font-weight: 700; color: var(--color-ink);
+  display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;
+}
+.we-cal-daynum.sun, .we-cal-daynum.holiday { color: #c53030; }
+.we-cal-daynum.sat { color: #2b6cb0; }
+.we-cal-daynum.today { border-radius: 999px; background: var(--color-ink); color: #fff; }
+.we-cal-holiday-name { display: block; font-size: 9.5px; color: #c53030; line-height: 1.3; margin-top: 1px; }
+.we-cal-mine-tag {
+  position: absolute; top: 6px; right: 6px; font-size: 9px; font-weight: 900; color: #fff;
+  background: var(--color-primary); border-radius: 999px; padding: 1px 6px;
+}
+.we-cal-slot {
+  display: block; width: 100%; margin-top: 5px; border: none; border-radius: 6px;
+  padding: 4px 5px; font-size: 10.5px; font-weight: 800; line-height: 1.35; text-align: left; cursor: pointer;
+}
+.we-cal-slot.ok { background: #e6f6ec; color: #1c8a4f; }
+.we-cal-slot.ok:hover { background: #1c8a4f; color: #fff; }
+.we-cal-slot.full { background: #fdeeee; color: #c53030; cursor: not-allowed; }
+.we-cal-slot.grey { background: #f0eef5; color: var(--color-muted); cursor: not-allowed; }
+
+.we-cal-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 18px; font-size: 11.5px; color: var(--color-muted); }
+.we-cal-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.we-cal-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+/* 신청 확인 (Step 3) */
+.we-confirm { margin-top: 22px; background: #fff; border: 1px solid var(--color-primary); border-radius: var(--radius-lg); padding: 26px 28px; }
+.we-confirm h3 { font-size: 16px; font-weight: 800; color: var(--color-ink); margin-bottom: 6px; }
+.we-confirm-when { font-size: 14px; color: var(--color-body); margin-bottom: 4px; }
+.we-checkbox-row { display: flex; align-items: center; gap: 8px; margin: 18px 0 4px; font-size: 13.5px; color: var(--color-ink); cursor: pointer; }
+.we-checkbox-row input { width: 16px; height: 16px; }
+
 .we-empty {
   background: var(--color-surface); border: 1px dashed var(--color-line); border-radius: var(--radius-md);
   padding: 26px 24px; text-align: center;
@@ -84,6 +148,22 @@
   margin-top: 22px; font-size: 12.5px; color: var(--color-muted); line-height: 1.8;
   background: var(--color-surface); border-radius: var(--radius-md); padding: 16px 18px;
 }
+
+/* PC 전용 문턱 — 잠금장치가 아니라 문턱입니다(docs-12 §6). 휴대폰 브라우저의
+   "데스크톱 사이트로 보기"로는 뚫리지만, 대부분의 수강생은 그 메뉴를 모르므로
+   빈번한 모바일 접속을 줄이는 목적에는 충분합니다. */
+.we-mobile-gate { display: none; }
+.we-app { display: block; }
+@media (max-width: 880px) {
+  .we-mobile-gate {
+    display: block; text-align: center; background: #fff; border: 1px solid var(--color-line);
+    border-radius: var(--radius-lg); padding: 52px 28px;
+  }
+  .we-app { display: none; }
+}
+.we-mobile-gate-icon { font-size: 42px; margin-bottom: 16px; }
+.we-mobile-gate-title { font-size: 17px; font-weight: 800; color: var(--color-ink); margin-bottom: 10px; }
+.we-mobile-gate-desc { font-size: 13.5px; color: var(--color-muted); line-height: 1.8; margin-bottom: 24px; }
 </style>
 </head>
 <body>
@@ -127,9 +207,9 @@
 
 <div class="page-header">
   <div class="container">
-    <div class="breadcrumb"><a href="index.html">홈</a> / 필기시험 조회</div>
-    <h1>필기시험 조회</h1>
-    <p>이름과 전화번호 뒷 4자리를 입력하시면 등록된 필기시험 날짜를 확인하실 수 있어요.</p>
+    <div class="breadcrumb"><a href="index.html">홈</a> / 필기시험 조회·신청</div>
+    <h1>필기시험 조회·신청</h1>
+    <p>이름과 생년월일로 신청 내역을 확인하고, 신청 내역이 없으면 달력에서 원하는 회차를 골라 바로 신청하실 수 있어요.</p>
   </div>
 </div>
 
@@ -138,34 +218,88 @@
     <div class="container">
       <div class="we-wrap">
 
-        <div class="we-form-card">
-          <h2>내 필기시험 날짜 확인하기</h2>
-          <p>수강 신청 시 등록하신 이름과 연락처로 조회합니다. 본인 정보만 조회되며, 다른 분의 정보는 표시되지 않습니다.</p>
-
-          <form id="weForm" autocomplete="off">
-            <div class="we-fields">
-              <div class="we-field">
-                <label for="weName">이름</label>
-                <input type="text" id="weName" placeholder="홍길동" required />
-              </div>
-              <div class="we-field">
-                <label for="wePhone">전화번호 뒷 4자리</label>
-                <input type="text" id="wePhone" placeholder="5678" inputmode="numeric" maxlength="4" required />
-                <p class="we-help">010-1234-<strong>5678</strong> 이면 5678</p>
-              </div>
-            </div>
-            <button type="submit" class="btn btn-accent btn-block" style="margin-top:20px;" id="weSubmit">조회하기</button>
-          </form>
-
-          <p class="we-status" id="weStatus"></p>
+        <div class="we-mobile-gate" id="weMobileGate">
+          <div class="we-mobile-gate-icon">📵</div>
+          <p class="we-mobile-gate-title">필기시험 신청은 컴퓨터에서만 가능합니다</p>
+          <p class="we-mobile-gate-desc">휴대폰에서는 신청·변경이 되지 않습니다.<br>컴퓨터로 접속해 주시거나 사무실로 연락 주세요.</p>
+          <a href="tel:062-951-5100" class="btn btn-accent">062-951-5100 전화하기</a>
         </div>
 
-        <div class="we-results" id="weResults"></div>
+        <div class="we-app" id="weApp">
+
+          <div class="we-form-card">
+            <h2>내 필기시험 신청 확인·신청하기</h2>
+            <p>수강 신청 시 등록하신 이름과 생년월일로 조회합니다. 신청 내역이 있으면 보여드리고, 없으면 바로 달력에서 신청하실 수 있어요.</p>
+
+            <form id="weLookupForm" autocomplete="off">
+              <div class="we-fields">
+                <div class="we-field">
+                  <label for="weName">이름</label>
+                  <input type="text" id="weName" placeholder="홍길동" required />
+                </div>
+                <div class="we-field">
+                  <label for="weBirth">생년월일 6자리</label>
+                  <input type="text" id="weBirth" placeholder="990101" inputmode="numeric" maxlength="6" required />
+                  <p class="we-help">1999년 1월 1일생이면 990101</p>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-accent btn-block" style="margin-top:20px;" id="weLookupSubmit">조회하기</button>
+            </form>
+
+            <p class="we-status" id="weStatus"></p>
+          </div>
+
+          <div class="we-existing" id="weExisting" style="display:none">
+            <div id="weExistingBody"></div>
+            <div id="weExistingActions"></div>
+          </div>
+
+          <div class="we-calendar-wrap" id="weCalendarWrap" style="display:none">
+            <div class="we-cal-head">
+              <button type="button" id="weCalPrev" aria-label="이전 달">◀</button>
+              <div class="we-cal-title" id="weCalTitle"></div>
+              <button type="button" id="weCalNext" aria-label="다음 달">▶</button>
+            </div>
+            <p class="we-status" id="weCalStatus"></p>
+            <div class="we-cal-grid" id="weCalGrid"></div>
+            <div class="we-cal-legend">
+              <span><i style="background:#e6f6ec;"></i>신청 가능</span>
+              <span><i style="background:#fdeeee;"></i>정원 마감</span>
+              <span><i style="background:#f0eef5;"></i>2일 전 마감 지남</span>
+              <span><i style="background:var(--color-primary);"></i>내 예약</span>
+            </div>
+          </div>
+
+          <div class="we-confirm" id="weConfirm" style="display:none">
+            <h3 id="weConfirmTitle">신청 확인</h3>
+            <div class="we-confirm-when" id="weConfirmWhen"></div>
+            <form id="weConfirmForm" autocomplete="off">
+              <label class="we-checkbox-row">
+                <input type="checkbox" id="weConfirmPersonal" />
+                셔틀 대신 개인적으로 가겠습니다 (개인방문)
+              </label>
+              <div class="we-fields">
+                <div class="we-field">
+                  <label for="weConfirmName">이름</label>
+                  <input type="text" id="weConfirmName" required />
+                </div>
+                <div class="we-field">
+                  <label for="weConfirmPhone">연락처</label>
+                  <input type="tel" id="weConfirmPhone" placeholder="010-0000-0000" required />
+                </div>
+              </div>
+              <button type="submit" class="btn btn-accent btn-block" style="margin-top:18px;" id="weConfirmSubmit">신청 완료</button>
+            </form>
+            <p class="we-status" id="weConfirmStatus"></p>
+          </div>
+
+        </div>
 
         <p class="we-note">
-          · 필기시험 날짜는 사무실에서 상담 후 등록해드립니다. 아직 상담 전이면 조회되지 않을 수 있어요.<br>
-          · 날짜나 시각을 바꾸시려면 <a href="tel:062-951-5100" style="color:var(--color-primary);font-weight:700;">062-951-5100</a>으로 연락 주세요.<br>
-          · 조회가 안 되시면 수강 신청 시 적어주신 이름·연락처와 같은지 확인해주세요.
+          · 필기시험 신청·변경·취소는 <strong>컴퓨터에서만</strong> 가능합니다.<br>
+          · 신청·변경·취소는 시험 2일 전까지만 가능하고, 그 이후에는 사무실 <a href="tel:062-951-5100" style="color:var(--color-primary);font-weight:700;">062-951-5100</a>으로 연락해주세요.<br>
+          · 정원이 찬 회차는 자동으로 "마감"으로 표시되며, 신청은 선착순입니다.<br>
+          · 같은 날짜에 수업이 예약되어 있으면 그 날짜로는 신청이 제한됩니다 — 사무실에 문의해주세요.
         </p>
 
       </div>
@@ -241,12 +375,17 @@
 (function () {
 "use strict";
 
-var form = document.getElementById("weForm");
-var nameEl = document.getElementById("weName");
-var phoneEl = document.getElementById("wePhone");
-var statusEl = document.getElementById("weStatus");
-var resultsEl = document.getElementById("weResults");
-var submitBtn = document.getElementById("weSubmit");
+var API = "api/written-exam-booking.php";
+
+var state = {
+  name: "", birthDigits: "", phone: "",
+  existing: null,      /* {examDate, slotNo, departType, departTime, examPlace, canCancel} */
+  mode: "new",         /* "new" | "change" */
+  calMonth: null,       /* Date, 항상 그 달 1일 */
+  slotsByDate: {},
+  holidaysByDate: {},
+  selectedSlot: null   /* {examDate, slotNo, departTime, examPlace} */
+};
 
 function esc(s) {
   return String(s == null ? "" : s)
@@ -259,86 +398,348 @@ function maskName(name) {
   if (name.length === 2) { return name.charAt(0) + "*"; }
   return name.charAt(0) + "*".repeat(name.length - 2) + name.charAt(name.length - 1);
 }
-function setStatus(msg, kind) {
-  statusEl.textContent = msg || "";
-  statusEl.className = "we-status" + (kind ? " " + kind : "");
+function pad2(n) { n = Number(n); return n < 10 ? "0" + n : "" + n; }
+function fmtYMD(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+function parseYMD(s) {
+  var p = String(s).split("-");
+  return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
 }
-function todayStr() {
-  var d = new Date();
-  var m = String(d.getMonth() + 1), day = String(d.getDate());
-  return d.getFullYear() + "-" + (m.length < 2 ? "0" + m : m) + "-" + (day.length < 2 ? "0" + day : day);
+function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+function addMonths(d, n) { return new Date(d.getFullYear(), d.getMonth() + n, 1); }
+function daysInMonth(d) { return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); }
+function todayStr() { return fmtYMD(new Date()); }
+/* 시험 날짜까지 남은 일수 (시각은 무시, 서버의 2일전 마감 규칙과 동일한 기준) */
+function diffDaysFromToday(ymd) {
+  var today = new Date(); today.setHours(0, 0, 0, 0);
+  var d = parseYMD(ymd); d.setHours(0, 0, 0, 0);
+  return Math.round((d - today) / 86400000);
 }
 var WEEK = ["일", "월", "화", "수", "목", "금", "토"];
 function prettyDate(ymd) {
-  var p = ymd.split("-");
+  var p = String(ymd).split("-");
   if (p.length !== 3) { return ymd; }
   var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
   return Number(p[1]) + "월 " + Number(p[2]) + "일 (" + WEEK[d.getDay()] + ")";
 }
+function digitsOnly(s) { return String(s || "").replace(/[^0-9]/g, ""); }
 
-/* 숫자만 입력되도록 */
-phoneEl.addEventListener("input", function () {
-  this.value = this.value.replace(/[^0-9]/g, "").slice(0, 4);
+function setStatusOn(el, msg, kind) {
+  el.textContent = msg || "";
+  el.className = "we-status" + (kind ? " " + kind : "");
+}
+function setStatus(msg, kind) { setStatusOn(document.getElementById("weStatus"), msg, kind); }
+function setCalStatus(msg, kind) { setStatusOn(document.getElementById("weCalStatus"), msg, kind); }
+function setConfirmStatus(msg, kind) { setStatusOn(document.getElementById("weConfirmStatus"), msg, kind); }
+
+/* ═══════════ Step 1: 이름 + 생년월일 조회 ═══════════ */
+
+var weBirthEl = document.getElementById("weBirth");
+weBirthEl.addEventListener("input", function () {
+  this.value = digitsOnly(this.value).slice(0, 6);
 });
 
-function renderResult(data) {
-  var today = todayStr();
-  var isToday = data.examDate === today;
-  var html = '<div class="we-results-head">' + esc(maskName(nameEl.value.trim())) + '님의 필기시험 정보</div>';
-  html += '<div class="we-card">'
-    + '<div class="we-when">'
-    +   '<div class="we-date">' + esc(prettyDate(data.examDate)) + (isToday ? '<span class="we-badge-today">오늘</span>' : '') + '</div>'
-    +   '<div class="we-time">' + esc(data.examTime || '시각 미정') + '</div>'
-    + '</div>'
-    + '<div class="we-where">'
-    +   '<div class="k">장소</div>'
-    +   '<div class="v">' + (data.place ? esc(data.place) : '학원에 문의해주세요') + '</div>'
-    + '</div>'
-    + '</div>';
-  resultsEl.innerHTML = html;
-  resultsEl.classList.add("show");
-}
-
-function renderEmpty() {
-  resultsEl.innerHTML = '<div class="we-empty">'
-    + '<p>등록된 필기시험 정보가 없습니다.</p>'
-    + '<span>아직 상담 전이거나, 입력하신 이름·전화번호가 신청서와 다를 수 있어요.<br>'
-    + '자세한 내용은 062-951-5100으로 문의해주세요.</span>'
-    + '</div>';
-  resultsEl.classList.add("show");
-}
-
-form.addEventListener("submit", function (e) {
+document.getElementById("weLookupForm").addEventListener("submit", function (e) {
   e.preventDefault();
-  var name = nameEl.value.trim();
-  var tail = phoneEl.value.trim();
-  if (name === "" || tail.length !== 4) {
-    setStatus("이름과 전화번호 뒷 4자리를 정확히 입력해주세요.", "err");
+  var name = document.getElementById("weName").value.trim();
+  var birth = digitsOnly(weBirthEl.value);
+  if (name === "" || birth.length < 6) {
+    setStatus("이름과 생년월일 6자리를 정확히 입력해주세요.", "err");
     return;
   }
-  setStatus("조회 중...");
-  submitBtn.disabled = true;
-  resultsEl.classList.remove("show");
+  state.name = name;
+  state.birthDigits = birth;
+  doLookup();
+});
 
-  fetch("api/written-exam.php", {
-    method: "POST",
-    credentials: "same-origin",
+function doLookup(doneMsg) {
+  setStatus(doneMsg ? "" : "조회 중...");
+  var submitBtn = document.getElementById("weLookupSubmit");
+  submitBtn.disabled = true;
+  fetch(API, {
+    method: "POST", credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "lookup", name: name, phoneTail: tail })
+    body: JSON.stringify({ action: "lookup", name: state.name, birthDate: state.birthDigits })
   })
     .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
     .then(function (res) {
-      if (!res.ok || res.body.error) {
-        throw new Error(res.body.error || "조회에 실패했습니다.");
+      if (!res.ok || res.body.error) { throw res.body || {}; }
+      setStatus(doneMsg || "", doneMsg ? "ok" : "");
+      if (res.body.found) {
+        state.existing = res.body;
+        state.mode = "new";
+        showExisting();
+      } else {
+        state.existing = null;
+        showCalendarFresh();
       }
-      setStatus("");
-      if (res.body.found) { renderResult(res.body); }
-      else { renderEmpty(); }
     })
-    .catch(function () {
-      setStatus("지금은 조회할 수 없습니다. 잠시 후 다시 시도하시거나 062-951-5100으로 문의해주세요.", "err");
+    .catch(function (err) {
+      setStatus((err && err.error) || "조회에 실패했습니다. 잠시 후 다시 시도해주세요.", "err");
     })
     .then(function () { submitBtn.disabled = false; });
+}
+
+/* ═══════════ Step 2-A: 기존 신청 내역 ═══════════ */
+
+function showExisting() {
+  document.getElementById("weCalendarWrap").style.display = "none";
+  document.getElementById("weConfirm").style.display = "none";
+
+  var ex = state.existing;
+  var today = todayStr();
+  var isToday = ex.examDate === today;
+
+  var html = '<div class="we-results-head">' + esc(maskName(state.name)) + '님의 신청 내역</div>';
+  html += '<div class="we-card">'
+    + '<div class="we-when">'
+    +   '<div class="we-date">' + esc(prettyDate(ex.examDate)) + (isToday ? '<span class="we-badge-today">오늘</span>' : '') + '</div>'
+    +   '<div class="we-time">' + esc(ex.departTime || '시각 미정') + '</div>'
+    + '</div>'
+    + '<div class="we-where">'
+    +   '<div class="k">' + (ex.departType === '개인방문' ? '개인방문 · 장소' : '학원출발(셔틀) · 장소') + '</div>'
+    +   '<div class="v">' + (ex.examPlace ? esc(ex.examPlace) : '학원에 문의해주세요') + '</div>'
+    + '</div>'
+    + '</div>';
+  document.getElementById("weExistingBody").innerHTML = html;
+
+  var actions = document.getElementById("weExistingActions");
+  if (ex.canCancel) {
+    actions.innerHTML =
+      '<div class="we-phone-confirm"><label for="weExistPhone">날짜 변경·취소 전에 본인 확인을 위해 연락처를 입력해주세요</label>'
+      + '<input type="tel" id="weExistPhone" placeholder="010-0000-0000" /></div>'
+      + '<div class="we-actions">'
+      + '<button type="button" class="btn btn-primary" id="weBtnChange">날짜 변경</button>'
+      + '<button type="button" class="btn btn-outline" id="weBtnCancel">취소하기</button>'
+      + '</div>';
+    document.getElementById("weBtnChange").addEventListener("click", onClickChange);
+    document.getElementById("weBtnCancel").addEventListener("click", onClickCancel);
+  } else {
+    actions.innerHTML = '<p class="we-cutoff-note">취소·변경은 시험 2일 전까지만 가능합니다. 사무실(062-951-5100)로 연락해주세요.</p>';
+  }
+  document.getElementById("weExisting").style.display = "block";
+}
+
+function takeExistPhone() {
+  var phoneInput = document.getElementById("weExistPhone");
+  var phone = phoneInput.value.trim();
+  if (digitsOnly(phone).length < 10) {
+    phoneInput.focus();
+    setStatus("연락처를 정확히 입력해주세요.", "err");
+    return null;
+  }
+  return phone;
+}
+
+function onClickChange() {
+  var phone = takeExistPhone();
+  if (!phone) { return; }
+  state.phone = phone;
+  state.mode = "change";
+  setStatus("");
+  showCalendarForMonth(parseYMD(state.existing.examDate));
+}
+
+function onClickCancel() {
+  var phone = takeExistPhone();
+  if (!phone) { return; }
+  if (!window.confirm(prettyDate(state.existing.examDate) + " 신청을 취소하시겠습니까?")) { return; }
+  setStatus("취소 처리 중...");
+  fetch(API, {
+    method: "POST", credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "cancel", name: state.name, phone: phone, birthDate: state.birthDigits })
+  })
+    .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+    .then(function (res) {
+      if (!res.ok || res.body.error) { throw res.body || {}; }
+      state.phone = phone;
+      state.existing = null;
+      state.mode = "new";
+      setStatus("취소되었습니다.", "ok");
+      document.getElementById("weExisting").style.display = "none";
+      showCalendarFresh();
+    })
+    .catch(function (err) {
+      setStatus((err && err.error) || "취소에 실패했습니다. 잠시 후 다시 시도해주세요.", "err");
+    });
+}
+
+/* ═══════════ Step 2-B: 달력 ═══════════ */
+
+function showCalendarFresh() {
+  state.mode = "new";
+  document.getElementById("weExisting").style.display = "none";
+  document.getElementById("weConfirm").style.display = "none";
+  document.getElementById("weCalendarWrap").style.display = "block";
+  loadCalendar(startOfMonth(new Date()));
+}
+function showCalendarForMonth(d) {
+  document.getElementById("weConfirm").style.display = "none";
+  document.getElementById("weCalendarWrap").style.display = "block";
+  loadCalendar(startOfMonth(d));
+}
+
+document.getElementById("weCalPrev").addEventListener("click", function () {
+  var prev = addMonths(state.calMonth, -1);
+  var curMonth = startOfMonth(new Date());
+  if (prev < curMonth) { prev = curMonth; }
+  loadCalendar(prev);
+});
+document.getElementById("weCalNext").addEventListener("click", function () {
+  loadCalendar(addMonths(state.calMonth, 1));
+});
+
+function loadCalendar(monthDate) {
+  state.calMonth = monthDate;
+  var from = fmtYMD(startOfMonth(monthDate));
+  var to = fmtYMD(new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0));
+  setCalStatus("불러오는 중...");
+  Promise.all([
+    fetch(API + "?action=slots&from=" + from + "&to=" + to, { credentials: "same-origin" }).then(function (r) { return r.json(); }),
+    fetch(API + "?action=holidays&from=" + from + "&to=" + to, { credentials: "same-origin" }).then(function (r) { return r.json(); })
+  ])
+    .then(function (res) {
+      var slots = res[0].slots || [];
+      var holidays = res[1].holidays || [];
+      state.slotsByDate = {};
+      slots.forEach(function (s) {
+        if (!state.slotsByDate[s.examDate]) { state.slotsByDate[s.examDate] = []; }
+        state.slotsByDate[s.examDate].push(s);
+      });
+      state.holidaysByDate = {};
+      holidays.forEach(function (h) { state.holidaysByDate[h.holiday_date] = h.name; });
+      renderCalendar();
+      setCalStatus("");
+    })
+    .catch(function () {
+      setCalStatus("달력을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.", "err");
+    });
+}
+
+function renderSlotButton(ymd, s) {
+  var pastCutoff = diffDaysFromToday(ymd) < 2;
+  var full = s.closed || s.remaining <= 0;
+  var cls, label;
+  if (pastCutoff) { cls = "grey"; label = "마감"; }
+  else if (full) { cls = "full"; label = "마감"; }
+  else { cls = "ok"; label = s.remaining + "석"; }
+  var attrs = (cls === "ok") ? (' data-date="' + esc(ymd) + '" data-slot="' + s.slotNo + '"') : " disabled";
+  return '<button type="button" class="we-cal-slot ' + cls + '"' + attrs + '>'
+    + esc(s.departTime) + ' ' + esc(s.examPlace) + '<br>' + label + '</button>';
+}
+
+function renderCalendar() {
+  var grid = document.getElementById("weCalGrid");
+  var m = state.calMonth;
+  document.getElementById("weCalTitle").textContent = m.getFullYear() + "년 " + (m.getMonth() + 1) + "월";
+  document.getElementById("weCalPrev").disabled = (startOfMonth(m).getTime() === startOfMonth(new Date()).getTime());
+
+  var first = startOfMonth(m);
+  var startWeekday = first.getDay();
+  var totalDays = daysInMonth(m);
+  var todayY = todayStr();
+
+  var html = "";
+  for (var i = 0; i < 7; i++) {
+    html += '<div class="we-cal-dow' + (i === 0 ? ' sun' : (i === 6 ? ' sat' : '')) + '">' + WEEK[i] + '</div>';
+  }
+  for (var i = 0; i < startWeekday; i++) { html += '<div class="we-cal-cell empty"></div>'; }
+
+  for (var day = 1; day <= totalDays; day++) {
+    var d = new Date(m.getFullYear(), m.getMonth(), day);
+    var ymd = fmtYMD(d);
+    var wd = d.getDay();
+    var isHoliday = !!state.holidaysByDate[ymd];
+    var isMine = !!(state.existing && state.existing.examDate === ymd);
+
+    var numClass = "we-cal-daynum";
+    if (wd === 0 || isHoliday) { numClass += " sun holiday"; }
+    else if (wd === 6) { numClass += " sat"; }
+    if (ymd === todayY) { numClass += " today"; }
+
+    html += '<div class="we-cal-cell' + (isMine ? ' mine' : '') + '">';
+    if (isMine) { html += '<span class="we-cal-mine-tag">내 예약</span>'; }
+    html += '<span class="' + numClass + '">' + day + '</span>';
+    if (isHoliday) { html += '<span class="we-cal-holiday-name">' + esc(state.holidaysByDate[ymd]) + '</span>'; }
+
+    var daySlots = state.slotsByDate[ymd] || [];
+    for (var k = 0; k < daySlots.length; k++) { html += renderSlotButton(ymd, daySlots[k]); }
+    html += '</div>';
+  }
+  grid.innerHTML = html;
+
+  [].forEach.call(grid.querySelectorAll(".we-cal-slot.ok"), function (btn) {
+    btn.addEventListener("click", function () {
+      onSlotClick(btn.getAttribute("data-date"), Number(btn.getAttribute("data-slot")));
+    });
+  });
+}
+
+function onSlotClick(examDate, slotNo) {
+  var list = state.slotsByDate[examDate] || [];
+  var s = null;
+  for (var i = 0; i < list.length; i++) { if (list[i].slotNo === slotNo) { s = list[i]; break; } }
+  if (!s) { return; }
+  state.selectedSlot = { examDate: examDate, slotNo: slotNo, departTime: s.departTime, examPlace: s.examPlace };
+  openConfirm();
+}
+
+/* ═══════════ Step 3: 신청/변경 확인 ═══════════ */
+
+function openConfirm() {
+  var sel = state.selectedSlot;
+  var isChange = state.mode === "change";
+  document.getElementById("weConfirmTitle").textContent = isChange ? "변경 확인" : "신청 확인";
+  document.getElementById("weConfirmSubmit").textContent = isChange ? "변경 완료" : "신청 완료";
+  document.getElementById("weConfirmWhen").textContent =
+    prettyDate(sel.examDate) + " · " + sel.departTime + " · " + sel.examPlace;
+  document.getElementById("weConfirmPersonal").checked = false;
+  document.getElementById("weConfirmName").value = state.name;
+  document.getElementById("weConfirmPhone").value = state.phone || "";
+  setConfirmStatus("");
+  var box = document.getElementById("weConfirm");
+  box.style.display = "block";
+  box.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+document.getElementById("weConfirmForm").addEventListener("submit", function (e) {
+  e.preventDefault();
+  var name = document.getElementById("weConfirmName").value.trim();
+  var phone = document.getElementById("weConfirmPhone").value.trim();
+  var personal = document.getElementById("weConfirmPersonal").checked;
+  if (name === "" || digitsOnly(phone).length < 10) {
+    setConfirmStatus("이름과 연락처를 정확히 입력해주세요.", "err");
+    return;
+  }
+  var payload = {
+    action: state.mode === "change" ? "change" : "book",
+    name: name, phone: phone, birthDate: state.birthDigits,
+    examDate: state.selectedSlot.examDate,
+    slotNo: state.selectedSlot.slotNo,
+    departType: personal ? "개인방문" : "학원출발"
+  };
+  setConfirmStatus("처리 중...");
+  var btn = document.getElementById("weConfirmSubmit");
+  btn.disabled = true;
+  fetch(API, {
+    method: "POST", credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+    .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+    .then(function (res) {
+      if (!res.ok || res.body.error) { throw res.body || {}; }
+      state.name = name;
+      state.phone = phone;
+      document.getElementById("weConfirm").style.display = "none";
+      document.getElementById("weCalendarWrap").style.display = "none";
+      doLookup(state.mode === "change" ? "변경이 완료되었습니다." : "신청이 완료되었습니다.");
+    })
+    .catch(function (err) {
+      setConfirmStatus((err && err.error) || "처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", "err");
+      loadCalendar(state.calMonth);
+    })
+    .then(function () { btn.disabled = false; });
 });
 
 })();
