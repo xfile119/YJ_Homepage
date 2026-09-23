@@ -80,7 +80,8 @@ document.addEventListener("DOMContentLoaded", function () {
    유입 경로 측정 — "어디서 들어온 사람이 상담·전화로 이어졌는지"
    - 광고 링크 끝에 ?src=이름 을 붙이면 그 이름으로 기록합니다
      (예: license-picker.html?src=naver_powerlink). 네이버 검색광고의 자동 추적
-     파라미터(n_keyword 등)가 붙어 오면 키워드도 함께 남깁니다.
+     파라미터(n_keyword 등)가 붙어 오면 키워드도 함께 남깁니다. 전단·현수막 QR처럼
+     한글 이름을 붙이고 싶으면 &c=이름 (예: ?src=flyer&c=수완OO아파트)을 씁니다.
    - src가 없으면 이전 페이지(referrer)로 네이버 검색·플레이스·구글 등을 구분합니다.
    - 마지막으로 확인된 경로를 이 브라우저에 30일간 기억해 두고, 상담 신청·문의
      남기기·전화(학원 대표번호)·카카오톡·네이버 톡톡 클릭 때 함께 보냅니다.
@@ -112,7 +113,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function detect() {
     var q = {};
     try { new URLSearchParams(location.search).forEach(function (v, k) { q[k] = v; }); } catch (e) {}
-    var kw = clean(q.n_keyword || q.n_query || q.utm_term || "", 60);
+    var kw = clean(q.n_keyword || q.n_query || q.utm_term || q.c || q.utm_campaign || "", 60);
     var src = clean(q.src || q.utm_source || "", 40).toLowerCase().replace(/[^a-z0-9_.:-]/g, "");
     if (!src && (q.n_media || q.n_keyword || q.n_query)) src = "naver_ad";
     if (src) return { src: src, kw: kw };

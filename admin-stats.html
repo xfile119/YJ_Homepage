@@ -42,7 +42,17 @@
   .url-row code { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 6px; padding: 6px 8px; overflow-x: auto; white-space: nowrap; }
   .url-row button { border: 1px solid var(--color-line); background: #fff; border-radius: 6px; padding: 6px 10px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
   .guide li { margin: 0 0 6px 18px; font-size: 13px; line-height: 1.7; color: var(--color-body); list-style: disc; }
-  @media (max-width: 640px) { .url-row { grid-template-columns: 1fr; } }
+  .qr-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .qr-form label { display: block; font-size: 12.5px; font-weight: 700; color: var(--color-ink); margin-bottom: 5px; }
+  .qr-form select, .qr-form input { width: 100%; border: 1px solid var(--color-line); border-radius: 8px; padding: 8px 10px; font-size: 13.5px; font-family: inherit; background: #fff; }
+  .qr-out { display: flex; gap: 18px; align-items: flex-start; flex-wrap: wrap; }
+  .qr-out canvas { width: 180px; height: 180px; border: 1px solid var(--color-line); border-radius: 8px; image-rendering: pixelated; }
+  .qr-side { flex: 1 1 280px; min-width: 0; }
+  .qr-side code { display: block; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 6px; padding: 8px; font-size: 12.5px; word-break: break-all; margin-bottom: 10px; }
+  .qr-side .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .qr-side button { border: 1px solid var(--color-line); background: #fff; border-radius: 6px; padding: 7px 12px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .qr-side button.primary { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+  @media (max-width: 640px) { .url-row { grid-template-columns: 1fr; } .qr-form { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -79,8 +89,8 @@
     </div>
 
     <div class="admin-section">
-      <h2>광고 키워드별</h2>
-      <p class="admin-note">네이버 검색광고의 추적 설정을 켜두면 광고 클릭에 키워드가 같이 붙어 와서 여기에 모입니다. 비어 있으면 아직 키워드가 붙은 방문이 없는 것입니다.</p>
+      <h2>광고 키워드·캠페인별</h2>
+      <p class="admin-note">네이버 검색광고의 추적 설정을 켜두면 광고 클릭에 키워드가 같이 붙어 와서 여기에 모입니다. 아래 "QR 만들기"에서 붙인 이름(예: 전단을 돌린 아파트)도 여기서 따로 집계됩니다.</p>
       <div class="table-wrap"><table class="stats" id="kwTable"></table></div>
     </div>
 
@@ -91,6 +101,47 @@
         주소 끝의 <code>?src=…</code>는 검색 순위에 영향을 주지 않습니다(각 페이지에 대표 주소가 지정돼 있음).
       </p>
       <div class="url-list" id="urlList"></div>
+    </div>
+
+    <div class="admin-section">
+      <h2>QR 만들기 (전단·현수막·명함 등)</h2>
+      <p class="admin-note">
+        종류와 이름을 정하면 그 이름으로 따로 집계되는 주소와 QR 코드가 만들어집니다. 전단을 돌린 아파트마다 이름을 다르게 하면
+        어느 단지 전단이 효과가 있었는지 비교할 수 있습니다. 인쇄할 때는 QR 옆에 "스캔하면 상담 신청" 같은 안내와 대표번호를 함께 넣으세요.
+      </p>
+      <div class="qr-form">
+        <div><label for="qrType">종류</label>
+          <select id="qrType">
+            <option value="flyer">전단</option>
+            <option value="banner">현수막</option>
+            <option value="poster">포스터·게시물</option>
+            <option value="namecard">명함</option>
+            <option value="naver_blog">네이버 블로그 글</option>
+            <option value="instagram">인스타그램</option>
+            <option value="youtube">유튜브</option>
+          </select></div>
+        <div><label for="qrName">이름 (선택 · 한글 가능)</label><input id="qrName" maxlength="40" placeholder="예: 수완 OO아파트 10월"></div>
+        <div><label for="qrPage">도착 페이지</label>
+          <select id="qrPage">
+            <option value="">홈</option>
+            <option value="license-picker.html">면허 탐색기 (비용 계산·상담 신청)</option>
+            <option value="driving-lessons.html">도로연수</option>
+            <option value="large-vehicle-training.html">대형연수</option>
+            <option value="location.html">오시는 길·셔틀</option>
+            <option value="contact.html">상담문의</option>
+          </select></div>
+      </div>
+      <div class="qr-out">
+        <canvas id="qrCanvas" width="180" height="180" aria-label="QR 코드 미리보기"></canvas>
+        <div class="qr-side">
+          <code id="qrUrl"></code>
+          <div class="btns">
+            <button type="button" class="primary" id="qrDownload">QR 이미지 저장 (PNG)</button>
+            <button type="button" id="qrCopy">주소 복사</button>
+          </div>
+          <p class="admin-note" style="margin:10px 0 0">저장되는 이미지는 인쇄용 큰 크기(1000×1000px)이고, 파일 이름은 <b>QR_종류_날짜시각.png</b>입니다. 인쇄 후 휴대폰 카메라로 한 번 찍어서 열리는지 꼭 확인하세요.</p>
+        </div>
+      </div>
     </div>
 
     <div class="admin-section">
@@ -106,6 +157,7 @@
 </div>
 
 <script src="js/yj-channels.js"></script>
+<script src="js/vendor/qrcode-generator-1.4.4.js"></script>
 <script>
 (function(){
 "use strict";
@@ -119,7 +171,10 @@ var AD_URLS = [
   ["스마트플레이스 홈페이지 칸", "?src=naver_place"],
   ["구글 비즈니스 프로필 웹사이트 칸", "?src=google_business"],
   ["당근 광고", "?src=daangn_ad"],
-  ["카카오톡 채널 홈 링크", "?src=kakao_channel"]
+  ["카카오톡 채널 홈 링크", "?src=kakao_channel"],
+  ["네이버 블로그 글 속 링크", "?src=naver_blog"],
+  ["인스타그램 프로필 링크", "?src=instagram"],
+  ["유튜브 설명란 링크", "?src=youtube"]
 ];
 
 function esc(s){
@@ -214,7 +269,7 @@ function renderKeywords(rows){
   var t = document.getElementById("kwTable");
   var list = aggregate(rows, function(r){ return r.src + "\u0000" + r.kw; });
   if (!list.length) { t.innerHTML = '<tr><td class="empty">이 기간에 키워드가 붙은 기록이 없습니다.</td></tr>'; return; }
-  var html = '<tr><th>키워드</th><th style="text-align:left">경로</th><th>방문</th><th>문의·신청</th><th>전환율</th><th>연락 클릭</th></tr>';
+  var html = '<tr><th>키워드·캠페인</th><th style="text-align:left">경로</th><th>방문</th><th>문의·신청</th><th>전환율</th><th>연락 클릭</th></tr>';
   list.forEach(function(o){
     html += '<tr><td>' + esc(o.kw) + '</td><td style="text-align:left">' + esc(YJ_CHANNEL.label(o.src)) + '</td>' +
       '<td class="num">' + num(o.visit) + '</td><td class="num lead">' + num(o.leads) + '</td>' +
@@ -239,6 +294,64 @@ function renderUrls(){
     });
   });
 }
+
+/* ---------- QR 만들기 ---------- */
+function qrUrl(){
+  var type = document.getElementById("qrType").value;
+  var name = document.getElementById("qrName").value.trim();
+  var page = document.getElementById("qrPage").value;
+  return SITE + page + "?src=" + type + (name ? "&c=" + encodeURIComponent(name) : "");
+}
+function drawQr(canvas, text, size){
+  var qr = qrcode(0, "M");
+  qr.addData(text);
+  qr.make();
+  var n = qr.getModuleCount(), quiet = 4;
+  var cell = Math.floor(size / (n + quiet * 2));
+  var off = Math.floor((size - cell * n) / 2);
+  canvas.width = size; canvas.height = size;
+  var g = canvas.getContext("2d");
+  g.fillStyle = "#fff"; g.fillRect(0, 0, size, size);
+  g.fillStyle = "#000";
+  for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) {
+    if (qr.isDark(r, c)) g.fillRect(off + c * cell, off + r * cell, cell, cell);
+  }
+}
+function refreshQr(){
+  var url = qrUrl();
+  document.getElementById("qrUrl").textContent = decodeURI(url);
+  drawQr(document.getElementById("qrCanvas"), url, 180);
+}
+["qrType", "qrName", "qrPage"].forEach(function(id){
+  var el = document.getElementById(id);
+  el.addEventListener("input", refreshQr);
+  el.addEventListener("change", refreshQr);
+});
+document.getElementById("qrDownload").addEventListener("click", function(){
+  var big = document.createElement("canvas");
+  drawQr(big, qrUrl(), 1000);
+  /* 파일 이름은 영문+날짜로 둡니다 — 한글 파일 이름은 브라우저·환경에 따라 확장자도 없는
+     "download"로 바뀌어 저장되는 경우가 있어서입니다. 어떤 QR인지는 저장 후 이름을 바꿔주세요. */
+  var d = new Date();
+  var stamp = d.getFullYear() + ("0" + (d.getMonth() + 1)).slice(-2) + ("0" + d.getDate()).slice(-2) + "_" +
+    ("0" + d.getHours()).slice(-2) + ("0" + d.getMinutes()).slice(-2);
+  var fileName = "QR_" + document.getElementById("qrType").value + "_" + stamp + ".png";
+  big.toBlob(function(blob){
+    var href = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = href;
+    a.download = fileName;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ a.remove(); URL.revokeObjectURL(href); }, 1000);
+  }, "image/png");
+});
+document.getElementById("qrCopy").addEventListener("click", function(){
+  var b = this, url = qrUrl();
+  function done(){ b.textContent = "복사됨"; setTimeout(function(){ b.textContent = "주소 복사"; }, 1500); }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(done, function(){ window.prompt("아래 주소를 복사하세요", url); });
+  } else { window.prompt("아래 주소를 복사하세요", url); }
+});
 
 function load(){
   if (!fromEl.value || !toEl.value) return;
@@ -273,6 +386,7 @@ fetch("api/auth.php").then(function(r){ return r.json(); }).then(function(res){
   document.getElementById("loadingMsg").style.display = "none";
   document.getElementById("mainArea").style.display = "block";
   renderUrls();
+  refreshQr();
   setPreset("28");
 }).catch(function(){
   document.getElementById("loadingMsg").textContent = "서버(api)에 접속할 수 없습니다.";

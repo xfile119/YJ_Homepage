@@ -18,6 +18,13 @@
     kakao: "카카오",
     kakao_channel: "카카오톡 채널",
     sns: "인스타그램·페이스북",
+    naver_blog: "네이버 블로그",
+    instagram: "인스타그램",
+    youtube: "유튜브",
+    flyer: "전단 (QR)",
+    banner: "현수막 (QR)",
+    poster: "포스터·게시물 (QR)",
+    namecard: "명함 (QR)",
     direct: "직접 방문·알 수 없음"
   };
   window.YJ_CHANNEL = {
@@ -27,9 +34,10 @@
       if (src.indexOf("ref:") === 0) return "다른 사이트 (" + src.slice(4) + ")";
       return src;
     },
-    /* 돈을 내는 광고 경로인지 (광고비 입력칸을 보여줄지 판단) */
+    /* 비용이 드는 경로인지 (광고비 입력칸을 보여줄지 판단) — 전단·현수막 인쇄비도 포함 */
     isPaid: function (src) {
-      return /(_ad|powerlink)$/.test(String(src || "")) || src === "naver_ad";
+      src = String(src || "");
+      return /(_ad|powerlink)$/.test(src) || src === "naver_ad" || /^(flyer|banner|poster)$/.test(src);
     }
   };
 })();
