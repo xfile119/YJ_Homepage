@@ -3,7 +3,7 @@
    이 파일이 사이트의 다른 페이지(관리자 화면 포함)에 영향을 주지 않습니다.
    PHP 서버 없이도 마지막으로 받은 화면·데이터로 켤 수 있게 하는 게 목적입니다. */
 
-var CACHE_NAME = "yj-license-guide-v2";
+var CACHE_NAME = "yj-license-guide-v4";
 var APP_SHELL = [
   "license-guide.html",
   "css/style.css",

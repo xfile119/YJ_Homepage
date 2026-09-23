@@ -39,6 +39,8 @@
   .tool-card-body { flex: 1 1 auto; min-width: 0; }
   .tool-card h3 { font-size: 15.5px; font-weight: 800; color: var(--color-ink); margin-bottom: 4px; }
   .tool-card p { font-size: 12.5px; color: var(--color-muted); line-height: 1.6; }
+  .tool-card.has-new { border-color: #E0413A; box-shadow: 0 0 0 1px #E0413A; }
+  .new-badge { display: inline-block; margin-left: 8px; padding: 2px 9px; border-radius: 999px; background: #E0413A; color: #fff; font-size: 12px; font-weight: 800; vertical-align: middle; }
   .tool-card .btn { flex: none; }
   @media (max-width: 480px) {
     /* 화면이 아주 좁으면 그때는 버튼을 아래로 내려 줄바꿈을 허용합니다 */
@@ -78,10 +80,10 @@
     <h2 style="font-size:16px;font-weight:800;color:var(--color-ink);margin-bottom:6px;">관리 도구</h2>
     <p id="whoAmI" style="font-size:13px;color:var(--color-muted);margin-bottom:18px;"></p>
     <div class="tool-list">
-      <div class="tool-card" data-role="admin,manager">
+      <div class="tool-card" data-role="admin,manager" id="msgCard">
         <div class="tool-card-body">
-          <h3>문의 관리</h3>
-          <p>상담문의 페이지의 "문의 남기기" 양식으로 접수된 이름·연락처·문의내용 확인</p>
+          <h3>문의 관리<span class="new-badge" id="msgBadge" hidden></span></h3>
+          <p>상담문의 페이지의 "문의 남기기"와 면허 탐색기의 "상담 신청하기"로 접수된 문의 확인</p>
         </div>
         <a href="admin-messages.html" class="btn btn-primary btn-sm">열기</a>
       </div>
@@ -172,6 +174,7 @@ function showUnlocked(username, roles){
     var ok = roles.some(function(r){ return allowed.indexOf(r) >= 0; });
     el.style.display = ok ? "" : "none";
   });
+  loadUnreadBadge(roles);
   var who = document.getElementById("whoAmI");
   if (username) {
     var labels = roles.map(function(r){ return ROLE_LABEL[r] || r; }).join(" · ");
@@ -179,6 +182,18 @@ function showUnlocked(username, roles){
   } else {
     who.textContent = "";
   }
+}
+/* 안 읽은 문의가 있으면 "문의 관리" 카드에 "새 문의 N" 뱃지를 붙입니다.
+   문의를 볼 수 있는 역할(최고관리자·사무실)일 때만 물어봅니다. */
+function loadUnreadBadge(roles){
+  if (roles.indexOf("admin") < 0 && roles.indexOf("manager") < 0) return;
+  fetch("api/contact.php?count=unread").then(function(r){ return r.ok ? r.json() : null; }).then(function(res){
+    var n = res && typeof res.unread === "number" ? res.unread : 0;
+    var badge = document.getElementById("msgBadge");
+    badge.hidden = n <= 0;
+    badge.textContent = "새 문의 " + n;
+    document.getElementById("msgCard").classList.toggle("has-new", n > 0);
+  }).catch(function(){});
 }
 function showError(msg){
   loginError.textContent = msg;

@@ -87,6 +87,15 @@ CREATE TABLE IF NOT EXISTS {prefix}contact_messages (
   message TEXT NOT NULL,
   -- 'unread' = 원장님이 아직 확인 안 함, 'read' = 확인함
   status VARCHAR(10) NOT NULL DEFAULT 'unread',
+  -- 어디서 들어온 문의인지: '' = 상담문의 페이지, 'license' = 면허 탐색기 결과의 "상담 신청하기"
+  source VARCHAR(20) NOT NULL DEFAULT '',
+  -- 아래는 면허 탐색기 상담 신청일 때만 채워집니다 (과정별 문의 통계를 낼 수 있게 따로 저장)
+  course_code VARCHAR(20) NOT NULL DEFAULT '',
+  course_title VARCHAR(100) NOT NULL DEFAULT '',
+  course_path VARCHAR(255) NOT NULL DEFAULT '',
+  est_total VARCHAR(30) NOT NULL DEFAULT '',
+  -- 학생이 고른 연락 가능한 시간 (09:00~18:00, 30분 단위, 예: "14:30")
+  contact_time VARCHAR(5) NOT NULL DEFAULT '',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

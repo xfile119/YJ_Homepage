@@ -216,6 +216,16 @@ yj_ensure_column($pdo, $prefix . 'admin_users', 'staff_id', "INT NULL DEFAULT NU
    yj_session_is_valid()에서 로그인 시 세션에 저장해둔 값과 비교합니다. */
 yj_ensure_column($pdo, $prefix . 'admin_users', 'session_version', 'INT NOT NULL DEFAULT 1');
 
+/* 면허 탐색기 결과의 "상담 신청하기"로 들어온 문의는 과정·예상금액·연락 가능한
+   시간을 문의 내용에 섞지 않고 따로 저장합니다 (과정별 문의 통계용).
+   api/contact.php의 yj_contact_ensure_schema()와 반드시 같게 유지하세요. */
+yj_ensure_column($pdo, $prefix . 'contact_messages', 'source', "VARCHAR(20) NOT NULL DEFAULT ''");
+yj_ensure_column($pdo, $prefix . 'contact_messages', 'course_code', "VARCHAR(20) NOT NULL DEFAULT ''");
+yj_ensure_column($pdo, $prefix . 'contact_messages', 'course_title', "VARCHAR(100) NOT NULL DEFAULT ''");
+yj_ensure_column($pdo, $prefix . 'contact_messages', 'course_path', "VARCHAR(255) NOT NULL DEFAULT ''");
+yj_ensure_column($pdo, $prefix . 'contact_messages', 'est_total', "VARCHAR(30) NOT NULL DEFAULT ''");
+yj_ensure_column($pdo, $prefix . 'contact_messages', 'contact_time', "VARCHAR(5) NOT NULL DEFAULT ''");
+
 /* role은 원래 VARCHAR(20)으로 만들어졌는데, 겸직 지원으로 쉼표 구분 여러 값
    ("admin,manager,office,instructor" 이면 32자)을 담아야 해서 넓혀둡니다. */
 function yj_widen_column($pdo, $table, $column, $definition, $minLength) {

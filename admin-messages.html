@@ -38,6 +38,11 @@
   .msg-status.unread { background: var(--color-primary); color: #fff; }
   .msg-status.read { background: var(--color-line); color: var(--color-muted); }
   .msg-body { font-size: 14px; color: var(--color-body); line-height: 1.7; white-space: pre-wrap; margin-bottom: 12px; }
+  .msg-src { display: inline-block; font-size: 11.5px; font-weight: 800; color: var(--color-primary); background: #fff; border: 1px solid var(--color-primary); border-radius: 999px; padding: 1px 9px; margin-bottom: 8px; }
+  .msg-consult { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13.5px; line-height: 1.6; background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 10px; }
+  .msg-consult dt { color: var(--color-muted); font-weight: 700; }
+  .msg-consult dd { margin: 0; color: var(--color-ink); }
+  .msg-consult .msg-time { font-weight: 800; color: var(--color-primary); font-size: 15px; }
   .msg-actions { display: flex; gap: 8px; flex-wrap: wrap; }
   .msg-actions button {
     border: 1px solid var(--color-line); background: #fff; border-radius: var(--radius-sm);
@@ -96,6 +101,19 @@ function telHref(phone){
   return "tel:" + String(phone || "").replace(/[^0-9+]/g, "");
 }
 
+/* 면허 탐색기 "상담 신청하기"로 들어온 문의는 과정·예상금액·연락 가능한 시간을
+   따로 보여줍니다 (상담원이 전화 걸기 전에 한눈에 보도록). */
+function consultHtml(row){
+  if (row.source !== "license") return "";
+  return '<span class="msg-src">면허 탐색기 상담 신청</span>' +
+    '<dl class="msg-consult">' +
+      '<dt>연락 가능</dt><dd class="msg-time">' + esc(row.contactTime || "-") + '</dd>' +
+      '<dt>과정</dt><dd>' + esc(row.courseTitle) + (row.courseCode ? ' (코드 ' + esc(row.courseCode) + ')' : '') + '</dd>' +
+      (row.coursePath ? '<dt>선택 경로</dt><dd>' + esc(row.coursePath) + '</dd>' : '') +
+      (row.estTotal ? '<dt>예상 합계</dt><dd>' + esc(row.estTotal) + '</dd>' : '') +
+    '</dl>';
+}
+
 function render(){
   msgList.innerHTML = "";
   emptyNote.style.display = DATA.length ? "none" : "block";
@@ -112,7 +130,8 @@ function render(){
         '</span>' +
         '<span class="msg-date">' + esc(row.createdAt) + '</span>' +
       '</div>' +
-      '<div class="msg-body">' + esc(row.message) + '</div>' +
+      consultHtml(row) +
+      (row.message ? '<div class="msg-body">' + (row.source === "license" ? "추가 문의: " : "") + esc(row.message) + '</div>' : '') +
       '<div class="msg-actions">' +
         '<button type="button" class="btn-toggle-status">' + (row.status === "unread" ? "읽음 처리" : "안읽음으로") + '</button>' +
         '<button type="button" class="btn-del danger">삭제</button>' +
@@ -150,7 +169,8 @@ function render(){
 }
 
 fetch("api/auth.php").then(function(r){ return r.json(); }).then(function(res){
-  if (!res || !res.loggedIn || res.role === "office") {
+  var roles = (res && res.roles) || [];
+  if (!res || !res.loggedIn || (roles.indexOf("admin") < 0 && roles.indexOf("manager") < 0)) {
     location.href = "admin.html";
     return;
   }
