@@ -43,6 +43,8 @@
   .msg-consult dt { color: var(--color-muted); font-weight: 700; }
   .msg-consult dd { margin: 0; color: var(--color-ink); }
   .msg-consult .msg-time { font-weight: 800; color: var(--color-primary); font-size: 15px; }
+  .msg-channel { font-size: 12px; color: var(--color-muted); margin: -2px 0 8px; }
+  .msg-channel b { color: var(--color-ink); font-weight: 700; }
   .msg-actions { display: flex; gap: 8px; flex-wrap: wrap; }
   .msg-actions button {
     border: 1px solid var(--color-line); background: #fff; border-radius: var(--radius-sm);
@@ -83,6 +85,7 @@
   </div>
 </div>
 
+<script src="js/yj-channels.js"></script>
 <script>
 (function(){
 "use strict";
@@ -115,6 +118,13 @@ function consultHtml(row){
     '</dl>';
 }
 
+/* 이 문의가 어디서 들어온 사람인지 (광고·검색 등). 측정 기능 이전 문의는 비어 있습니다. */
+function channelHtml(row){
+  if (!row.channel) return "";
+  return '<div class="msg-channel">유입: <b>' + esc(YJ_CHANNEL.label(row.channel)) + '</b>' +
+    (row.adKeyword ? ' · 광고 키워드 "' + esc(row.adKeyword) + '"' : '') + '</div>';
+}
+
 function render(){
   msgList.innerHTML = "";
   emptyNote.style.display = DATA.length ? "none" : "block";
@@ -131,6 +141,7 @@ function render(){
         '</span>' +
         '<span class="msg-date">' + esc(row.createdAt) + '</span>' +
       '</div>' +
+      channelHtml(row) +
       consultHtml(row) +
       (row.message ? '<div class="msg-body">' + (row.source === "license" ? "추가 문의: " : "") + esc(row.message) + '</div>' : '') +
       '<div class="msg-actions">' +

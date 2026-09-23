@@ -226,6 +226,42 @@ function yj_ensure_auth_schema() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 }
 
+/* 유입 경로 측정 기록 한 건 (api/track.php, api/contact.php에서 씀).
+   개인정보 없이 이벤트 종류·유입 경로·광고 키워드·페이지만 남깁니다.
+   테이블이 아직 없으면(setup.php를 안 돌린 경우) 만들고 다시 넣습니다 —
+   정의는 db/setup.php와 같게 유지하세요. */
+function yj_track_record($event, $src, $kw, $page) {
+    $src = strtolower(preg_replace('/[^A-Za-z0-9_.:-]/', '', (string)$src));
+    $src = substr($src, 0, 40);
+    if ($src === '') { $src = 'direct'; }
+    /* utf8 칼럼이라 이모지 같은 4바이트 문자는 뺍니다 */
+    $kw = trim(preg_replace('/[\x00-\x1f<>"\'`\x{10000}-\x{10FFFF}]/u', '', (string)$kw));
+    $kw = function_exists('mb_substr') ? mb_substr($kw, 0, 60) : substr($kw, 0, 60);
+    $page = substr(preg_replace('/[^A-Za-z0-9_.-]/', '', (string)$page), 0, 60);
+
+    $t = yj_table('track_events');
+    $db = yj_db();
+    $sql = "INSERT INTO $t (event, src, kw, page) VALUES (?, ?, ?, ?)";
+    try {
+        $db->prepare($sql)->execute([$event, $src, $kw, $page]);
+    } catch (Exception $e) {
+        $db->exec("CREATE TABLE IF NOT EXISTS $t (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          event VARCHAR(20) NOT NULL DEFAULT '',
+          src VARCHAR(40) NOT NULL DEFAULT '',
+          kw VARCHAR(60) NOT NULL DEFAULT '',
+          page VARCHAR(60) NOT NULL DEFAULT '',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX idx_time (created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+        $db->prepare($sql)->execute([$event, $src, $kw, $page]);
+    }
+    /* 13개월 지난 기록은 가끔(1% 확률) 정리 */
+    if (mt_rand(1, 100) === 1) {
+        $db->exec("DELETE FROM $t WHERE created_at < (NOW() - INTERVAL 13 MONTH)");
+    }
+}
+
 /* 로그인 무차별 대입(비밀번호 자동 시도) 방지 — 같은 IP에서 15분 안에 로그인
    실패가 너무 많으면 잠깐 막습니다. 세션 카운터(셔틀/필기시험 조회 제한처럼)는
    쿠키를 새로 받으면 바로 우회되므로 로그인처럼 값이 큰 대상에는 약해서,

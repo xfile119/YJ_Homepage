@@ -4,7 +4,7 @@
    license-guide.html의 sw-license-guide.js와 같은 구조이며, 위저드 엔진
    (js/license-wizard.js)을 공유하므로 같이 캐시해둡니다. */
 
-var CACHE_NAME = "yj-license-picker-v4";
+var CACHE_NAME = "yj-license-picker-v5";
 var APP_SHELL = [
   "license-picker.html",
   "css/style.css",

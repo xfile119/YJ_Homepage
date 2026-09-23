@@ -13,6 +13,17 @@ function yj_contact_ensure_schema($table) {
     yj_db_ensure_column($table, 'course_path', "VARCHAR(255) NOT NULL DEFAULT ''");
     yj_db_ensure_column($table, 'est_total', "VARCHAR(30) NOT NULL DEFAULT ''");
     yj_db_ensure_column($table, 'contact_time', "VARCHAR(5) NOT NULL DEFAULT ''");
+    yj_db_ensure_column($table, 'channel', "VARCHAR(40) NOT NULL DEFAULT ''");
+    yj_db_ensure_column($table, 'ad_keyword', "VARCHAR(60) NOT NULL DEFAULT ''");
+}
+
+/* 이 문의가 어디서 들어온 사람인지 (js/main.js의 YJ_ATTR 값). 개인정보 아님. */
+function yj_contact_attr($body) {
+    $src = strtolower(preg_replace('/[^A-Za-z0-9_.:-]/', '', (string)(isset($body['attrSrc']) ? $body['attrSrc'] : '')));
+    $src = substr($src, 0, 40);
+    $kw = trim(preg_replace('/[\x00-\x1f<>"\'`\x{10000}-\x{10FFFF}]/u', '', (string)(isset($body['attrKw']) ? $body['attrKw'] : '')));
+    $kw = mb_substr($kw, 0, 60);
+    return [$src !== '' ? $src : 'direct', $kw];
 }
 
 /* 개인정보처리방침 제2조: 홈페이지 문의(문의 남기기·면허 탐색기 상담 신청)는
@@ -34,7 +45,7 @@ if ($method === 'GET') {
         yj_json(['unread' => $n]);
     }
 
-    $stmt = yj_db()->query("SELECT id, name, phone, message, status, source, course_code, course_title, course_path, est_total, contact_time, created_at FROM $table ORDER BY id DESC");
+    $stmt = yj_db()->query("SELECT id, name, phone, message, status, source, course_code, course_title, course_path, est_total, contact_time, channel, ad_keyword, created_at FROM $table ORDER BY id DESC");
     $rows = $stmt->fetchAll();
     $messages = array_map(function ($r) {
         return [
@@ -49,6 +60,8 @@ if ($method === 'GET') {
             'coursePath' => $r['course_path'],
             'estTotal' => $r['est_total'],
             'contactTime' => $r['contact_time'],
+            'channel' => $r['channel'],
+            'adKeyword' => $r['ad_keyword'],
             'createdAt' => $r['created_at'],
         ];
     }, $rows);
@@ -80,8 +93,11 @@ if ($action === 'submit') {
         yj_json(['error' => '입력한 내용이 너무 깁니다.'], 400);
     }
 
-    $stmt = yj_db()->prepare("INSERT INTO $table (name, phone, message, status) VALUES (?, ?, ?, 'unread')");
-    $stmt->execute([$name, $phone, $message]);
+    list($attrSrc, $attrKw) = yj_contact_attr($body);
+    yj_contact_ensure_schema($table);
+    $stmt = yj_db()->prepare("INSERT INTO $table (name, phone, message, status, channel, ad_keyword) VALUES (?, ?, ?, 'unread', ?, ?)");
+    $stmt->execute([$name, $phone, $message, $attrSrc, $attrKw]);
+    yj_track_record('contact', $attrSrc, $attrKw, 'contact.html');
     yj_json(['ok' => true]);
 }
 
@@ -132,12 +148,14 @@ if ($action === 'consult') {
     $tries[] = $now;
     $_SESSION['yj_consult_try'] = $tries;
 
+    list($attrSrc, $attrKw) = yj_contact_attr($body);
     yj_contact_ensure_schema($table);
     $stmt = yj_db()->prepare(
-        "INSERT INTO $table (name, phone, message, status, source, course_code, course_title, course_path, est_total, contact_time)
-         VALUES (?, ?, ?, 'unread', 'license', ?, ?, ?, ?, ?)"
+        "INSERT INTO $table (name, phone, message, status, source, course_code, course_title, course_path, est_total, contact_time, channel, ad_keyword)
+         VALUES (?, ?, ?, 'unread', 'license', ?, ?, ?, ?, ?, ?, ?)"
     );
-    $stmt->execute([$name, $phone, $message, $courseCode, $courseTitle, $coursePath, $estTotal, $contactTime]);
+    $stmt->execute([$name, $phone, $message, $courseCode, $courseTitle, $coursePath, $estTotal, $contactTime, $attrSrc, $attrKw]);
+    yj_track_record('consult', $attrSrc, $attrKw, 'license');
     yj_json(['ok' => true]);
 }
 

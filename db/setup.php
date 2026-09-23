@@ -226,6 +226,22 @@ yj_ensure_column($pdo, $prefix . 'contact_messages', 'course_path', "VARCHAR(255
 yj_ensure_column($pdo, $prefix . 'contact_messages', 'est_total', "VARCHAR(30) NOT NULL DEFAULT ''");
 yj_ensure_column($pdo, $prefix . 'contact_messages', 'contact_time', "VARCHAR(5) NOT NULL DEFAULT ''");
 
+/* 유입 경로 측정: 문의가 어디서 들어온 사람인지(광고·검색 등)와 광고 키워드.
+   경로별 방문·클릭·상담 건수는 개인정보 없이 track_events에 따로 쌓습니다
+   (문의는 1개월 뒤 파기되지만 통계는 13개월 유지). api/_db.php의
+   yj_track_record()·api/contact.php와 정의를 같게 유지하세요. */
+yj_ensure_column($pdo, $prefix . 'contact_messages', 'channel', "VARCHAR(40) NOT NULL DEFAULT ''");
+yj_ensure_column($pdo, $prefix . 'contact_messages', 'ad_keyword', "VARCHAR(60) NOT NULL DEFAULT ''");
+$pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}track_events (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  event VARCHAR(20) NOT NULL DEFAULT '',
+  src VARCHAR(40) NOT NULL DEFAULT '',
+  kw VARCHAR(60) NOT NULL DEFAULT '',
+  page VARCHAR(60) NOT NULL DEFAULT '',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_time (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
 /* role은 원래 VARCHAR(20)으로 만들어졌는데, 겸직 지원으로 쉼표 구분 여러 값
    ("admin,manager,office,instructor" 이면 32자)을 담아야 해서 넓혀둡니다. */
 function yj_widen_column($pdo, $table, $column, $definition, $minLength) {

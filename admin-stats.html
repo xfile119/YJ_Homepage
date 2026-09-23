@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>광고·유입 성과 (비공개)</title>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<style>
+  body { background: var(--color-surface); }
+  .admin-shell { max-width: 1080px; margin: 0 auto; padding: 32px 24px 80px; }
+  .admin-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+  .admin-header h1 { font-size: 22px; font-weight: 800; color: var(--color-ink); }
+  .admin-section { background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-lg); padding: 22px; margin-bottom: 20px; }
+  .admin-section h2 { font-size: 16px; font-weight: 800; color: var(--color-ink); margin-bottom: 6px; }
+  .admin-note { font-size: 12.5px; color: var(--color-muted); margin-bottom: 14px; line-height: 1.7; }
+  .period { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 4px; }
+  .period button { border: 1px solid var(--color-line); background: #fff; border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 700; color: var(--color-ink); cursor: pointer; font-family: inherit; }
+  .period button.is-on { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+  .period input[type=date] { border: 1px solid var(--color-line); border-radius: 8px; padding: 6px 8px; font-size: 13px; font-family: inherit; }
+  .range-text { font-size: 13px; color: var(--color-muted); margin-top: 8px; }
+  .table-wrap { overflow-x: auto; }
+  table.stats { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 760px; }
+  table.stats th, table.stats td { padding: 10px 10px; border-bottom: 1px solid var(--color-line); text-align: right; white-space: nowrap; }
+  table.stats th { font-size: 12px; color: var(--color-muted); font-weight: 700; background: var(--color-surface); }
+  table.stats th:first-child, table.stats td:first-child { text-align: left; white-space: normal; }
+  table.stats td.num { font-variant-numeric: tabular-nums; }
+  table.stats tr.total td { font-weight: 800; border-top: 2px solid var(--color-ink); }
+  table.stats td.lead { font-weight: 800; color: var(--color-primary); }
+  table.stats .paid-tag { display: inline-block; font-size: 11px; font-weight: 800; color: #9a5b12; background: #fbedda; border-radius: 999px; padding: 1px 7px; margin-left: 6px; }
+  table.stats input.cost { width: 96px; text-align: right; border: 1px solid var(--color-line); border-radius: 6px; padding: 5px 6px; font-size: 13px; font-family: inherit; }
+  .muted { color: var(--color-muted); }
+  .empty { padding: 18px 4px; color: var(--color-muted); font-size: 13.5px; }
+  .url-list { display: flex; flex-direction: column; gap: 8px; }
+  .url-row { display: grid; grid-template-columns: 200px 1fr auto; gap: 10px; align-items: center; font-size: 13px; }
+  .url-row code { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 6px; padding: 6px 8px; overflow-x: auto; white-space: nowrap; }
+  .url-row button { border: 1px solid var(--color-line); background: #fff; border-radius: 6px; padding: 6px 10px; font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .guide li { margin: 0 0 6px 18px; font-size: 13px; line-height: 1.7; color: var(--color-body); list-style: disc; }
+  @media (max-width: 640px) { .url-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="admin-shell">
+  <div class="admin-header">
+    <h1>광고·유입 성과</h1>
+    <a href="admin.html" class="btn btn-outline btn-sm">← 관리자 메인</a>
+  </div>
+
+  <p id="loadingMsg">불러오는 중...</p>
+
+  <div id="mainArea" style="display:none">
+    <div class="admin-section">
+      <h2>기간</h2>
+      <div class="period" id="period">
+        <button type="button" data-p="7">최근 7일</button>
+        <button type="button" data-p="28" class="is-on">최근 28일</button>
+        <button type="button" data-p="this">이번 달</button>
+        <button type="button" data-p="last">지난 달</button>
+        <input type="date" id="fromDate" aria-label="시작일"> ~ <input type="date" id="toDate" aria-label="종료일">
+      </div>
+      <p class="range-text" id="rangeText"></p>
+    </div>
+
+    <div class="admin-section">
+      <h2>유입 경로별</h2>
+      <p class="admin-note">
+        <b>문의·신청</b>은 실제로 접수까지 끝난 건수(면허 탐색기 상담 신청 + 문의 남기기)입니다.
+        <b>전화·카톡·톡톡</b>은 버튼을 누른 횟수라, 실제로 통화·상담이 이뤄졌는지는 알 수 없습니다.
+        광고 경로에 그 기간 광고비를 넣으면 1건당 비용을 계산합니다(입력값은 이 브라우저에만 저장).
+      </p>
+      <div class="table-wrap"><table class="stats" id="srcTable"></table></div>
+    </div>
+
+    <div class="admin-section">
+      <h2>광고 키워드별</h2>
+      <p class="admin-note">네이버 검색광고의 추적 설정을 켜두면 광고 클릭에 키워드가 같이 붙어 와서 여기에 모입니다. 비어 있으면 아직 키워드가 붙은 방문이 없는 것입니다.</p>
+      <div class="table-wrap"><table class="stats" id="kwTable"></table></div>
+    </div>
+
+    <div class="admin-section">
+      <h2>광고에 넣을 주소</h2>
+      <p class="admin-note">
+        광고나 업체 정보의 "홈페이지 주소" 칸에 아래 주소를 그대로 넣으면 그 경로로 들어온 방문이 따로 집계됩니다.
+        주소 끝의 <code>?src=…</code>는 검색 순위에 영향을 주지 않습니다(각 페이지에 대표 주소가 지정돼 있음).
+      </p>
+      <div class="url-list" id="urlList"></div>
+    </div>
+
+    <div class="admin-section">
+      <h2>이 화면으로 알 수 없는 것</h2>
+      <ul class="guide">
+        <li><b>네이버 플레이스 안에서 바로 건 전화·길찾기</b>는 홈페이지를 거치지 않아서 여기 안 잡힙니다. 스마트플레이스·광고 관리 화면의 통계를 함께 보세요.</li>
+        <li><b>광고 노출·클릭 수와 실제 광고비</b>는 네이버 광고 보고서가 정확합니다. 여기의 "방문"은 광고 클릭 뒤 실제로 페이지가 열린 수라 광고 클릭 수보다 조금 적을 수 있습니다.</li>
+        <li>같은 사람이 광고로 들어왔다가 며칠 뒤 직접 다시 와서 신청하면, 30일 안이면 처음 광고 경로로 집계합니다.</li>
+        <li>이름·전화번호 같은 개인정보는 이 통계에 저장하지 않습니다. 기록은 13개월 뒤 자동으로 지워집니다.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script src="js/yj-channels.js"></script>
+<script>
+(function(){
+"use strict";
+
+var SITE = "https://www.yjcdrive.co.kr/";
+var AD_URLS = [
+  ["파워링크 → 면허 탐색기", "license-picker.html?src=naver_powerlink"],
+  ["파워링크 → 도로연수", "driving-lessons.html?src=naver_powerlink"],
+  ["파워링크 → 대형연수", "large-vehicle-training.html?src=naver_powerlink"],
+  ["파워링크 → 홈", "?src=naver_powerlink"],
+  ["스마트플레이스 홈페이지 칸", "?src=naver_place"],
+  ["구글 비즈니스 프로필 웹사이트 칸", "?src=google_business"],
+  ["당근 광고", "?src=daangn_ad"],
+  ["카카오톡 채널 홈 링크", "?src=kakao_channel"]
+];
+
+function esc(s){
+  return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function ymd(d){
+  return d.getFullYear() + "-" + ("0" + (d.getMonth()+1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+}
+function num(n){ return (n || 0).toLocaleString("ko-KR"); }
+function won(n){ return Math.round(n).toLocaleString("ko-KR") + "원"; }
+
+var fromEl = document.getElementById("fromDate");
+var toEl = document.getElementById("toDate");
+
+function setPreset(p){
+  var today = new Date(); today.setHours(0,0,0,0);
+  var from, to = new Date(today);
+  if (p === "7" || p === "28") { from = new Date(today); from.setDate(from.getDate() - (+p - 1)); }
+  else if (p === "this") { from = new Date(today.getFullYear(), today.getMonth(), 1); }
+  else if (p === "last") { from = new Date(today.getFullYear(), today.getMonth() - 1, 1); to = new Date(today.getFullYear(), today.getMonth(), 0); }
+  fromEl.value = ymd(from); toEl.value = ymd(to);
+  [].forEach.call(document.querySelectorAll("#period button"), function(b){ b.classList.toggle("is-on", b.getAttribute("data-p") === p); });
+  load();
+}
+
+function costKey(src){ return "yj_adcost:" + fromEl.value + ":" + toEl.value + ":" + src; }
+function getCost(src){ try { return localStorage.getItem(costKey(src)) || ""; } catch (e) { return ""; } }
+function setCost(src, v){ try { localStorage.setItem(costKey(src), v); } catch (e) {} }
+
+function aggregate(rows, keyFn){
+  var map = {};
+  rows.forEach(function(r){
+    var k = keyFn(r);
+    var o = map[k] || (map[k] = { key: k, src: r.src, kw: r.kw || "", visit: 0, consult: 0, contact: 0, call: 0, kakao: 0, talk: 0 });
+    if (o.hasOwnProperty(r.event)) o[r.event] += +r.n;
+  });
+  return Object.keys(map).map(function(k){
+    var o = map[k];
+    o.leads = o.consult + o.contact;
+    o.clicks = o.call + o.kakao + o.talk;
+    return o;
+  }).sort(function(a, b){ return (b.leads - a.leads) || (b.visit - a.visit); });
+}
+
+function rate(a, b){ return b ? (a / b * 100).toFixed(1) + "%" : "-"; }
+
+function renderSources(rows){
+  var t = document.getElementById("srcTable");
+  var list = aggregate(rows, function(r){ return r.src; });
+  if (!list.length) { t.innerHTML = '<tr><td class="empty">이 기간에 기록이 없습니다.</td></tr>'; return; }
+  var tot = { visit:0, consult:0, contact:0, call:0, kakao:0, talk:0, leads:0, clicks:0 };
+  var html = '<tr><th>경로</th><th>방문</th><th>상담 신청</th><th>문의 남기기</th><th>문의·신청 합계</th><th>전환율</th>' +
+    '<th>전화</th><th>카톡·톡톡</th><th>광고비</th><th>문의·신청 1건당</th><th>연락 클릭 포함 1건당</th></tr>';
+  list.forEach(function(o){
+    Object.keys(tot).forEach(function(k){ tot[k] += o[k]; });
+    var paid = YJ_CHANNEL.isPaid(o.src);
+    var cost = paid ? getCost(o.src) : "";
+    var c = parseFloat(String(cost).replace(/[^0-9.]/g, "")) || 0;
+    html += '<tr data-src="' + esc(o.src) + '">' +
+      '<td>' + esc(YJ_CHANNEL.label(o.src)) + (paid ? '<span class="paid-tag">광고</span>' : '') + '</td>' +
+      '<td class="num">' + num(o.visit) + '</td>' +
+      '<td class="num">' + num(o.consult) + '</td>' +
+      '<td class="num">' + num(o.contact) + '</td>' +
+      '<td class="num lead">' + num(o.leads) + '</td>' +
+      '<td class="num">' + rate(o.leads, o.visit) + '</td>' +
+      '<td class="num">' + num(o.call) + '</td>' +
+      '<td class="num">' + num(o.kakao + o.talk) + '</td>' +
+      '<td>' + (paid ? '<input class="cost" inputmode="numeric" placeholder="원" value="' + esc(cost) + '">' : '<span class="muted">-</span>') + '</td>' +
+      '<td class="num cpl">' + (c && o.leads ? won(c / o.leads) : '<span class="muted">-</span>') + '</td>' +
+      '<td class="num cpa">' + (c && (o.leads + o.clicks) ? won(c / (o.leads + o.clicks)) : '<span class="muted">-</span>') + '</td>' +
+      '</tr>';
+  });
+  html += '<tr class="total"><td>합계</td><td class="num">' + num(tot.visit) + '</td><td class="num">' + num(tot.consult) + '</td>' +
+    '<td class="num">' + num(tot.contact) + '</td><td class="num lead">' + num(tot.leads) + '</td><td class="num">' + rate(tot.leads, tot.visit) + '</td>' +
+    '<td class="num">' + num(tot.call) + '</td><td class="num">' + num(tot.kakao + tot.talk) + '</td><td></td><td></td><td></td></tr>';
+  t.innerHTML = html;
+
+  [].forEach.call(t.querySelectorAll("input.cost"), function(inp){
+    inp.addEventListener("input", function(){
+      var tr = inp.closest("tr");
+      var src = tr.getAttribute("data-src");
+      setCost(src, inp.value);
+      var o = list.filter(function(x){ return x.src === src; })[0];
+      var c = parseFloat(inp.value.replace(/[^0-9.]/g, "")) || 0;
+      tr.querySelector(".cpl").innerHTML = c && o.leads ? won(c / o.leads) : '<span class="muted">-</span>';
+      tr.querySelector(".cpa").innerHTML = c && (o.leads + o.clicks) ? won(c / (o.leads + o.clicks)) : '<span class="muted">-</span>';
+    });
+  });
+}
+
+function renderKeywords(rows){
+  var t = document.getElementById("kwTable");
+  var list = aggregate(rows, function(r){ return r.src + "\u0000" + r.kw; });
+  if (!list.length) { t.innerHTML = '<tr><td class="empty">이 기간에 키워드가 붙은 기록이 없습니다.</td></tr>'; return; }
+  var html = '<tr><th>키워드</th><th style="text-align:left">경로</th><th>방문</th><th>문의·신청</th><th>전환율</th><th>연락 클릭</th></tr>';
+  list.forEach(function(o){
+    html += '<tr><td>' + esc(o.kw) + '</td><td style="text-align:left">' + esc(YJ_CHANNEL.label(o.src)) + '</td>' +
+      '<td class="num">' + num(o.visit) + '</td><td class="num lead">' + num(o.leads) + '</td>' +
+      '<td class="num">' + rate(o.leads, o.visit) + '</td><td class="num">' + num(o.clicks) + '</td></tr>';
+  });
+  t.innerHTML = html;
+}
+
+function renderUrls(){
+  var box = document.getElementById("urlList");
+  box.innerHTML = AD_URLS.map(function(u){
+    return '<div class="url-row"><span>' + esc(u[0]) + '</span><code>' + esc(SITE + u[1]) + '</code>' +
+      '<button type="button" data-url="' + esc(SITE + u[1]) + '">복사</button></div>';
+  }).join("");
+  [].forEach.call(box.querySelectorAll("button"), function(b){
+    b.addEventListener("click", function(){
+      var url = b.getAttribute("data-url");
+      function done(){ b.textContent = "복사됨"; setTimeout(function(){ b.textContent = "복사"; }, 1500); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(done, function(){ window.prompt("아래 주소를 복사하세요", url); });
+      } else { window.prompt("아래 주소를 복사하세요", url); }
+    });
+  });
+}
+
+function load(){
+  if (!fromEl.value || !toEl.value) return;
+  document.getElementById("rangeText").textContent = fromEl.value + " ~ " + toEl.value;
+  fetch("api/track.php?from=" + encodeURIComponent(fromEl.value) + "&to=" + encodeURIComponent(toEl.value))
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      renderSources((res && res.bySource) || []);
+      renderKeywords((res && res.byKeyword) || []);
+    })
+    .catch(function(){
+      document.getElementById("srcTable").innerHTML = '<tr><td class="empty">서버에서 통계를 불러오지 못했습니다.</td></tr>';
+    });
+}
+
+[].forEach.call(document.querySelectorAll("#period button"), function(b){
+  b.addEventListener("click", function(){ setPreset(b.getAttribute("data-p")); });
+});
+[fromEl, toEl].forEach(function(el){
+  el.addEventListener("change", function(){
+    [].forEach.call(document.querySelectorAll("#period button"), function(b){ b.classList.remove("is-on"); });
+    load();
+  });
+});
+
+fetch("api/auth.php").then(function(r){ return r.json(); }).then(function(res){
+  var roles = (res && res.roles) || [];
+  if (!res || !res.loggedIn || (roles.indexOf("admin") < 0 && roles.indexOf("manager") < 0)) {
+    location.href = "admin.html";
+    return;
+  }
+  document.getElementById("loadingMsg").style.display = "none";
+  document.getElementById("mainArea").style.display = "block";
+  renderUrls();
+  setPreset("28");
+}).catch(function(){
+  document.getElementById("loadingMsg").textContent = "서버(api)에 접속할 수 없습니다.";
+});
+
+})();
+</script>
+</body>
+</html>

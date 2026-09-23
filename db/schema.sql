@@ -96,7 +96,21 @@ CREATE TABLE IF NOT EXISTS {prefix}contact_messages (
   est_total VARCHAR(30) NOT NULL DEFAULT '',
   -- 학생이 고른 연락 가능한 시간 (09:00~18:00, 30분 단위, 예: "14:30")
   contact_time VARCHAR(5) NOT NULL DEFAULT '',
+  -- 어디서 들어온 사람인지(광고·검색 등, 예: naver_powerlink)와 네이버 광고 키워드
+  channel VARCHAR(40) NOT NULL DEFAULT '',
+  ad_keyword VARCHAR(60) NOT NULL DEFAULT '',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- 유입 경로 측정 (개인정보 없음, 13개월 보관). event: visit·call·kakao·talk·consult·contact
+CREATE TABLE IF NOT EXISTS {prefix}track_events (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  event VARCHAR(20) NOT NULL DEFAULT '',
+  src VARCHAR(40) NOT NULL DEFAULT '',
+  kw VARCHAR(60) NOT NULL DEFAULT '',
+  page VARCHAR(60) NOT NULL DEFAULT '',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_time (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- 학사서버(MSSQL)에서 주기적으로 밀어넣는(push) "다가오는 일정"의 최소 정보 사본입니다.

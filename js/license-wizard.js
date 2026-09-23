@@ -585,13 +585,16 @@ function submitConsult(time){
 
   var info=consultInfo;
   var when=hhmm(time.t);
+  /* 광고·검색 등 어디서 들어온 사람인지 (js/main.js). 개인정보는 들어있지 않습니다. */
+  var attr=(window.YJ_ATTR && window.YJ_ATTR.get()) || {};
   btn.disabled=true;
   btn.textContent="보내는 중...";
   fetch("api/contact.php", {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({ action:"consult", name:name, phone:phone, message:msg,
-      courseCode:info.code, courseTitle:info.title, coursePath:info.path, estTotal:info.total||"", contactTime:when })
+      courseCode:info.code, courseTitle:info.title, coursePath:info.path, estTotal:info.total||"", contactTime:when,
+      attrSrc:attr.src||"", attrKw:attr.kw||"" })
   }).then(function(r){
       return r.json().catch(function(){ return {}; }).then(function(d){ return { ok:r.ok, data:d }; });
     })

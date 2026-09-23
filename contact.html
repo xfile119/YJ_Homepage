@@ -371,7 +371,10 @@ form.addEventListener("submit", function(e){
   fetch("api/contact.php", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "submit", name: name, phone: phone, message: message })
+    body: JSON.stringify((function(){
+      var attr = window.YJ_ATTR ? window.YJ_ATTR.get() : {};
+      return { action: "submit", name: name, phone: phone, message: message, attrSrc: attr.src || "", attrKw: attr.kw || "" };
+    })())
   }).then(function(r){ return r.json().then(function(data){ return { ok: r.ok, data: data }; }); })
     .then(function(res){
       if (res.ok) {
