@@ -64,9 +64,50 @@ function yj_json($data, $status = 200) {
     exit;
 }
 
+/* 세션을 완전히 비우고 쿠키도 지웁니다 (로그아웃, 또는 세션이 더 이상
+   유효하지 않다고 판단됐을 때 공통으로 씁니다). */
+function yj_destroy_session() {
+    $_SESSION = [];
+    if (ini_get('session.use_cookies')) {
+        $p = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+    }
+    session_destroy();
+}
+
+/* 로그인 세션이 지금도 유효한지 매 요청마다 DB로 다시 확인합니다. 로그인 시
+   세션에 저장해둔 session_version이 admin_users의 현재 값과 다르면(비밀번호가
+   바뀌었거나) 계정이 아예 없어졌으면(삭제됐으면), 세션을 지우고 false를
+   돌려줍니다. 통과하면 role도 그 사이 바뀌었을 수 있으니 세션 값을 최신으로
+   맞춰둡니다 — 이렇게 하면 관리자 화면에서 계정을 지우거나 비밀번호·역할을
+   바꾼 순간부터 그 계정의 예전 세션은 즉시 못 쓰게 됩니다. */
+function yj_session_is_valid() {
+    static $result = null;
+    if ($result !== null) {
+        return $result;
+    }
+    if (empty($_SESSION['yj_admin']) || empty($_SESSION['yj_uid'])) {
+        $result = false;
+        return false;
+    }
+    $table = yj_table('admin_users');
+    $stmt = yj_db()->prepare("SELECT username, role, session_version FROM $table WHERE id = ? LIMIT 1");
+    $stmt->execute([(int)$_SESSION['yj_uid']]);
+    $row = $stmt->fetch();
+    $sessionVer = isset($_SESSION['yj_sver']) ? (int)$_SESSION['yj_sver'] : -1;
+    if (!$row || $row['username'] !== $_SESSION['yj_admin'] || (int)$row['session_version'] !== $sessionVer) {
+        yj_destroy_session();
+        $result = false;
+        return false;
+    }
+    $_SESSION['yj_role'] = $row['role'];
+    $result = true;
+    return true;
+}
+
 function yj_require_login() {
-    if (empty($_SESSION['yj_admin'])) {
-        yj_json(['error' => '로그인이 필요합니다.'], 401);
+    if (!yj_session_is_valid()) {
+        yj_json(['error' => '로그인이 만료되었습니다. 다시 로그인해주세요.'], 401);
     }
 }
 

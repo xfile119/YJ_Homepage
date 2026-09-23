@@ -34,19 +34,38 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}admin_users (
   username VARCHAR(50) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
   role VARCHAR(20) NOT NULL DEFAULT 'admin',
+  session_version INT NOT NULL DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
-/* 보안 — 이미 설치가 끝난 사이트(관리자 계정이 하나라도 있음)에서는, 로그인도
-   안 한 외부인이 이 화면에 다시 접속해서 계정을 만들거나(기본 role이 admin이라
-   최고권한) 기존 아이디의 비밀번호를 덮어쓸 수 있으면 안 됩니다. 파일을 지우지
-   않고 재배포로 다시 올라와도 안전하도록, 코드 자체에서 막습니다.
-   최초 설치(관리자 계정이 하나도 없는 상태)는 지금처럼 로그인 없이 그대로 진행됩니다. */
-$existingAdminCount = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}admin_users")->fetchColumn();
+/* 보안 — 최고관리자(admin) 계정이 이미 있는 사이트에서는, 로그인도 안 한
+   외부인이 이 화면에 다시 접속해서 계정을 만들거나 기존 아이디의 비밀번호를
+   덮어쓸 수 있으면 안 됩니다. 파일을 지우지 않고 재배포로 다시 올라와도
+   안전하도록, 코드 자체에서 막습니다. (아래에서 매번 만드는 office 계정은
+   admin이 아니라서 여기 안 걸립니다 — 안 걸리면 최초 설치 때 office 계정이
+   먼저 생기고 나서 관리자 계정 생성 폼을 제출하는 순간 막혀버립니다.)
+   최초 설치(admin 계정이 하나도 없는 상태)는 지금처럼 로그인 없이 그대로 진행됩니다. */
+$existingAdminCount = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}admin_users WHERE FIND_IN_SET('admin', role) > 0")->fetchColumn();
 if ($existingAdminCount > 0) {
     if (session_status() === PHP_SESSION_NONE) { session_start(); }
     $sessionRoles = isset($_SESSION['yj_role']) ? explode(',', (string)$_SESSION['yj_role']) : [];
     $isLoggedInAdmin = !empty($_SESSION['yj_admin']) && in_array('admin', $sessionRoles, true);
+    /* 세션이 지금도 유효한지(로그인한 뒤 비밀번호가 바뀌어 무효화되지 않았는지)
+       한 번 더 DB로 확인합니다. session_version 컬럼이 아직 없는 예전 설치
+       (마이그레이션 전)에서는 이 확인을 건너뛰고 위 role 확인만으로 통과시킵니다. */
+    if ($isLoggedInAdmin && !empty($_SESSION['yj_uid'])) {
+        try {
+            $verStmt = $pdo->prepare("SELECT session_version FROM {$prefix}admin_users WHERE id = ? AND username = ?");
+            $verStmt->execute([(int)$_SESSION['yj_uid'], (string)$_SESSION['yj_admin']]);
+            $curVer = $verStmt->fetchColumn();
+            $sessVer = isset($_SESSION['yj_sver']) ? (int)$_SESSION['yj_sver'] : -1;
+            if ($curVer === false || (int)$curVer !== $sessVer) {
+                $isLoggedInAdmin = false;
+            }
+        } catch (Exception $e) {
+            /* session_version 컬럼이 아직 없는 예전 설치 — 아래 마이그레이션에서 곧 추가됩니다 */
+        }
+    }
     if (!$isLoggedInAdmin) {
         http_response_code(403);
         echo '<!doctype html><html lang="ko"><head><meta charset="UTF-8">'
@@ -182,6 +201,12 @@ yj_ensure_column($pdo, $prefix . 'staff', 'real_name', "VARCHAR(50) NULL DEFAULT
 yj_ensure_column($pdo, $prefix . 'admin_users', 'real_name', "VARCHAR(50) NULL DEFAULT NULL");
 yj_ensure_column($pdo, $prefix . 'admin_users', 'staff_id', "INT NULL DEFAULT NULL");
 
+/* 비밀번호 변경/계정 삭제 시 이 값을 올려서, 그 전에 이미 로그인해 있던 세션을
+   다음 요청부터 무효화합니다 (계정을 지우거나 비밀번호를 바꿨는데도 이미 열려있던
+   브라우저 세션으로 계속 접근할 수 있으면 안 되니까요). api/_db.php의
+   yj_session_is_valid()에서 로그인 시 세션에 저장해둔 값과 비교합니다. */
+yj_ensure_column($pdo, $prefix . 'admin_users', 'session_version', 'INT NOT NULL DEFAULT 1');
+
 /* role은 원래 VARCHAR(20)으로 만들어졌는데, 겸직 지원으로 쉼표 구분 여러 값
    ("admin,manager,office,instructor" 이면 32자)을 담아야 해서 넓혀둡니다. */
 function yj_widen_column($pdo, $table, $column, $definition, $minLength) {
@@ -281,8 +306,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = '비밀번호는 8자 이상으로 설정해주세요.';
     } else {
         $hash = password_hash($password, PASSWORD_DEFAULT);
+        /* 기존 계정 비밀번호를 재설정하는 경우, session_version을 올려서 이전
+           비밀번호로 로그인해 있던 세션을 무효화합니다. */
         $stmt = $pdo->prepare("INSERT INTO {$prefix}admin_users (username, password_hash) VALUES (?, ?)
-            ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash)");
+            ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), session_version = session_version + 1");
         $stmt->execute([$username, $hash]);
         $done = true;
         $message = '관리자 계정이 생성/변경되었습니다.';

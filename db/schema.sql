@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS {prefix}admin_users (
   real_name VARCHAR(50) NULL DEFAULT NULL,
   -- 임직원 등록 화면에서 자동 생성된 계정이면, 어느 staff 카드에서 만들어졌는지 연결
   staff_id INT NULL DEFAULT NULL,
+  -- 비밀번호 변경/계정 삭제 시 올라가서, 그 전에 발급된 로그인 세션을 다음 요청부터
+  -- 무효화합니다 (api/_db.php의 yj_session_is_valid 참고)
+  session_version INT NOT NULL DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
