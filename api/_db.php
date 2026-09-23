@@ -202,6 +202,30 @@ function yj_input() {
     return is_array($data) ? $data : [];
 }
 
+/* 새로 추가된 칼럼·테이블이 아직 없으면(파일만 먼저 올리고 db/setup.php를 아직
+   안 돌린 경우) 그 자리에서 만들어 둡니다. 로그인·상담신청처럼 드물게 도는
+   경로에서만 부릅니다. 특히 로그인은 이게 없으면 관리자 로그인이 막히는데,
+   setup.php도 관리자로 로그인해야 열 수 있어서 스스로 풀 방법이 없어집니다.
+   칼럼 정의는 db/setup.php와 반드시 같게 유지하세요. */
+function yj_db_ensure_column($table, $column, $definition) {
+    $db = yj_db();
+    $check = $db->prepare("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?");
+    $check->execute([$table, $column]);
+    if ((int)$check->fetchColumn() === 0) {
+        $db->exec("ALTER TABLE {$table} ADD COLUMN {$column} {$definition}");
+    }
+}
+function yj_ensure_auth_schema() {
+    yj_db_ensure_column(yj_table('admin_users'), 'session_version', 'INT NOT NULL DEFAULT 1');
+    $t = yj_table('login_attempts');
+    yj_db()->exec("CREATE TABLE IF NOT EXISTS {$t} (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      ip VARCHAR(45) NOT NULL DEFAULT '',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_ip_time (ip, created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+}
+
 /* 로그인 무차별 대입(비밀번호 자동 시도) 방지 — 같은 IP에서 15분 안에 로그인
    실패가 너무 많으면 잠깐 막습니다. 세션 카운터(셔틀/필기시험 조회 제한처럼)는
    쿠키를 새로 받으면 바로 우회되므로 로그인처럼 값이 큰 대상에는 약해서,

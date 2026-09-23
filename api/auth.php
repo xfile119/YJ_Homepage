@@ -24,6 +24,7 @@ if ($action === 'logout') {
     yj_json(['ok' => true]);
 }
 
+yj_ensure_auth_schema();
 yj_login_rate_limit_check();
 
 $username = trim((string)(isset($body['username']) ? $body['username'] : ''));
