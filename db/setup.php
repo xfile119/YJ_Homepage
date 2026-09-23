@@ -37,6 +37,30 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}admin_users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
+/* 보안 — 이미 설치가 끝난 사이트(관리자 계정이 하나라도 있음)에서는, 로그인도
+   안 한 외부인이 이 화면에 다시 접속해서 계정을 만들거나(기본 role이 admin이라
+   최고권한) 기존 아이디의 비밀번호를 덮어쓸 수 있으면 안 됩니다. 파일을 지우지
+   않고 재배포로 다시 올라와도 안전하도록, 코드 자체에서 막습니다.
+   최초 설치(관리자 계정이 하나도 없는 상태)는 지금처럼 로그인 없이 그대로 진행됩니다. */
+$existingAdminCount = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}admin_users")->fetchColumn();
+if ($existingAdminCount > 0) {
+    if (session_status() === PHP_SESSION_NONE) { session_start(); }
+    $sessionRoles = isset($_SESSION['yj_role']) ? explode(',', (string)$_SESSION['yj_role']) : [];
+    $isLoggedInAdmin = !empty($_SESSION['yj_admin']) && in_array('admin', $sessionRoles, true);
+    if (!$isLoggedInAdmin) {
+        http_response_code(403);
+        echo '<!doctype html><html lang="ko"><head><meta charset="UTF-8">'
+           . '<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>이미 설치됨</title></head>'
+           . '<body style="font-family:sans-serif;max-width:560px;margin:60px auto;padding:0 20px;line-height:1.7;">'
+           . '<h1 style="font-size:20px;">이미 설치되어 있습니다</h1>'
+           . '<p>관리자 계정이 이미 있어서, 이 설치 화면은 <b>최고관리자로 로그인한 상태</b>에서만 다시 열 수 있습니다.</p>'
+           . '<p><a href="../admin.html">관리자 로그인</a> 후 같은 주소로 다시 접속해주세요.</p>'
+           . '<p style="color:#888;font-size:13px;">설치를 이미 마치셨다면, 이 파일(db/setup.php)은 서버에서 삭제해두시는 걸 권장합니다.</p>'
+           . '</body></html>';
+        exit;
+    }
+}
+
 $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}notices (
   id INT AUTO_INCREMENT PRIMARY KEY,
   display_no VARCHAR(20) NOT NULL DEFAULT '',
@@ -265,15 +289,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-/* 셔틀 명단 작성용 office 계정 3개를 만들어 둡니다.
-   비밀번호는 임시값이며, 관리자 화면의 "계정 관리"에서 반드시 바꿔주세요. */
-$officeTempPw = 'yjoffice1234';
+/* 셔틀 명단 작성용 office 계정 3개를 만들어 둡니다. 계정마다 이번 설치에서만
+   쓰는 무작위 임시 비밀번호를 발급하고, 아래 결과 화면에 한 번만 보여줍니다 —
+   받으시면 바로 관리자 화면의 "계정 관리"에서 원하는 비밀번호로 바꿔주세요.
+   (예전엔 세 계정이 전부 같은 고정 비밀번호였는데, 안 바꾸고 두면 셔틀 명단의
+   이름·전화번호를 아무나 조회·수정할 수 있어 계정마다 무작위 값으로 바꿨습니다.) */
 $officeIns = $pdo->prepare("INSERT INTO {$prefix}admin_users (username, password_hash, role) VALUES (?, ?, 'office')");
+$newOfficePasswords = [];
 foreach (['office1', 'office2', 'office3'] as $officeName) {
     $chk = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}admin_users WHERE username = ?");
     $chk->execute([$officeName]);
     if ((int)$chk->fetchColumn() === 0) {
-        $officeIns->execute([$officeName, password_hash($officeTempPw, PASSWORD_DEFAULT)]);
+        $tempPw = substr(bin2hex(random_bytes(6)), 0, 10);
+        $officeIns->execute([$officeName, password_hash($tempPw, PASSWORD_DEFAULT)]);
+        $newOfficePasswords[$officeName] = $tempPw;
     }
 }
 
@@ -300,6 +329,18 @@ $adminCount = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}admin_users")->fet
 <body>
   <h1>초기 설치</h1>
   <p>테이블 생성 및 기본 데이터 삽입이 완료되었습니다 (공지사항 <?= $noticeCount ?: '새로 채움' ?>, 면허가이드 데이터 <?= $licenseCount ? '이미 있음' : '새로 채움' ?>).</p>
+
+  <?php if ($newOfficePasswords): ?>
+    <div class="warn">
+      <strong>셔틀 계정 임시 비밀번호 (지금 이 화면에서만 보입니다 — 꼭 적어두세요):</strong>
+      <ul>
+        <?php foreach ($newOfficePasswords as $name => $pw): ?>
+          <li><code><?= htmlspecialchars($name) ?></code> / <code><?= htmlspecialchars($pw) ?></code></li>
+        <?php endforeach; ?>
+      </ul>
+      관리자 화면의 "계정 관리"에서 원하는 비밀번호로 바로 바꿔주세요.
+    </div>
+  <?php endif; ?>
 
   <?php if ($message): ?>
     <div class="<?= $done ? 'ok' : 'err' ?>"><?= htmlspecialchars($message) ?></div>
