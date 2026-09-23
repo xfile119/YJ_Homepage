@@ -24,6 +24,8 @@ if ($action === 'logout') {
     yj_json(['ok' => true]);
 }
 
+yj_login_rate_limit_check();
+
 $username = trim((string)(isset($body['username']) ? $body['username'] : ''));
 $password = (string)(isset($body['password']) ? $body['password'] : '');
 
@@ -37,6 +39,7 @@ $stmt->execute([$username]);
 $row = $stmt->fetch();
 
 if (!$row || !password_verify($password, $row['password_hash'])) {
+    yj_login_rate_limit_record_failure();
     yj_json(['error' => '아이디 또는 비밀번호가 올바르지 않습니다.'], 401);
 }
 

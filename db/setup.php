@@ -174,6 +174,15 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}written_exam (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
+/* 로그인 실패 시도를 IP별로 기록해서 무차별 대입(비밀번호 자동 시도)을 막습니다.
+   (api/auth.php에서 일정 시간 내 실패 횟수가 너무 많으면 잠깐 막아둡니다) */
+$pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}login_attempts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ip VARCHAR(45) NOT NULL DEFAULT '',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_ip_time (ip, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
 /* 이미 만들어진 notices 테이블에 content/image 컬럼이 없으면 추가합니다.
    (기존에 db/setup.php를 이미 한 번 실행한 사이트를 위한 안전한 마이그레이션 — 여러 번 실행해도 안전합니다.) */
 function yj_ensure_column($pdo, $table, $column, $definition) {

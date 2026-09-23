@@ -172,3 +172,31 @@ function yj_input() {
     $data = json_decode($raw, true);
     return is_array($data) ? $data : [];
 }
+
+/* 로그인 무차별 대입(비밀번호 자동 시도) 방지 — 같은 IP에서 15분 안에 로그인
+   실패가 너무 많으면 잠깐 막습니다. 세션 카운터(셔틀/필기시험 조회 제한처럼)는
+   쿠키를 새로 받으면 바로 우회되므로 로그인처럼 값이 큰 대상에는 약해서,
+   IP 기준으로 DB에 기록합니다. */
+function yj_login_rate_limit_check() {
+    $ip = isset($_SERVER['REMOTE_ADDR']) ? (string)$_SERVER['REMOTE_ADDR'] : '';
+    if ($ip === '') { return; }
+    $table = yj_table('login_attempts');
+    $db = yj_db();
+    $stmt = $db->prepare("SELECT COUNT(*) FROM $table WHERE ip = ? AND created_at > (NOW() - INTERVAL 15 MINUTE)");
+    $stmt->execute([$ip]);
+    if ((int)$stmt->fetchColumn() >= 10) {
+        yj_json(['error' => '로그인 시도가 너무 많습니다. 15분 후 다시 시도해주세요.'], 429);
+    }
+    /* 오래된 기록은 매번 지우지 않고 가끔(1% 확률)만 정리해서, 매 요청마다
+       DELETE가 도는 부담을 줄입니다. */
+    if (mt_rand(1, 100) === 1) {
+        $db->exec("DELETE FROM $table WHERE created_at < (NOW() - INTERVAL 1 DAY)");
+    }
+}
+function yj_login_rate_limit_record_failure() {
+    $ip = isset($_SERVER['REMOTE_ADDR']) ? (string)$_SERVER['REMOTE_ADDR'] : '';
+    if ($ip === '') { return; }
+    $table = yj_table('login_attempts');
+    $stmt = yj_db()->prepare("INSERT INTO $table (ip) VALUES (?)");
+    $stmt->execute([$ip]);
+}

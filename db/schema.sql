@@ -21,6 +21,15 @@ CREATE TABLE IF NOT EXISTS {prefix}admin_users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- 로그인 실패 시도를 IP별로 기록해서 무차별 대입(비밀번호 자동 시도)을 막습니다.
+-- (api/auth.php에서 일정 시간 내 실패 횟수가 너무 많으면 잠깐 막아둡니다)
+CREATE TABLE IF NOT EXISTS {prefix}login_attempts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ip VARCHAR(45) NOT NULL DEFAULT '',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_ip_time (ip, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS {prefix}notices (
   id INT AUTO_INCREMENT PRIMARY KEY,
   display_no VARCHAR(20) NOT NULL DEFAULT '',
