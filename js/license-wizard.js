@@ -8,6 +8,17 @@
 (function(){
 "use strict";
 
+/* api/license-data.php에서 받아온 DATA(면허별 안내문구·학원 연락처 등, 관리자가
+   콘텐츠 관리 화면에서 입력)는 아래에서 innerHTML에 그대로 꽂아 넣기 전에
+   반드시 이 함수로 이스케이프합니다. 관리자 계정이 뚫리거나 실수로 <script>
+   같은 텍스트를 넣어도, 그게 그대로 실행되지 않고 글자 그대로만 보이게 하기
+   위해서입니다 (NODES/opt 같은 코드에 고정된 값은 대상이 아닙니다). */
+function esc(s){
+  return String(s===null||s===undefined?"":s).replace(/[&<>"']/g, function(ch){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch];
+  });
+}
+
 /* =======================================================================
    질문 흐름 — 법령·학원 실제 운영기준에 따라 확정된 케이스만 담겨 있음
    ======================================================================= */
@@ -350,8 +361,8 @@ function contactBox(){
   return ""
     +'<div class="yjlg-contact-box">'
       +'<div class="yjlg-head">학원에 문의하기</div>'
-      +'<div class="yjlg-contact-row">'+svgPhone()+' <a href="tel:'+(c.phoneHref||"")+'">'+(c.phone||"")+'</a></div>'
-      +'<div class="yjlg-contact-row">'+svgPin()+' '+(c.address||"")+'</div>'
+      +'<div class="yjlg-contact-row">'+svgPhone()+' <a href="tel:'+esc(c.phoneHref||"")+'">'+esc(c.phone||"")+'</a></div>'
+      +'<div class="yjlg-contact-row">'+svgPin()+' '+esc(c.address||"")+'</div>'
     +'</div>';
 }
 
@@ -454,15 +465,15 @@ function renderResult(){
   html+='<div class="yjlg-code-tag">코드 '+code+'</div>';
   html+='<span class="yjlg-pill '+sl.cls+'">'+sl.text+'</span>';
   var titleText=c.target+(terminal.cond?' ('+terminal.cond+')':'');
-  html+='<div class="yjlg-result-title">'+titleText+'</div>';
+  html+='<div class="yjlg-result-title">'+esc(titleText)+'</div>';
   html+='<p class="yjlg-result-sub">선택하신 조건 기준 예상 결과예요</p>';
 
   if(c.status!=="doc" && c.status!=="unknown" && c.hours){ html+=renderFlow(c); }
 
   if(c.status==="doc"){
-    html+='<div class="yjlg-callout yjlg-info">'+c.note+'</div>'+contactBox();
+    html+='<div class="yjlg-callout yjlg-info">'+esc(c.note)+'</div>'+contactBox();
   } else if(c.status==="unknown"){
-    html+='<div class="yjlg-callout yjlg-warn">'+c.note+'</div>'+contactBox();
+    html+='<div class="yjlg-callout yjlg-warn">'+esc(c.note)+'</div>'+contactBox();
   } else {
     html+='<div class="yjlg-section-label">필요한 교육시간</div><div class="yjlg-stat-grid">';
     ["hak","gi","doro"].forEach(function(k){
@@ -503,7 +514,7 @@ function renderResult(){
     html+='<div class="yjlg-total-tile"><span class="yjlg-k">예상 합계</span><span class="yjlg-v">'+(total==="unknown"?"문의 필요":won(total))+'</span></div>';
     html+='<p class="yjlg-fineprint">'+(total==="unknown"?"":"정확한 금액은 상담 시 확인해드려요. 상기 수강료는 의무교육을 기준으로 산정되었으며, 시험은 각 1회씩 포함된 가격입니다.")+'</p>';
 
-    if(c.note){ html+='<div class="yjlg-callout '+(c.status==="warn"?"yjlg-warn":"yjlg-ok")+'">'+c.note+'</div>'; }
+    if(c.note){ html+='<div class="yjlg-callout '+(c.status==="warn"?"yjlg-warn":"yjlg-ok")+'">'+esc(c.note)+'</div>'; }
 
     html+=estimateDuration(c);
     html+=renderScheduleBlock(code, c);
@@ -522,14 +533,14 @@ function render(){
   var c=DATA.contact||{};
   root.innerHTML=""
     +'<div class="yjlg-shell">'
-      +'<div class="yjlg-brand"><div class="yjlg-id">'+svgCar()+'<span><b>'+(c.name||"")+'</b> · '+(window.YJLG_ROOT_MODE==="images"?"이미지로 면허 찾기":"면허 가이드")+'</span></div></div>'
+      +'<div class="yjlg-brand"><div class="yjlg-id">'+svgCar()+'<span><b>'+esc(c.name||"")+'</b> · '+(window.YJLG_ROOT_MODE==="images"?"이미지로 면허 찾기":"면허 가이드")+'</span></div></div>'
       +'<header class="yjlg-hero"><h1>면허, 선택만 하세요. 나머지는 저희가 찾아드릴게요.</h1>'
       +'<p>지금 갖고 계신 면허와 새로 따고 싶은 면허를 하나씩 골라주시면, 필요한 교육시간과 예상 수강료를 바로 계산해드려요.</p></header>'
       +'<div class="yjlg-crumbs" id="yjlg-crumbs"></div>'
       +'<main class="yjlg-card yjlg-animate" id="yjlg-card"></main>'
-      +'<footer><span class="yjlg-school">'+(c.name||"")+'</span><br/>'+(c.address||"")+' · 전화 '+(c.phone||"")+'<br/>'
+      +'<footer><span class="yjlg-school">'+esc(c.name||"")+'</span><br/>'+esc(c.address||"")+' · 전화 '+esc(c.phone||"")+'<br/>'
       +'안내된 시간·비용은 참고용이며, 실제 등록 시 최신 기준으로 다시 확인해드려요.'
-      +(DATA.updatedAt? '<br/>최근 업데이트: '+DATA.updatedAt : '')+'</footer>'
+      +(DATA.updatedAt? '<br/>최근 업데이트: '+esc(DATA.updatedAt) : '')+'</footer>'
     +'</div>';
   window.__yjwiz={ choose:function(i){ choose(window.__yjwizOpts[i]); }, back:goBack, reset:resetAll };
   renderCrumbs();
