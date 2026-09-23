@@ -325,23 +325,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-/* 셔틀 명단 작성용 office 계정 3개를 만들어 둡니다. 계정마다 이번 설치에서만
-   쓰는 무작위 임시 비밀번호를 발급하고, 아래 결과 화면에 한 번만 보여줍니다 —
-   받으시면 바로 관리자 화면의 "계정 관리"에서 원하는 비밀번호로 바꿔주세요.
-   (예전엔 세 계정이 전부 같은 고정 비밀번호였는데, 안 바꾸고 두면 셔틀 명단의
-   이름·전화번호를 아무나 조회·수정할 수 있어 계정마다 무작위 값으로 바꿨습니다.) */
-$officeIns = $pdo->prepare("INSERT INTO {$prefix}admin_users (username, password_hash, role) VALUES (?, ?, 'office')");
-$newOfficePasswords = [];
-foreach (['office1', 'office2', 'office3'] as $officeName) {
-    $chk = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}admin_users WHERE username = ?");
-    $chk->execute([$officeName]);
-    if ((int)$chk->fetchColumn() === 0) {
-        $tempPw = substr(bin2hex(random_bytes(6)), 0, 10);
-        $officeIns->execute([$officeName, password_hash($tempPw, PASSWORD_DEFAULT)]);
-        $newOfficePasswords[$officeName] = $tempPw;
-    }
-}
-
 $adminCount = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}admin_users")->fetchColumn();
 ?>
 <!doctype html>
@@ -365,18 +348,6 @@ $adminCount = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}admin_users")->fet
 <body>
   <h1>초기 설치</h1>
   <p>테이블 생성 및 기본 데이터 삽입이 완료되었습니다 (공지사항 <?= $noticeCount ?: '새로 채움' ?>, 면허가이드 데이터 <?= $licenseCount ? '이미 있음' : '새로 채움' ?>).</p>
-
-  <?php if ($newOfficePasswords): ?>
-    <div class="warn">
-      <strong>셔틀 계정 임시 비밀번호 (지금 이 화면에서만 보입니다 — 꼭 적어두세요):</strong>
-      <ul>
-        <?php foreach ($newOfficePasswords as $name => $pw): ?>
-          <li><code><?= htmlspecialchars($name) ?></code> / <code><?= htmlspecialchars($pw) ?></code></li>
-        <?php endforeach; ?>
-      </ul>
-      관리자 화면의 "계정 관리"에서 원하는 비밀번호로 바로 바꿔주세요.
-    </div>
-  <?php endif; ?>
 
   <?php if ($message): ?>
     <div class="<?= $done ? 'ok' : 'err' ?>"><?= htmlspecialchars($message) ?></div>
