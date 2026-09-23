@@ -4,14 +4,15 @@ User-agent: *
 Allow: /
 
 # 관리자 화면·API·업로드 원본은 검색 결과에 나올 필요가 없습니다.
+# 셔틀 조회(shuttle.html)·공지 상세(notice-detail.html)는 여기서 막지 않습니다 —
+# 여기서 막으면 검색 로봇이 페이지 안의 noindex(검색 제외) 표시를 읽지 못해서,
+# 오히려 내용 없는 주소만 검색 결과에 남을 수 있습니다. 두 페이지는 noindex로 제외됩니다.
 Disallow: /admin.html
 Disallow: /admin-accounts.html
 Disallow: /admin-license.html
 Disallow: /admin-notice.html
 Disallow: /admin-shuttle.html
 Disallow: /admin-staff.html
-Disallow: /shuttle.html
-Disallow: /notice-detail.html
 Disallow: /api/
 Disallow: /db/
 Disallow: /uploads/
