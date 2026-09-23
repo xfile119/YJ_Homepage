@@ -1,0 +1,12 @@
+# 이 폴더의 스키마·기본데이터·문서 파일은 브라우저로 직접 열어볼 이유가 없고,
+# DB 테이블 구조를 그대로 노출합니다. setup.php/check.php(설치·진단용, 접근
+# 제한은 코드에서 함)만 그대로 열리도록, 나머지 확장자는 서버에서 차단합니다.
+<FilesMatch "\.(sql|json|md)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
