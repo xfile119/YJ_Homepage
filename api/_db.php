@@ -105,10 +105,39 @@ function yj_session_is_valid() {
     return true;
 }
 
+/* CSRF(사이트 간 요청 위조) 방지 — 로그인 세션 쿠키로 인증하는 상태변경 요청은
+   다른 사이트가 관리자의 브라우저를 통해 몰래 대신 보낼 수 있으면 안 됩니다.
+   (JSON 본문은 php://input으로 Content-Type과 무관하게 읽히기 때문에, text/plain
+   폼처럼 <form>만으로도 이런 요청을 만들어낼 수 있는 알려진 기법이 있습니다.)
+   브라우저가 요청에 자동으로 붙이는 Origin(없으면 Referer) 헤더가 지금 이
+   사이트 자신인지 확인해서, 아니면 막습니다. 도메인을 하드코딩하지 않고 지금
+   요청이 온 Host와 비교하므로 어느 도메인/서브도메인에 배포해도 그대로 동작합니다.
+   조회만 하는 GET은 상태를 바꾸지 않으니 대상이 아닙니다. */
+function yj_verify_same_origin() {
+    if ($_SERVER['REQUEST_METHOD'] === 'GET') { return; }
+    $host = isset($_SERVER['HTTP_HOST']) ? strtolower($_SERVER['HTTP_HOST']) : '';
+    $check = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '');
+    /* HTTP_HOST에는 기본 포트(80/443)가 아니면 포트까지 포함되는데, parse_url()의
+       PHP_URL_HOST는 포트를 떼어내므로 그냥 비교하면 포트가 다른 개발 환경 등에서
+       오탐이 납니다. 포트까지 다시 붙여서 같은 형태로 맞춰 비교합니다. */
+    $checkHost = null;
+    if ($check !== '') {
+        $h = parse_url($check, PHP_URL_HOST);
+        $p = parse_url($check, PHP_URL_PORT);
+        if ($h !== null && $h !== false) {
+            $checkHost = strtolower($h) . ($p ? ':' . $p : '');
+        }
+    }
+    if ($host === '' || $checkHost === null || $checkHost !== $host) {
+        yj_json(['error' => '요청을 확인할 수 없습니다. 새로고침 후 다시 시도해주세요.'], 403);
+    }
+}
+
 function yj_require_login() {
     if (!yj_session_is_valid()) {
         yj_json(['error' => '로그인이 만료되었습니다. 다시 로그인해주세요.'], 401);
     }
+    yj_verify_same_origin();
 }
 
 /* 현재 로그인한 계정의 역할들 (겸직 가능해서 쉼표로 구분된 하나 이상의 값):
