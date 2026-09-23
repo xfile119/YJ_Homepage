@@ -480,7 +480,7 @@ function openConsult(){
     +'<div class="yjc-field"><label for="yjc-phone">연락처<span class="yjc-req">*</span></label><input type="tel" id="yjc-phone" maxlength="30" placeholder="010-0000-0000" autocomplete="tel"></div>'
     +'<div class="yjc-field"><span class="yjc-label" id="yjc-time-label">연락 가능한 시간<span class="yjc-req">*</span></span><div class="yjf-box" id="yjf-box" role="group" aria-labelledby="yjc-time-label"></div></div>'
     +'<div class="yjc-field"><label for="yjc-msg">더 궁금한 점<span class="yjc-opt">(선택)</span></label><textarea id="yjc-msg" maxlength="2000" placeholder="예) 주말에도 수업 들을 수 있나요?"></textarea></div>'
-    +'<label class="yjc-agree"><input type="checkbox" id="yjc-agree"><span>상담 연락을 위한 개인정보(이름·연락처) 수집·이용에 동의합니다. <a href="privacy.html" target="_blank" rel="noopener">자세히</a></span></label>'
+    +'<label class="yjc-agree"><input type="checkbox" id="yjc-agree"><span>상담 연락을 위한 개인정보 수집·이용에 동의합니다. (수집 항목: 이름·연락처, 선택 입력한 문의 내용 / 보유기간: 접수일로부터 1개월 · 동의하지 않으시면 신청하실 수 없어요 · <a href="privacy.html" target="_blank" rel="noopener">자세히</a>)</span></label>'
     +'<button type="submit" class="yjc-submit" id="yjc-submit">상담 신청 보내기</button>'
     +'<p class="yjc-error" id="yjc-error" role="alert"></p>'
     +(c.phoneHref?'<p class="yjc-alt">급하시면 <a href="tel:'+esc(c.phoneHref)+'">'+esc(c.phone||c.phoneHref)+'</a></p>':'')

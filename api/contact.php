@@ -15,9 +15,18 @@ function yj_contact_ensure_schema($table) {
     yj_db_ensure_column($table, 'contact_time', "VARCHAR(5) NOT NULL DEFAULT ''");
 }
 
+/* 개인정보처리방침 제2조: 홈페이지 문의(문의 남기기·면허 탐색기 상담 신청)는
+   접수일로부터 1개월 보유 후 파기합니다. 따로 예약 작업(cron)이 없는 호스팅이라,
+   문의가 새로 들어오거나 관리자가 문의 목록·뱃지를 볼 때마다 기한 지난 것을
+   지웁니다. 방침의 보유기간을 바꾸면 여기 INTERVAL도 같이 바꿔야 합니다. */
+function yj_contact_purge_expired($table) {
+    yj_db()->exec("DELETE FROM $table WHERE created_at < (NOW() - INTERVAL 1 MONTH)");
+}
+
 if ($method === 'GET') {
     yj_require_content_admin();
     yj_contact_ensure_schema($table);
+    yj_contact_purge_expired($table);
 
     /* 관리자 메인의 "새 문의 N" 뱃지용 — 목록 전체 대신 개수만 */
     if (isset($_GET['count']) && $_GET['count'] === 'unread') {
@@ -52,6 +61,10 @@ if ($method !== 'POST') {
 
 $body = yj_input();
 $action = isset($body['action']) ? $body['action'] : '';
+
+if ($action === 'submit' || $action === 'consult') {
+    yj_contact_purge_expired($table);
+}
 
 /* 문의 등록은 누구나(로그인 없이) 할 수 있어야 하므로 다른 액션들과 달리
    관리자 권한 확인보다 먼저 처리합니다. */
