@@ -11,6 +11,19 @@ FTP 업로드 후 이 값이 아래 최신 항목과 일치하는지 보면, 실
 
 ---
 
+## 2026-09-24 00:18 KST — `2ce09e0`
+**검색 설정 정리.** 외부 SEO 분석에서 지적된 설정 충돌을 실제 파일과 대조해 고쳤습니다.
+
+- `sitemap.xml`: 검색 제외 페이지(`license-guide.html`) 대신 주 메뉴의 `license-picker.html`,
+  빠져 있던 `medical-checkup-hospitals.html` 추가. 수정일을 실제 파일 수정일로 바꿈.
+- `robots.txt`: 셔틀 조회·공지 상세 차단 해제(페이지 안의 검색 제외 표시가 제대로 읽히도록).
+- `.htaccess`: `yjcdrive.co.kr`(www 없음)으로 들어오면 `https://www.yjcdrive.co.kr`로 이동.
+
+**FTP로 올릴 파일**: `sitemap.xml`, `robots.txt`, `.htaccess`, `js/main.js`. DB 변경 없음.
+**올린 직후 꼭 확인**: 주소창에 `yjcdrive.co.kr`과 `http://www.yjcdrive.co.kr`을 각각 쳐서
+`https://www.yjcdrive.co.kr`로 바뀌는지, 사이트가 정상으로 뜨는지 보세요. 만약 화면이 안 뜨면
+(500 오류 등) 예전 `.htaccess`로 바로 되돌리면 됩니다.
+
 ## 2026-09-23 21:26 KST — `57460a4`
 **개인정보처리방침을 실제와 맞게 고치고, 1개월 지난 문의를 자동 삭제합니다.**
 처리방침에 "홈페이지로는 개인정보를 수집하지 않는다"고 되어 있었는데, 문의 남기기와
