@@ -1,7 +1,7 @@
 /* 실제 사이트(FTP 업로드본)가 지금 어느 작업 시점인지 확인하기 위한 버전 표시입니다.
    커밋할 때마다 이 값을 그 커밋 해시/시각으로 갱신해두면, 화면 맨 아래 작은 글씨로
    나오는 버전과 git 기록을 대조해서 "어디까지 실제로 반영됐는지" 확인할 수 있습니다. */
-var YJ_SITE_VERSION = { commit: "7b46bb6", date: "2026-09-25 23:20 KST", note: "공지 예시 삭제·셔틀 안내 문구 수정" };
+var YJ_SITE_VERSION = { commit: "e514847", date: "2026-09-25 23:50 KST", note: "동선개편·조회통합·색상전환 (branch)" };
 
 document.addEventListener("DOMContentLoaded", function () {
   var header = document.querySelector(".site-header");
