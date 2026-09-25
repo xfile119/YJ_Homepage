@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>내 일정 조회 | 영진자동차운전전문학원</title>
+<title>내 일정 조회 (교육·셔틀·필기) | 영진자동차운전전문학원</title>
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-<meta name="description" content="영진자동차운전전문학원 수강생 일정 조회 - 이름과 전화번호 뒷 4자리로 본인의 학과·기능·도로 교육 일정을 확인하실 수 있습니다." />
+<meta name="description" content="영진자동차운전전문학원 수강생 조회 - 이름과 전화번호 뒷 4자리로 교육 일정·셔틀 탑승 시간·필기시험 날짜를 각각 확인하실 수 있습니다." />
 <meta name="robots" content="noindex" />
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="영진자동차운전전문학원" />
 <meta property="og:locale" content="ko_KR" />
-<meta property="og:title" content="내 일정 조회 | 영진자동차운전전문학원" />
-<meta property="og:description" content="영진자동차운전전문학원 수강생 일정 조회 - 이름과 전화번호 뒷 4자리로 본인의 학과·기능·도로 교육 일정을 확인하실 수 있습니다." />
+<meta property="og:title" content="내 일정 조회 (교육·셔틀·필기) | 영진자동차운전전문학원" />
+<meta property="og:description" content="영진자동차운전전문학원 수강생 조회 - 이름과 전화번호 뒷 4자리로 교육 일정·셔틀 탑승 시간·필기시험 날짜를 각각 확인하실 수 있습니다." />
 <meta property="og:url" content="https://www.yjcdrive.co.kr/my-schedule.html" />
 <!-- 공유 이미지: 이 페이지 전용 배너가 생기면 아래 줄의 파일명만 바꾸세요
      (권장 이름: images/og-my-schedule.jpg · 크기 1200x630) -->
@@ -26,31 +26,46 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css" />
 <style>
-.ms-wrap { max-width: 640px; margin: 0 auto; }
+.lk-wrap { max-width: 640px; margin: 0 auto; }
 
-.ms-form-card {
+/* 탭 전환 — 탭을 바꾸면 그 안의 조회 내용은 초기화됩니다 (교육·셔틀·필기가 서로 다른 조회) */
+.lk-tabs { display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
+.lk-tab {
+  font-family: inherit; font-size: 14.5px; font-weight: 800; color: var(--color-body);
+  background: #fff; border: 1px solid var(--color-line); border-radius: 999px;
+  padding: 11px 22px; cursor: pointer; transition: all .15s ease;
+}
+.lk-tab:hover { border-color: var(--color-primary); color: var(--color-primary-dark); }
+.lk-tab.is-active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+.lk-panel { display: none; }
+.lk-panel.is-active { display: block; }
+
+/* ---- 공통 폼 카드 ---- */
+.ms-form-card, .sh-form-card, .we-form-card {
   background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-lg);
   padding: 30px 30px 26px; box-shadow: var(--shadow-sm);
 }
-.ms-form-card h2 { font-size: 19px; font-weight: 800; color: var(--color-ink); }
-.ms-form-card > p { margin-top: 8px; font-size: 14px; color: var(--color-muted); line-height: 1.7; }
-.ms-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 22px; }
-@media (max-width: 560px) { .ms-fields { grid-template-columns: 1fr; } }
-.ms-field label { display: block; font-size: 13px; font-weight: 700; color: var(--color-ink); margin-bottom: 7px; }
-.ms-field input {
+.ms-form-card h2, .sh-form-card h2, .we-form-card h2 { font-size: 19px; font-weight: 800; color: var(--color-ink); }
+.ms-form-card > p, .sh-form-card > p, .we-form-card > p { margin-top: 8px; font-size: 14px; color: var(--color-muted); line-height: 1.7; }
+.ms-fields, .sh-fields, .we-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 22px; }
+@media (max-width: 560px) { .ms-fields, .sh-fields, .we-fields { grid-template-columns: 1fr; } }
+.ms-field label, .sh-field label, .we-field label { display: block; font-size: 13px; font-weight: 700; color: var(--color-ink); margin-bottom: 7px; }
+.ms-field input, .sh-field input, .we-field input {
   width: 100%; border: 1px solid var(--color-line); border-radius: var(--radius-sm);
   padding: 13px 14px; font-size: 15px; font-family: inherit; color: var(--color-ink); background: #fff;
   transition: border-color .15s ease, box-shadow .15s ease;
 }
-.ms-field input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
-.ms-field .ms-help { font-size: 12px; color: var(--color-muted); margin-top: 6px; }
+.ms-field input:focus, .sh-field input:focus, .we-field input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); }
+.ms-field .ms-help, .sh-field .sh-help, .we-field .we-help { font-size: 12px; color: var(--color-muted); margin-top: 6px; }
 
-.ms-status { margin-top: 16px; font-size: 13.5px; font-weight: 600; min-height: 20px; }
-.ms-status.err { color: #c53030; }
+.ms-status, .sh-status, .we-status { margin-top: 16px; font-size: 13.5px; font-weight: 600; min-height: 20px; }
+.ms-status.err, .sh-status.err, .we-status.err { color: #c53030; }
 
-.ms-results { margin-top: 26px; display: none; }
-.ms-results.show { display: block; }
-.ms-results-head { font-size: 14px; font-weight: 800; color: var(--color-ink); margin-bottom: 14px; }
+.ms-results, .sh-results, .we-results { margin-top: 26px; display: none; }
+.ms-results.show, .sh-results.show, .we-results.show { display: block; }
+.ms-results-head, .sh-results-head, .we-results-head { font-size: 14px; font-weight: 800; color: var(--color-ink); margin-bottom: 14px; }
+
+/* ---- 교육 일정 카드 ---- */
 .ms-item {
   display: flex; align-items: center; gap: 18px;
   background: #fff; border: 1px solid var(--color-line); border-left: 5px solid var(--color-primary);
@@ -69,11 +84,11 @@
 }
 .ms-item .ms-staff { display: block; margin-top: 7px; font-size: 12px; color: var(--color-muted); }
 @media (max-width: 560px) {
-  .ms-item { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .ms-item .ms-when { text-align: left; min-width: 0; }
-  .ms-item .ms-what { border-left: none; padding-left: 0; }
+  .ms-item, .sh-ride, .we-card { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .ms-item .ms-when, .sh-ride .sh-when, .we-card .we-when { text-align: left; min-width: 0; }
+  .ms-item .ms-what, .sh-ride .sh-where, .we-card .we-where { border-left: none; padding-left: 0; }
 }
-.ms-badge-today {
+.ms-badge-today, .sh-badge-today, .we-badge-today {
   display: inline-block; background: var(--color-accent); color: var(--color-ink);
   font-size: 11.5px; font-weight: 900; border-radius: 999px; padding: 3px 9px; margin-left: 6px;
 }
@@ -103,14 +118,46 @@
 .ms-license.lic-violet  { background: #e2dff1; color: #2e2561; border-color: transparent; }
 .ms-license.lic-red     { background: #fbe2e2; color: #822d2d; border-color: transparent; }
 
-.ms-empty {
+/* ---- 셔틀 카드 ---- */
+.sh-ride {
+  display: flex; align-items: center; gap: 18px;
+  background: #fff; border: 1px solid var(--color-line); border-left: 5px solid var(--color-primary);
+  border-radius: var(--radius-md); padding: 20px 22px; margin-bottom: 12px;
+}
+.sh-ride .sh-when { flex: none; text-align: center; min-width: 92px; }
+.sh-ride .sh-date { font-size: 12.5px; font-weight: 700; color: var(--color-muted); }
+.sh-ride .sh-time { font-size: 25px; font-weight: 900; color: var(--color-primary-dark); line-height: 1.25; letter-spacing: -0.01em; }
+.sh-ride .sh-where { border-left: 1px solid var(--color-line); padding-left: 18px; flex: 1; }
+.sh-ride .sh-where .k { font-size: 12px; font-weight: 700; color: var(--color-muted); }
+.sh-ride .sh-where .v { font-size: 17px; font-weight: 800; color: var(--color-ink); margin-top: 3px; }
+.sh-ride .sh-vehicle {
+  display: inline-block; margin-top: 8px; background: var(--color-primary-light);
+  color: var(--color-primary-dark); font-size: 12.5px; font-weight: 800;
+  border-radius: 999px; padding: 4px 11px;
+}
+.sh-ride .sh-depart { display: block; margin-top: 7px; font-size: 12px; color: var(--color-muted); }
+
+/* ---- 필기시험 카드 ---- */
+.we-card {
+  display: flex; align-items: center; gap: 18px;
+  background: #fff; border: 1px solid var(--color-line); border-left: 5px solid var(--color-primary);
+  border-radius: var(--radius-md); padding: 20px 22px;
+}
+.we-card .we-when { flex: none; text-align: center; min-width: 92px; }
+.we-card .we-date { font-size: 12.5px; font-weight: 700; color: var(--color-muted); }
+.we-card .we-time { font-size: 21px; font-weight: 900; color: var(--color-primary-dark); line-height: 1.3; letter-spacing: -0.01em; }
+.we-card .we-where { border-left: 1px solid var(--color-line); padding-left: 18px; flex: 1; }
+.we-card .we-where .k { font-size: 12px; font-weight: 700; color: var(--color-muted); }
+.we-card .we-where .v { font-size: 17px; font-weight: 800; color: var(--color-ink); margin-top: 3px; }
+
+.ms-empty, .sh-empty, .we-empty {
   background: var(--color-surface); border: 1px dashed var(--color-line); border-radius: var(--radius-md);
   padding: 26px 24px; text-align: center;
 }
-.ms-empty p { font-size: 14.5px; font-weight: 700; color: var(--color-ink); }
-.ms-empty span { display: block; margin-top: 8px; font-size: 13px; color: var(--color-muted); line-height: 1.7; }
+.ms-empty p, .sh-empty p, .we-empty p { font-size: 14.5px; font-weight: 700; color: var(--color-ink); }
+.ms-empty span, .sh-empty span, .we-empty span { display: block; margin-top: 8px; font-size: 13px; color: var(--color-muted); line-height: 1.7; }
 
-.ms-note {
+.ms-note, .sh-note, .we-note {
   margin-top: 22px; font-size: 12.5px; color: var(--color-muted); line-height: 1.8;
   background: var(--color-surface); border-radius: var(--radius-md); padding: 16px 18px;
 }
@@ -124,8 +171,6 @@
     <div class="topbar-links">
       <a href="location.html">오시는 길</a>
       <a href="my-schedule.html">내 일정 조회</a>
-      <a href="shuttle.html">셔틀 조회</a>
-      <a href="written-exam.html">필기시험 조회</a>
       <a href="notice.html">공지사항</a>
     </div>
     <a class="topbar-tel" href="tel:062-951-5100">☎ 062-951-5100</a>
@@ -158,45 +203,120 @@
 <div class="page-header">
   <div class="container">
     <div class="breadcrumb"><a href="index.html">홈</a> / 내 일정 조회</div>
-    <h1>내 일정 조회</h1>
-    <p>이름과 전화번호 뒷 4자리를 입력하시면 본인의 학과·기능·도로 교육 예정 일정을 확인하실 수 있어요.</p>
+    <h1>내 일정 조회 (교육·셔틀·필기)</h1>
+    <p>이름과 전화번호 뒷 4자리로 교육·셔틀·필기시험 일정을 각각 확인하실 수 있어요. 탭을 바꾸면 새로 입력해 조회합니다.</p>
   </div>
 </div>
 
 <main id="main-content">
   <section class="section">
     <div class="container">
-      <div class="ms-wrap">
+      <div class="lk-wrap">
 
-        <div class="ms-form-card">
-          <h2>내 교육 일정 확인하기</h2>
-          <p>수강 신청 시 등록하신 이름과 연락처로 조회합니다. 본인 정보만 조회되며, 다른 분의 일정은 표시되지 않습니다.</p>
-
-          <form id="msForm" autocomplete="off">
-            <div class="ms-fields">
-              <div class="ms-field">
-                <label for="msName">이름</label>
-                <input type="text" id="msName" placeholder="홍길동" required />
-              </div>
-              <div class="ms-field">
-                <label for="msPhone">전화번호 뒷 4자리</label>
-                <input type="text" id="msPhone" placeholder="5678" inputmode="numeric" maxlength="4" required />
-                <p class="ms-help">010-1234-<strong>5678</strong> 이면 5678</p>
-              </div>
-            </div>
-            <button type="submit" class="btn btn-accent btn-block" style="margin-top:20px;" id="msSubmit">조회하기</button>
-          </form>
-
-          <p class="ms-status" id="msStatus"></p>
+        <div class="lk-tabs" role="tablist">
+          <button type="button" class="lk-tab is-active" data-tab="edu" role="tab" aria-selected="true">교육</button>
+          <button type="button" class="lk-tab" data-tab="shuttle" role="tab" aria-selected="false">셔틀</button>
+          <button type="button" class="lk-tab" data-tab="written" role="tab" aria-selected="false">필기</button>
         </div>
 
-        <div class="ms-results" id="msResults"></div>
+        <!-- 교육 일정 -->
+        <div class="lk-panel is-active" data-panel="edu">
+          <div class="ms-form-card">
+            <h2>내 교육 일정 확인하기</h2>
+            <p>수강 신청 시 등록하신 이름과 연락처로 조회합니다. 본인 정보만 조회되며, 다른 분의 일정은 표시되지 않습니다.</p>
 
-        <p class="ms-note">
-          · 일정은 학원 전산에서 주기적으로 반영되므로, 방금 등록·변경된 일정은 아직 조회되지 않을 수 있어요.<br>
-          · 일정을 바꾸시려면 <a href="tel:062-951-5100" style="color:var(--color-primary);font-weight:700;">062-951-5100</a>으로 연락 주세요.<br>
-          · 조회가 안 되시면 수강 신청 시 적어주신 이름·연락처와 같은지 확인해주세요.
-        </p>
+            <form id="msForm" autocomplete="off">
+              <div class="ms-fields">
+                <div class="ms-field">
+                  <label for="msName">이름</label>
+                  <input type="text" id="msName" placeholder="홍길동" required />
+                </div>
+                <div class="ms-field">
+                  <label for="msPhone">전화번호 뒷 4자리</label>
+                  <input type="text" id="msPhone" placeholder="5678" inputmode="numeric" maxlength="4" required />
+                  <p class="ms-help">010-1234-<strong>5678</strong> 이면 5678</p>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-accent btn-block" style="margin-top:20px;" id="msSubmit">조회하기</button>
+            </form>
+
+            <p class="ms-status" id="msStatus"></p>
+          </div>
+
+          <div class="ms-results" id="msResults"></div>
+
+          <p class="ms-note">
+            · 일정은 학원 전산에서 주기적으로 반영되므로, 방금 등록·변경된 일정은 아직 조회되지 않을 수 있어요.<br>
+            · 일정을 바꾸시려면 <a href="tel:062-951-5100" style="color:var(--color-primary);font-weight:700;">062-951-5100</a>으로 연락 주세요.<br>
+            · 조회가 안 되시면 수강 신청 시 적어주신 이름·연락처와 같은지 확인해주세요.
+          </p>
+        </div>
+
+        <!-- 셔틀 조회 -->
+        <div class="lk-panel" data-panel="shuttle">
+          <div class="sh-form-card">
+            <h2>내 셔틀 시간 확인하기</h2>
+            <p>신청해주신 수강생분들께는 모두 셔틀을 운행해 드립니다. 이름과 연락처로 탑승 시간·장소를 조회합니다.</p>
+
+            <form id="shForm" autocomplete="off">
+              <div class="sh-fields">
+                <div class="sh-field">
+                  <label for="shName">이름</label>
+                  <input type="text" id="shName" placeholder="홍길동" required />
+                </div>
+                <div class="sh-field">
+                  <label for="shPhone">전화번호 뒷 4자리</label>
+                  <input type="text" id="shPhone" placeholder="5678" inputmode="numeric" maxlength="4" required />
+                  <p class="sh-help">010-1234-<strong>5678</strong> 이면 5678</p>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-accent btn-block" style="margin-top:20px;" id="shSubmit">조회하기</button>
+            </form>
+
+            <p class="sh-status" id="shStatus"></p>
+          </div>
+
+          <div class="sh-results" id="shResults"></div>
+
+          <p class="sh-note">
+            · 명단은 학원에서 운행 전날 정리해 등록합니다. 아직 등록 전이면 조회되지 않을 수 있어요.<br>
+            · 탑승 장소나 시간을 바꾸시려면 <a href="tel:062-951-5100" style="color:var(--color-primary);font-weight:700;">062-951-5100</a>으로 연락 주세요.<br>
+            · 조회가 안 되시면 수강 신청 시 적어주신 이름·연락처와 같은지 확인해주세요.
+          </p>
+        </div>
+
+        <!-- 필기시험 조회 -->
+        <div class="lk-panel" data-panel="written">
+          <div class="we-form-card">
+            <h2>내 필기시험 날짜 확인하기</h2>
+            <p>수강 신청 시 등록하신 이름과 연락처로 조회합니다. 본인 정보만 조회되며, 다른 분의 정보는 표시되지 않습니다.</p>
+
+            <form id="weForm" autocomplete="off">
+              <div class="we-fields">
+                <div class="we-field">
+                  <label for="weName">이름</label>
+                  <input type="text" id="weName" placeholder="홍길동" required />
+                </div>
+                <div class="we-field">
+                  <label for="wePhone">전화번호 뒷 4자리</label>
+                  <input type="text" id="wePhone" placeholder="5678" inputmode="numeric" maxlength="4" required />
+                  <p class="we-help">010-1234-<strong>5678</strong> 이면 5678</p>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-accent btn-block" style="margin-top:20px;" id="weSubmit">조회하기</button>
+            </form>
+
+            <p class="we-status" id="weStatus"></p>
+          </div>
+
+          <div class="we-results" id="weResults"></div>
+
+          <p class="we-note">
+            · 필기시험 날짜는 사무실에서 상담 후 등록해드립니다. 아직 상담 전이면 조회되지 않을 수 있어요.<br>
+            · 날짜나 시각을 바꾸시려면 <a href="tel:062-951-5100" style="color:var(--color-primary);font-weight:700;">062-951-5100</a>으로 연락 주세요.<br>
+            · 조회가 안 되시면 수강 신청 시 적어주신 이름·연락처와 같은지 확인해주세요.
+          </p>
+        </div>
 
       </div>
     </div>
@@ -224,8 +344,6 @@
           <li><a href="large-vehicle-training.html">대형연수</a></li>
           <li><a href="driving-lessons.html">도로연수</a></li>
           <li><a href="my-schedule.html">내 일정 조회</a></li>
-          <li><a href="shuttle.html">셔틀 조회</a></li>
-          <li><a href="written-exam.html">필기시험 조회</a></li>
           <li><a href="notice.html">공지사항</a></li>
           <li><a href="location.html">오시는길</a></li>
         </ul>
@@ -271,38 +389,6 @@
 (function () {
 "use strict";
 
-var form = document.getElementById("msForm");
-var nameEl = document.getElementById("msName");
-var phoneEl = document.getElementById("msPhone");
-var statusEl = document.getElementById("msStatus");
-var resultsEl = document.getElementById("msResults");
-var submitBtn = document.getElementById("msSubmit");
-
-var EDU_LABEL = { "학과": "학과교육", "기능": "기능교육", "도로": "도로연수" };
-
-/* 학사서버는 인코딩 문제를 피하려고 면허종류를 코드값(1, A, 2, 3, 4...)으로 보내고,
-   실제 이름으로 바꾸는 건 여기서 합니다. */
-var LICENSE_LABEL = {
-  "1": "1종보통(수동)", "A": "1종보통(자동)",
-  "2": "2종보통(수동)", "3": "2종보통(자동)",
-  "4": "1종대형", "5": "대형견인", "6": "구난차",
-  "7": "2종소형", "8": "원자", "9": "소형견인"
-};
-function licenseLabel(code) {
-  if (!code) { return "면허 미지정"; }
-  return LICENSE_LABEL[code] || code;
-}
-/* 종별 배지 색상 — 같은 색상 그룹(수동/자동 등)은 한 가지 색으로 묶어 구분합니다 */
-var LICENSE_COLOR = {
-  "1": "lic-blue", "A": "lic-blue",
-  "2": "lic-orange", "3": "lic-orange",
-  "4": "lic-aqua", "5": "lic-yellow", "6": "lic-magenta",
-  "7": "lic-green", "8": "lic-violet", "9": "lic-red"
-};
-function licenseColorClass(code) {
-  return LICENSE_COLOR[code] || "";
-}
-
 function esc(s) {
   return String(s == null ? "" : s)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -314,142 +400,392 @@ function maskName(name) {
   if (name.length === 2) { return name.charAt(0) + "*"; }
   return name.charAt(0) + "*".repeat(name.length - 2) + name.charAt(name.length - 1);
 }
-function setStatus(msg, kind) {
-  statusEl.textContent = msg || "";
-  statusEl.className = "ms-status" + (kind ? " " + kind : "");
-}
-function todayYmd() {
-  var d = new Date();
-  var m = String(d.getMonth() + 1), day = String(d.getDate());
-  return "" + d.getFullYear() + (m.length < 2 ? "0" + m : m) + (day.length < 2 ? "0" + day : day);
-}
 var WEEK = ["일", "월", "화", "수", "목", "금", "토"];
-/* YYYYMMDD -> "9월 12일 (금)" */
-function prettyDate(ymd) {
-  ymd = String(ymd || "");
-  if (ymd.length !== 8) { return ymd; }
-  var y = Number(ymd.slice(0, 4)), m = Number(ymd.slice(4, 6)), day = Number(ymd.slice(6, 8));
-  var d = new Date(y, m - 1, day);
-  return m + "월 " + day + "일 (" + WEEK[d.getDay()] + ")";
-}
-/* HHMMSS -> "17:43" */
-function prettyTime(hms) {
-  hms = String(hms || "");
-  if (hms.length < 4) { return hms; }
-  return hms.slice(0, 2) + ":" + hms.slice(2, 4);
-}
 
-phoneEl.addEventListener("input", function () {
-  this.value = this.value.replace(/[^0-9]/g, "").slice(0, 4);
+/* ================= 탭 전환 =================
+   탭을 바꿀 때마다 이름·전화번호를 다시 입력하도록, 떠나는 탭의 입력값과
+   조회 결과를 비워둡니다 (교육·셔틀·필기 조회는 서로 결과를 공유하지 않음). */
+var tabs = document.querySelectorAll(".lk-tab");
+var panels = document.querySelectorAll(".lk-panel");
+var resetters = {
+  edu: function () { if (window.resetMsPanel) { window.resetMsPanel(); } },
+  shuttle: function () { if (window.resetShPanel) { window.resetShPanel(); } },
+  written: function () { if (window.resetWePanel) { window.resetWePanel(); } }
+};
+var currentTab = "edu";
+
+tabs.forEach(function (t) {
+  t.addEventListener("click", function () {
+    var next = t.getAttribute("data-tab");
+    if (next === currentTab) { return; }
+    if (resetters[currentTab]) { resetters[currentTab](); }
+    tabs.forEach(function (x) { x.classList.remove("is-active"); x.setAttribute("aria-selected", "false"); });
+    panels.forEach(function (p) { p.classList.remove("is-active"); });
+    t.classList.add("is-active");
+    t.setAttribute("aria-selected", "true");
+    document.querySelector('.lk-panel[data-panel="' + next + '"]').classList.add("is-active");
+    currentTab = next;
+  });
 });
 
-var lastItems = [];
-var currentFilter = "all";
+/* ================= 교육 일정 (기존 my-schedule.html 로직) ================= */
+(function () {
+  var form = document.getElementById("msForm");
+  var nameEl = document.getElementById("msName");
+  var phoneEl = document.getElementById("msPhone");
+  var statusEl = document.getElementById("msStatus");
+  var resultsEl = document.getElementById("msResults");
+  var submitBtn = document.getElementById("msSubmit");
 
-/* 면허(등록)별로 묶어서, 등록이 2개 이상이면 위에 필터 탭을 보여줍니다.
-   면허종류가 안 들어온 예전 데이터는 "면허 미지정"으로 묶습니다. */
-function licenseGroups(items) {
-  var order = [];
-  var seen = {};
-  items.forEach(function (it) {
-    var key = it.licenseType || "";
-    if (!(key in seen)) { seen[key] = 0; order.push(key); }
-    seen[key]++;
+  var EDU_LABEL = { "학과": "학과교육", "기능": "기능교육", "도로": "도로연수" };
+  var LICENSE_LABEL = {
+    "1": "1종보통(수동)", "A": "1종보통(자동)", "2": "2종보통(수동)", "3": "2종보통(자동)",
+    "4": "1종대형", "5": "대형견인", "6": "구난차", "7": "2종소형", "8": "원자", "9": "소형견인"
+  };
+  function licenseLabel(code) { if (!code) { return "면허 미지정"; } return LICENSE_LABEL[code] || code; }
+  var LICENSE_COLOR = {
+    "1": "lic-blue", "A": "lic-blue", "2": "lic-orange", "3": "lic-orange",
+    "4": "lic-aqua", "5": "lic-yellow", "6": "lic-magenta", "7": "lic-green", "8": "lic-violet", "9": "lic-red"
+  };
+  function licenseColorClass(code) { return LICENSE_COLOR[code] || ""; }
+
+  function setStatus(msg, kind) {
+    statusEl.textContent = msg || "";
+    statusEl.className = "ms-status" + (kind ? " " + kind : "");
+  }
+  function todayYmd() {
+    var d = new Date();
+    var m = String(d.getMonth() + 1), day = String(d.getDate());
+    return "" + d.getFullYear() + (m.length < 2 ? "0" + m : m) + (day.length < 2 ? "0" + day : day);
+  }
+  function prettyDate(ymd) {
+    ymd = String(ymd || "");
+    if (ymd.length !== 8) { return ymd; }
+    var y = Number(ymd.slice(0, 4)), m = Number(ymd.slice(4, 6)), day = Number(ymd.slice(6, 8));
+    var d = new Date(y, m - 1, day);
+    return m + "월 " + day + "일 (" + WEEK[d.getDay()] + ")";
+  }
+  function prettyTime(hms) {
+    hms = String(hms || "");
+    if (hms.length < 4) { return hms; }
+    return hms.slice(0, 2) + ":" + hms.slice(2, 4);
+  }
+
+  phoneEl.addEventListener("input", function () {
+    this.value = this.value.replace(/[^0-9]/g, "").slice(0, 4);
   });
-  return { order: order, counts: seen };
-}
 
-function renderTabs(items) {
-  var groups = licenseGroups(items);
-  if (groups.order.length < 2) { return ""; }
-  var html = '<div class="ms-tabs">';
-  html += '<button type="button" class="ms-tab' + (currentFilter === "all" ? " is-active" : "") + '" data-filter="all">전체 (' + items.length + ')</button>';
-  groups.order.forEach(function (key) {
-    html += '<button type="button" class="ms-tab' + (currentFilter === key ? " is-active" : "") + '" data-filter="' + esc(key) + '">' + esc(licenseLabel(key)) + ' (' + groups.counts[key] + ')</button>';
+  var lastItems = [];
+  var currentFilter = "all";
+
+  function licenseGroups(items) {
+    var order = [];
+    var seen = {};
+    items.forEach(function (it) {
+      var key = it.licenseType || "";
+      if (!(key in seen)) { seen[key] = 0; order.push(key); }
+      seen[key]++;
+    });
+    return { order: order, counts: seen };
+  }
+
+  function renderTabs(items) {
+    var groups = licenseGroups(items);
+    if (groups.order.length < 2) { return ""; }
+    var html = '<div class="ms-tabs">';
+    html += '<button type="button" class="ms-tab' + (currentFilter === "all" ? " is-active" : "") + '" data-filter="all">전체 (' + items.length + ')</button>';
+    groups.order.forEach(function (key) {
+      html += '<button type="button" class="ms-tab' + (currentFilter === key ? " is-active" : "") + '" data-filter="' + esc(key) + '">' + esc(licenseLabel(key)) + ' (' + groups.counts[key] + ')</button>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function renderItems(items) {
+    lastItems = items;
+    var today = todayYmd();
+    var visible = currentFilter === "all" ? items : items.filter(function (it) { return (it.licenseType || "") === currentFilter; });
+
+    var html = renderTabs(items);
+    html += '<div class="ms-results-head">' + esc(maskName(nameEl.value.trim())) + '님의 예정된 일정 ' + visible.length + '건</div>';
+    visible.forEach(function (it) {
+      var isToday = it.date === today;
+      var typeLabel = EDU_LABEL[it.eduType] || it.eduType;
+      var staffNote = it.staffName ? '<span class="ms-staff">담당 ' + esc(it.staffName) + '</span>' : '';
+      var licenseNote = '<span class="ms-license ' + licenseColorClass(it.licenseType) + '">' + esc(licenseLabel(it.licenseType)) + '</span>';
+      html += '<div class="ms-item">'
+        + '<div class="ms-when">'
+        +   '<div class="ms-date">' + esc(prettyDate(it.date)) + (isToday ? '<span class="ms-badge-today">오늘</span>' : '') + '</div>'
+        +   '<div class="ms-time">' + esc(prettyTime(it.time)) + '</div>'
+        + '</div>'
+        + '<div class="ms-what">'
+        +   licenseNote
+        +   '<div class="v">' + esc(typeLabel) + '</div>'
+        +   '<span class="ms-type">' + esc(typeLabel) + '</span>'
+        +   staffNote
+        + '</div>'
+        + '</div>';
+    });
+    resultsEl.innerHTML = html;
+    resultsEl.classList.add("show");
+
+    var innerTabs = resultsEl.querySelectorAll(".ms-tab");
+    for (var i = 0; i < innerTabs.length; i++) {
+      innerTabs[i].addEventListener("click", function () {
+        currentFilter = this.getAttribute("data-filter");
+        renderItems(lastItems);
+      });
+    }
+  }
+
+  function renderEmpty() {
+    resultsEl.innerHTML = '<div class="ms-empty">'
+      + '<p>예정된 일정이 없습니다.</p>'
+      + '<span>아직 반영 전이거나, 입력하신 이름·전화번호가 신청서와 다를 수 있어요.<br>'
+      + '자세한 내용은 062-951-5100으로 문의해주세요.</span>'
+      + '</div>';
+    resultsEl.classList.add("show");
+  }
+
+  window.resetMsPanel = function () {
+    form.reset();
+    setStatus("");
+    resultsEl.classList.remove("show");
+    resultsEl.innerHTML = "";
+    lastItems = [];
+    currentFilter = "all";
+  };
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var name = nameEl.value.trim();
+    var tail = phoneEl.value.trim();
+    if (name === "" || tail.length !== 4) {
+      setStatus("이름과 전화번호 뒷 4자리를 정확히 입력해주세요.", "err");
+      return;
+    }
+    setStatus("조회 중...");
+    submitBtn.disabled = true;
+    resultsEl.classList.remove("show");
+    currentFilter = "all";
+
+    fetch("api/schedule.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "lookup", name: name, phoneTail: tail })
+    })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+      .then(function (res) {
+        if (!res.ok || res.body.error) { throw new Error(res.body.error || "조회에 실패했습니다."); }
+        setStatus("");
+        if (res.body.found && res.body.schedule.length) { renderItems(res.body.schedule); }
+        else { renderEmpty(); }
+      })
+      .catch(function () {
+        setStatus("지금은 조회할 수 없습니다. 잠시 후 다시 시도하시거나 062-951-5100으로 문의해주세요.", "err");
+      })
+      .then(function () { submitBtn.disabled = false; });
   });
-  html += '</div>';
-  return html;
-}
+})();
 
-function renderItems(items) {
-  lastItems = items;
-  var today = todayYmd();
-  var visible = currentFilter === "all" ? items : items.filter(function (it) { return (it.licenseType || "") === currentFilter; });
+/* ================= 셔틀 조회 (기존 shuttle.html 로직) ================= */
+(function () {
+  var form = document.getElementById("shForm");
+  var nameEl = document.getElementById("shName");
+  var phoneEl = document.getElementById("shPhone");
+  var statusEl = document.getElementById("shStatus");
+  var resultsEl = document.getElementById("shResults");
+  var submitBtn = document.getElementById("shSubmit");
 
-  var html = renderTabs(items);
-  html += '<div class="ms-results-head">' + esc(maskName(nameEl.value.trim())) + '님의 예정된 일정 ' + visible.length + '건</div>';
-  visible.forEach(function (it) {
-    var isToday = it.date === today;
-    var typeLabel = EDU_LABEL[it.eduType] || it.eduType;
-    var staffNote = it.staffName ? '<span class="ms-staff">담당 ' + esc(it.staffName) + '</span>' : '';
-    var licenseNote = '<span class="ms-license ' + licenseColorClass(it.licenseType) + '">' + esc(licenseLabel(it.licenseType)) + '</span>';
-    html += '<div class="ms-item">'
-      + '<div class="ms-when">'
-      +   '<div class="ms-date">' + esc(prettyDate(it.date)) + (isToday ? '<span class="ms-badge-today">오늘</span>' : '') + '</div>'
-      +   '<div class="ms-time">' + esc(prettyTime(it.time)) + '</div>'
+  function setStatus(msg, kind) {
+    statusEl.textContent = msg || "";
+    statusEl.className = "sh-status" + (kind ? " " + kind : "");
+  }
+  function todayStr() {
+    var d = new Date();
+    var m = String(d.getMonth() + 1), day = String(d.getDate());
+    return d.getFullYear() + "-" + (m.length < 2 ? "0" + m : m) + "-" + (day.length < 2 ? "0" + day : day);
+  }
+  function prettyDate(ymd) {
+    var p = ymd.split("-");
+    if (p.length !== 3) { return ymd; }
+    var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+    return Number(p[1]) + "월 " + Number(p[2]) + "일 (" + WEEK[d.getDay()] + ")";
+  }
+
+  phoneEl.addEventListener("input", function () {
+    this.value = this.value.replace(/[^0-9]/g, "").slice(0, 4);
+  });
+
+  function renderRides(rides) {
+    var today = todayStr();
+    var html = '<div class="sh-results-head">' + esc(maskName(nameEl.value.trim())) + '님의 예정된 셔틀 ' + rides.length + '건</div>';
+    rides.forEach(function (r) {
+      var isToday = r.date === today;
+      var departNote = (r.departTime && r.departTime !== r.time)
+        ? '<span class="sh-depart">교육시간 ' + esc(r.departTime) + '</span>' : '';
+      var vehicle = r.vehicle ? '<span class="sh-vehicle">' + esc(r.vehicle) + '</span>' : '';
+      html += '<div class="sh-ride">'
+        + '<div class="sh-when">'
+        +   '<div class="sh-date">' + esc(prettyDate(r.date)) + (isToday ? '<span class="sh-badge-today">오늘</span>' : '') + '</div>'
+        +   '<div class="sh-time">' + esc(r.time) + '</div>'
+        +   '<div class="sh-date">탑승시간</div>'
+        + '</div>'
+        + '<div class="sh-where">'
+        +   '<div class="k">탑승 장소</div>'
+        +   '<div class="v">' + (r.place ? esc(r.place) : '학원에 문의해주세요') + '</div>'
+        +   vehicle
+        +   departNote
+        + '</div>'
+        + '</div>';
+    });
+    resultsEl.innerHTML = html;
+    resultsEl.classList.add("show");
+  }
+
+  function renderEmpty() {
+    resultsEl.innerHTML = '<div class="sh-empty">'
+      + '<p>예정된 셔틀 탑승 정보가 없습니다.</p>'
+      + '<span>아직 명단이 등록되지 않았거나, 입력하신 이름·전화번호가 신청서와 다를 수 있어요.<br>'
+      + '자세한 내용은 062-951-5100으로 문의해주세요.</span>'
+      + '</div>';
+    resultsEl.classList.add("show");
+  }
+
+  window.resetShPanel = function () {
+    form.reset();
+    setStatus("");
+    resultsEl.classList.remove("show");
+    resultsEl.innerHTML = "";
+  };
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var name = nameEl.value.trim();
+    var tail = phoneEl.value.trim();
+    if (name === "" || tail.length !== 4) {
+      setStatus("이름과 전화번호 뒷 4자리를 정확히 입력해주세요.", "err");
+      return;
+    }
+    setStatus("조회 중...");
+    submitBtn.disabled = true;
+    resultsEl.classList.remove("show");
+
+    fetch("api/shuttle.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "lookup", name: name, phoneTail: tail })
+    })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+      .then(function (res) {
+        if (!res.ok || res.body.error) { throw new Error(res.body.error || "조회에 실패했습니다."); }
+        setStatus("");
+        if (res.body.found && res.body.rides.length) { renderRides(res.body.rides); }
+        else { renderEmpty(); }
+      })
+      .catch(function () {
+        setStatus("지금은 조회할 수 없습니다. 잠시 후 다시 시도하시거나 062-951-5100으로 문의해주세요.", "err");
+      })
+      .then(function () { submitBtn.disabled = false; });
+  });
+})();
+
+/* ================= 필기시험 조회 (기존 written-exam.html 로직) ================= */
+(function () {
+  var form = document.getElementById("weForm");
+  var nameEl = document.getElementById("weName");
+  var phoneEl = document.getElementById("wePhone");
+  var statusEl = document.getElementById("weStatus");
+  var resultsEl = document.getElementById("weResults");
+  var submitBtn = document.getElementById("weSubmit");
+
+  function setStatus(msg, kind) {
+    statusEl.textContent = msg || "";
+    statusEl.className = "we-status" + (kind ? " " + kind : "");
+  }
+  function todayStr() {
+    var d = new Date();
+    var m = String(d.getMonth() + 1), day = String(d.getDate());
+    return d.getFullYear() + "-" + (m.length < 2 ? "0" + m : m) + "-" + (day.length < 2 ? "0" + day : day);
+  }
+  function prettyDate(ymd) {
+    var p = ymd.split("-");
+    if (p.length !== 3) { return ymd; }
+    var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+    return Number(p[1]) + "월 " + Number(p[2]) + "일 (" + WEEK[d.getDay()] + ")";
+  }
+
+  phoneEl.addEventListener("input", function () {
+    this.value = this.value.replace(/[^0-9]/g, "").slice(0, 4);
+  });
+
+  function renderResult(data) {
+    var today = todayStr();
+    var isToday = data.examDate === today;
+    var html = '<div class="we-results-head">' + esc(maskName(nameEl.value.trim())) + '님의 필기시험 정보</div>';
+    html += '<div class="we-card">'
+      + '<div class="we-when">'
+      +   '<div class="we-date">' + esc(prettyDate(data.examDate)) + (isToday ? '<span class="we-badge-today">오늘</span>' : '') + '</div>'
+      +   '<div class="we-time">' + esc(data.examTime || '시각 미정') + '</div>'
       + '</div>'
-      + '<div class="ms-what">'
-      +   licenseNote
-      +   '<div class="v">' + esc(typeLabel) + '</div>'
-      +   '<span class="ms-type">' + esc(typeLabel) + '</span>'
-      +   staffNote
+      + '<div class="we-where">'
+      +   '<div class="k">장소</div>'
+      +   '<div class="v">' + (data.place ? esc(data.place) : '학원에 문의해주세요') + '</div>'
       + '</div>'
       + '</div>';
+    resultsEl.innerHTML = html;
+    resultsEl.classList.add("show");
+  }
+
+  function renderEmpty() {
+    resultsEl.innerHTML = '<div class="we-empty">'
+      + '<p>등록된 필기시험 정보가 없습니다.</p>'
+      + '<span>아직 상담 전이거나, 입력하신 이름·전화번호가 신청서와 다를 수 있어요.<br>'
+      + '자세한 내용은 062-951-5100으로 문의해주세요.</span>'
+      + '</div>';
+    resultsEl.classList.add("show");
+  }
+
+  window.resetWePanel = function () {
+    form.reset();
+    setStatus("");
+    resultsEl.classList.remove("show");
+    resultsEl.innerHTML = "";
+  };
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var name = nameEl.value.trim();
+    var tail = phoneEl.value.trim();
+    if (name === "" || tail.length !== 4) {
+      setStatus("이름과 전화번호 뒷 4자리를 정확히 입력해주세요.", "err");
+      return;
+    }
+    setStatus("조회 중...");
+    submitBtn.disabled = true;
+    resultsEl.classList.remove("show");
+
+    fetch("api/written-exam.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "lookup", name: name, phoneTail: tail })
+    })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+      .then(function (res) {
+        if (!res.ok || res.body.error) { throw new Error(res.body.error || "조회에 실패했습니다."); }
+        setStatus("");
+        if (res.body.found) { renderResult(res.body); }
+        else { renderEmpty(); }
+      })
+      .catch(function () {
+        setStatus("지금은 조회할 수 없습니다. 잠시 후 다시 시도하시거나 062-951-5100으로 문의해주세요.", "err");
+      })
+      .then(function () { submitBtn.disabled = false; });
   });
-  resultsEl.innerHTML = html;
-  resultsEl.classList.add("show");
-
-  var tabs = resultsEl.querySelectorAll(".ms-tab");
-  for (var i = 0; i < tabs.length; i++) {
-    tabs[i].addEventListener("click", function () {
-      currentFilter = this.getAttribute("data-filter");
-      renderItems(lastItems);
-    });
-  }
-}
-
-function renderEmpty() {
-  resultsEl.innerHTML = '<div class="ms-empty">'
-    + '<p>예정된 일정이 없습니다.</p>'
-    + '<span>아직 반영 전이거나, 입력하신 이름·전화번호가 신청서와 다를 수 있어요.<br>'
-    + '자세한 내용은 062-951-5100으로 문의해주세요.</span>'
-    + '</div>';
-  resultsEl.classList.add("show");
-}
-
-form.addEventListener("submit", function (e) {
-  e.preventDefault();
-  var name = nameEl.value.trim();
-  var tail = phoneEl.value.trim();
-  if (name === "" || tail.length !== 4) {
-    setStatus("이름과 전화번호 뒷 4자리를 정확히 입력해주세요.", "err");
-    return;
-  }
-  setStatus("조회 중...");
-  submitBtn.disabled = true;
-  resultsEl.classList.remove("show");
-  currentFilter = "all";
-
-  fetch("api/schedule.php", {
-    method: "POST",
-    credentials: "same-origin",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "lookup", name: name, phoneTail: tail })
-  })
-    .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
-    .then(function (res) {
-      if (!res.ok || res.body.error) {
-        throw new Error(res.body.error || "조회에 실패했습니다.");
-      }
-      setStatus("");
-      if (res.body.found && res.body.schedule.length) { renderItems(res.body.schedule); }
-      else { renderEmpty(); }
-    })
-    .catch(function () {
-      setStatus("지금은 조회할 수 없습니다. 잠시 후 다시 시도하시거나 062-951-5100으로 문의해주세요.", "err");
-    })
-    .then(function () { submitBtn.disabled = false; });
-});
+})();
 
 })();
 </script>

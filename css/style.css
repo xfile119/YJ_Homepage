@@ -3,20 +3,22 @@
    ========================================================================== */
 
 :root {
-  /* 색상 테스트: 마켓컬리 느낌의 보라색 팔레트 (2026-09) — 기존 주황/네이비 팔레트에서 전환 */
-  --color-primary: #6D28D9;
-  --color-primary-dark: #5B21B6;
-  --color-primary-light: #F3E8FF;
+  /* 색상 테스트: 네이비+옐로우 팔레트 (2026-09-25) — 도로 표지판(경고=노랑·안내=남색)
+     연상과 신뢰감을 노려 마켓컬리 느낌의 보라색 팔레트에서 전환. 강조색(노랑)은 그대로 두고
+     주 색상만 보라→남색으로 바꿨습니다. */
+  --color-primary: #13294B;
+  --color-primary-dark: #0B1B36;
+  --color-primary-light: #E7ECF5;
   --color-accent: #F5B700;
   --color-accent-dark: #D69E00;
-  /* 어두운 배경(상단바·푸터·정보카드)에 쓰는 짙은 보라 (기존 네이비 자리) */
-  --color-deep: #241934;
-  --color-deep-2: #3D2A5C;
-  --color-ink: #2E2440;
-  --color-body: #4A4258;
-  --color-muted: #8A8299;
-  --color-line: #ECE6F5;
-  --color-surface: #FAF8FC;
+  /* 어두운 배경(상단바·푸터·정보카드)에 쓰는 짙은 남색 */
+  --color-deep: #0A1730;
+  --color-deep-2: #16294D;
+  --color-ink: #1C2333;
+  --color-body: #3E4759;
+  --color-muted: #7A8699;
+  --color-line: #E2E6EE;
+  --color-surface: #F5F7FA;
   --color-white: #ffffff;
   --radius-sm: 8px;
   --radius-md: 14px;
@@ -216,7 +218,7 @@ button { font-family: inherit; cursor: pointer; }
 .hero {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(125deg, #0F0819 0%, #221040 50%, #3B1D6E 100%);
+  background: linear-gradient(125deg, #060D1C 0%, #0F2148 50%, #1E4C86 100%);
   color: #fff;
 }
 .hero::after {
@@ -292,7 +294,7 @@ button { font-family: inherit; cursor: pointer; }
   right: -25%;
   top: -20%;
   bottom: -10%;
-  background: radial-gradient(ellipse 60% 60% at 62% 42%, rgba(233,216,250,0.5), rgba(233,216,250,0) 70%);
+  background: radial-gradient(ellipse 60% 60% at 62% 42%, rgba(200,220,250,0.5), rgba(200,220,250,0) 70%);
   filter: blur(46px);
   pointer-events: none;
   z-index: 0;
@@ -418,6 +420,50 @@ a.feature-card:hover .fc-more { color: var(--color-primary-dark); }
 }
 .notice-badge.info { background: var(--color-primary-light); color: var(--color-primary); }
 
+/* ---------- Entry band (index — 신규/재원 동선 분리) ---------- */
+.entry-band { align-items: stretch; }
+.entry-card {
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.entry-card-primary { background: var(--color-primary); color: #fff; box-shadow: var(--shadow-md); }
+.entry-card-secondary { background: #fff; border: 1px solid var(--color-line); box-shadow: var(--shadow-sm); }
+.entry-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.entry-card-primary .entry-eyebrow { background: rgba(255,255,255,0.16); color: #fff; }
+.entry-card-secondary .entry-eyebrow { background: var(--color-primary-light); color: var(--color-primary); }
+.entry-card h2 { margin: 0; font-weight: 800; line-height: 1.35; }
+.entry-card-primary h2 { font-size: 30px; }
+.entry-card-secondary h2 { font-size: 24px; color: var(--color-ink); }
+.entry-card p { margin: 0; font-size: 15.5px; line-height: 1.65; }
+.entry-card-primary p { color: rgba(255,255,255,0.85); }
+.entry-card-secondary p { color: var(--color-muted); }
+.entry-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.entry-chip {
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 5px 13px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  color: var(--color-body);
+}
+.entry-card-cta { margin-top: auto; align-self: flex-start; }
+.entry-card-primary .entry-card-cta { background: #fff; color: var(--color-primary); }
+.entry-card-primary .entry-card-cta:hover { background: var(--color-surface); }
+.entry-card-secondary .entry-card-cta { background: #fff; color: var(--color-primary); border: 2px solid var(--color-primary); }
+.entry-card-secondary .entry-card-cta:hover { background: var(--color-primary-light); }
+
 /* ---------- Partner strip (index) ---------- */
 .partner-strip {
   display: flex;
@@ -517,7 +563,7 @@ a.partner-strip:hover { box-shadow: var(--shadow-sm); }
 
 /* ---------- CTA banner ---------- */
 .cta-banner {
-  background: linear-gradient(125deg, #0F0819 0%, #221040 50%, #3B1D6E 100%);
+  background: linear-gradient(125deg, #060D1C 0%, #0F2148 50%, #1E4C86 100%);
   border-radius: var(--radius-lg);
   padding: 48px;
   color: #fff;
@@ -548,7 +594,7 @@ a.partner-strip:hover { box-shadow: var(--shadow-sm); }
 
 /* ---------- Page header (inner pages) ---------- */
 .page-header {
-  background: linear-gradient(125deg, #0F0819 0%, #221040 50%, #3B1D6E 100%);
+  background: linear-gradient(125deg, #060D1C 0%, #0F2148 50%, #1E4C86 100%);
   color: #fff;
   padding: 56px 0 42px;
 }
@@ -874,6 +920,9 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
   .header-cta { flex-shrink: 0; gap: 8px; }
   .hero-stats { gap: 20px; }
   .grid-4, .grid-3, .grid-2, .steps { grid-template-columns: 1fr; }
+  .entry-card { padding: 28px 24px; }
+  .entry-card-primary h2 { font-size: 24px; }
+  .entry-card-secondary h2 { font-size: 20px; }
   .section { padding: 56px 0; }
   .cta-banner { flex-direction: column; text-align: center; padding: 34px 24px; }
   .footer-top { grid-template-columns: 1fr; gap: 28px; }
@@ -887,7 +936,7 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
   grid-template-columns: 1.15fr 0.85fr;
   align-items: center;
   gap: 32px;
-  background: linear-gradient(125deg, #0F0819 0%, #221040 50%, #3B1D6E 100%);
+  background: linear-gradient(125deg, #060D1C 0%, #0F2148 50%, #1E4C86 100%);
   border-radius: var(--radius-lg);
   padding: 40px 44px;
   color: #fff;
