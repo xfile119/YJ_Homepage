@@ -438,21 +438,7 @@
         </div>
         <div class="notice-list">
           <!-- NOTICE_PREVIEW_START -->
-          <div class="notice-row">
-            <span class="notice-badge">필독</span>
-            <span class="notice-title">학과교육 시간표 변경 안내</span>
-            <span class="notice-date">2026.08.20</span>
-          </div>
-          <div class="notice-row">
-            <span class="notice-badge info">안내</span>
-            <span class="notice-title">여름 성수기 셔틀버스 임시 노선 운영 안내</span>
-            <span class="notice-date">2026.08.05</span>
-          </div>
-          <div class="notice-row">
-            <span class="notice-badge info">안내</span>
-            <span class="notice-title">기능시험장 정기 점검에 따른 임시 휴장 안내</span>
-            <span class="notice-date">2026.07.22</span>
-          </div>
+          <p class="form-note" style="padding:18px 0;">등록된 공지사항이 없습니다.</p>
           <!-- NOTICE_PREVIEW_END -->
         </div>
         <a href="notice.html" class="btn btn-outline btn-sm" style="margin-top:22px;">공지사항 전체보기</a>
@@ -464,6 +450,10 @@
             fetch("api/notices.php").then(function (r) { return r.ok ? r.json() : null; }).then(function (res) {
               if (!res || !Array.isArray(res.notices)) return;
               var list = document.querySelector(".notice-list");
+              if (res.notices.length === 0) {
+                list.innerHTML = '<p class="form-note" style="padding:18px 0;">등록된 공지사항이 없습니다.</p>';
+                return;
+              }
               list.innerHTML = res.notices.slice(0, 3).map(function (n) {
                 var badgeHtml = n.badge && n.badge !== "없음"
                   ? '<span class="notice-badge' + (n.badge === "안내" ? " info" : "") + '">' + esc(n.badge) + "</span>"
