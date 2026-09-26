@@ -4,6 +4,11 @@
    PHP 서버 없이도 마지막으로 받은 화면·데이터로 켤 수 있게 하는 게 목적입니다. */
 
 var CACHE_NAME = "yj-license-guide-v5";
+/* Cache Storage는 서비스워커의 scope가 아니라 오리진(도메인) 전체에서 공유됩니다.
+   그래서 "내 캐시 이름이 아니면 지운다"로 정리하면 license-picker.html·
+   lookup-app.html 같은 다른 앱의 캐시까지 같이 지워집니다. 내 캐시 이름
+   접두사로 시작하는(=내 앱의 옛 버전인) 것만 지우도록 좁힙니다. */
+var CACHE_PREFIX = "yj-license-guide-";
 var APP_SHELL = [
   "license-guide.html",
   "css/style.css",
@@ -23,7 +28,7 @@ self.addEventListener("activate", function (event) {
   event.waitUntil(
     caches.keys().then(function (keys) {
       return Promise.all(
-        keys.filter(function (k) { return k !== CACHE_NAME; })
+        keys.filter(function (k) { return k.indexOf(CACHE_PREFIX) === 0 && k !== CACHE_NAME; })
             .map(function (k) { return caches.delete(k); })
       );
     }).then(function () { return self.clients.claim(); })

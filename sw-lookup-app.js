@@ -5,6 +5,11 @@
    항상 네트워크로만 처리하고, 실패하면 그냥 실패로 둡니다. */
 
 var CACHE_NAME = "yj-lookup-app-v1";
+/* Cache Storage는 서비스워커의 scope가 아니라 오리진(도메인) 전체에서 공유됩니다.
+   그래서 "내 캐시 이름이 아니면 지운다"로 정리하면 license-picker.html·
+   license-guide.html 같은 다른 앱의 캐시까지 같이 지워집니다. 내 캐시 이름
+   접두사로 시작하는(=내 앱의 옛 버전인) 것만 지우도록 좁힙니다. */
+var CACHE_PREFIX = "yj-lookup-app-";
 var APP_SHELL = [
   "lookup-app.html",
   "css/style.css"
@@ -23,7 +28,7 @@ self.addEventListener("activate", function (event) {
   event.waitUntil(
     caches.keys().then(function (keys) {
       return Promise.all(
-        keys.filter(function (k) { return k !== CACHE_NAME; })
+        keys.filter(function (k) { return k.indexOf(CACHE_PREFIX) === 0 && k !== CACHE_NAME; })
             .map(function (k) { return caches.delete(k); })
       );
     }).then(function () { return self.clients.claim(); })

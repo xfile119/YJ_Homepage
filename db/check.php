@@ -1,5 +1,26 @@
 <?php
 header('Content-Type: text/html; charset=utf-8');
+
+/* PHP 버전·DB 연결 상태 등을 그대로 보여주는 진단 화면이라, 아무나 열어보면
+   안 됩니다. setup.php와 같은 방식: 최고관리자 계정이 이미 있으면 로그인한
+   최고관리자만 열 수 있게 막습니다. 계정이 아직 없거나 DB에 연결할 수 없는
+   초기 설치 단계에서는 이 화면 자체가 원인을 찾는 용도라 막지 않습니다. */
+require __DIR__ . '/../api/_db.php';
+try {
+    $adminTable = yj_table('admin_users');
+    $existingAdminCount = (int) yj_db()->query("SELECT COUNT(*) FROM $adminTable WHERE FIND_IN_SET('admin', role) > 0")->fetchColumn();
+    if ($existingAdminCount > 0 && !(yj_session_is_valid() && yj_has_role('admin'))) {
+        http_response_code(403);
+        echo '<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>서버 진단</title></head>'
+           . '<body style="font-family:-apple-system,\'Malgun Gothic\',sans-serif;max-width:520px;margin:60px auto;padding:0 20px;">'
+           . '<h1>접근할 수 없습니다</h1>'
+           . '<p>이 화면은 최고관리자로 로그인한 뒤에만 볼 수 있습니다. <a href="../admin.html">관리자 로그인</a> 후 다시 열어주세요.</p>'
+           . '</body></html>';
+        exit;
+    }
+} catch (Exception $e) {
+    /* DB 연결 자체가 안 되는 초기 단계 — 이 진단 화면이 필요한 상황이므로 막지 않습니다. */
+}
 ?>
 <!doctype html>
 <html lang="ko">

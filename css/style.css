@@ -443,9 +443,11 @@ a.feature-card:hover .fc-more { color: var(--color-primary-dark); }
 .entry-card p { margin: 0; font-size: 15px; line-height: 1.7; transition: color 0.2s ease; }
 
 .entry-card-primary { background: #fff; border: 1px solid var(--color-line); box-shadow: var(--shadow-sm); }
-.entry-card-primary .entry-eyebrow { color: var(--color-muted); }
+/* var(--color-muted)는 흰 배경에서 13px 글자 기준 명도 대비가 3.7:1 정도라
+   본문 텍스트 기준(4.5:1)에 못 미칩니다. 더 진한 --color-body로 바꿉니다. */
+.entry-card-primary .entry-eyebrow { color: var(--color-body); }
 .entry-card-primary h2 { color: var(--color-ink); }
-.entry-card-primary p { color: var(--color-muted); }
+.entry-card-primary p { color: var(--color-body); }
 .entry-card-primary:hover, .entry-card-primary:focus-visible {
   background: var(--color-primary-dark);
   border-color: var(--color-primary-dark);
@@ -461,7 +463,10 @@ a.feature-card:hover .fc-more { color: var(--color-primary-dark); }
 .entry-card-secondary p { color: rgba(255,255,255,0.75); }
 .entry-card-secondary:hover, .entry-card-secondary:focus-visible { background: #081428; box-shadow: var(--shadow-lg); }
 
-.entry-card-cta { background: var(--color-accent); color: var(--color-ink); pointer-events: none; }
+/* margin-top:auto로 버튼을 카드 바닥에 붙입니다. 두 카드는 높이가
+   맞춰져 있는데(align-items:stretch) 헤드라인 줄 수가 서로 달라서, 이게
+   없으면 짧은 카드의 버튼이 긴 카드보다 위쪽에 뜨는 문제가 있었습니다. */
+.entry-card-cta { background: var(--color-accent); color: var(--color-ink); pointer-events: none; margin-top: auto; }
 
 /* ---------- Partner strip (index) ---------- */
 .partner-strip {

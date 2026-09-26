@@ -214,9 +214,9 @@
       <div class="lk-wrap">
 
         <div class="lk-tabs" role="tablist">
-          <button type="button" class="lk-tab is-active" data-tab="edu" role="tab" aria-selected="true">교육</button>
-          <button type="button" class="lk-tab" data-tab="shuttle" role="tab" aria-selected="false">셔틀</button>
-          <button type="button" class="lk-tab" data-tab="written" role="tab" aria-selected="false">필기</button>
+          <button type="button" class="lk-tab is-active" data-tab="edu" role="tab" aria-selected="true" tabindex="0">교육</button>
+          <button type="button" class="lk-tab" data-tab="shuttle" role="tab" aria-selected="false" tabindex="-1">셔틀</button>
+          <button type="button" class="lk-tab" data-tab="written" role="tab" aria-selected="false" tabindex="-1">필기</button>
         </div>
 
         <!-- 교육 일정 -->
@@ -414,18 +414,36 @@ var resetters = {
 };
 var currentTab = "edu";
 
-tabs.forEach(function (t) {
-  t.addEventListener("click", function () {
-    var next = t.getAttribute("data-tab");
-    if (next === currentTab) { return; }
-    if (resetters[currentTab]) { resetters[currentTab](); }
-    tabs.forEach(function (x) { x.classList.remove("is-active"); x.setAttribute("aria-selected", "false"); });
-    panels.forEach(function (p) { p.classList.remove("is-active"); });
-    t.classList.add("is-active");
-    t.setAttribute("aria-selected", "true");
-    document.querySelector('.lk-panel[data-panel="' + next + '"]').classList.add("is-active");
-    currentTab = next;
+function activateTab(next, focusIt) {
+  if (next === currentTab) { return; }
+  if (resetters[currentTab]) { resetters[currentTab](); }
+  tabs.forEach(function (x) {
+    var isNext = x.getAttribute("data-tab") === next;
+    x.classList.toggle("is-active", isNext);
+    x.setAttribute("aria-selected", isNext ? "true" : "false");
+    x.setAttribute("tabindex", isNext ? "0" : "-1");
+    if (isNext && focusIt) { x.focus(); }
   });
+  panels.forEach(function (p) { p.classList.remove("is-active"); });
+  document.querySelector('.lk-panel[data-panel="' + next + '"]').classList.add("is-active");
+  currentTab = next;
+}
+
+tabs.forEach(function (t) {
+  t.addEventListener("click", function () { activateTab(t.getAttribute("data-tab"), false); });
+});
+
+/* 방향키로 탭 이동 (WAI-ARIA 탭 패턴): ←/→ 로 옆 탭으로, Home/End 로 처음·끝 탭으로 */
+var tabList = document.querySelector(".lk-tabs");
+tabList.addEventListener("keydown", function (e) {
+  var order = Array.prototype.map.call(tabs, function (t) { return t.getAttribute("data-tab"); });
+  var idx = order.indexOf(currentTab);
+  var next = null;
+  if (e.key === "ArrowRight") { next = order[(idx + 1) % order.length]; }
+  else if (e.key === "ArrowLeft") { next = order[(idx - 1 + order.length) % order.length]; }
+  else if (e.key === "Home") { next = order[0]; }
+  else if (e.key === "End") { next = order[order.length - 1]; }
+  if (next) { e.preventDefault(); activateTab(next, true); }
 });
 
 /* ================= 교육 일정 (기존 my-schedule.html 로직) ================= */
@@ -547,13 +565,20 @@ tabs.forEach(function (t) {
     resultsEl.classList.add("show");
   }
 
+  /* 탭을 떠날 때 진행 중인 조회 요청이 있으면 취소합니다. 취소하지 않으면
+     요청이 계속 진행되다가 나중에 응답이 와서, 이미 비워둔 결과 칸에 옛
+     결과를 다시 그려 넣는 문제가 생깁니다. */
+  var inflight = null;
+
   window.resetMsPanel = function () {
+    if (inflight) { inflight.abort(); inflight = null; }
     form.reset();
     setStatus("");
     resultsEl.classList.remove("show");
     resultsEl.innerHTML = "";
     lastItems = [];
     currentFilter = "all";
+    submitBtn.disabled = false;
   };
 
   form.addEventListener("submit", function (e) {
@@ -564,6 +589,9 @@ tabs.forEach(function (t) {
       setStatus("이름과 전화번호 뒷 4자리를 정확히 입력해주세요.", "err");
       return;
     }
+    if (inflight) { inflight.abort(); }
+    var controller = new AbortController();
+    inflight = controller;
     setStatus("조회 중...");
     submitBtn.disabled = true;
     resultsEl.classList.remove("show");
@@ -573,7 +601,8 @@ tabs.forEach(function (t) {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "lookup", name: name, phoneTail: tail })
+      body: JSON.stringify({ action: "lookup", name: name, phoneTail: tail }),
+      signal: controller.signal
     })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
       .then(function (res) {
@@ -582,10 +611,13 @@ tabs.forEach(function (t) {
         if (res.body.found && res.body.schedule.length) { renderItems(res.body.schedule); }
         else { renderEmpty(); }
       })
-      .catch(function () {
+      .catch(function (err) {
+        if (err && err.name === "AbortError") { return; }
         setStatus("지금은 조회할 수 없습니다. 잠시 후 다시 시도하시거나 062-951-5100으로 문의해주세요.", "err");
       })
-      .then(function () { submitBtn.disabled = false; });
+      .then(function () {
+        if (inflight === controller) { submitBtn.disabled = false; inflight = null; }
+      });
   });
 })();
 
@@ -653,11 +685,15 @@ tabs.forEach(function (t) {
     resultsEl.classList.add("show");
   }
 
+  var inflight = null;
+
   window.resetShPanel = function () {
+    if (inflight) { inflight.abort(); inflight = null; }
     form.reset();
     setStatus("");
     resultsEl.classList.remove("show");
     resultsEl.innerHTML = "";
+    submitBtn.disabled = false;
   };
 
   form.addEventListener("submit", function (e) {
@@ -668,6 +704,9 @@ tabs.forEach(function (t) {
       setStatus("이름과 전화번호 뒷 4자리를 정확히 입력해주세요.", "err");
       return;
     }
+    if (inflight) { inflight.abort(); }
+    var controller = new AbortController();
+    inflight = controller;
     setStatus("조회 중...");
     submitBtn.disabled = true;
     resultsEl.classList.remove("show");
@@ -676,7 +715,8 @@ tabs.forEach(function (t) {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "lookup", name: name, phoneTail: tail })
+      body: JSON.stringify({ action: "lookup", name: name, phoneTail: tail }),
+      signal: controller.signal
     })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
       .then(function (res) {
@@ -685,10 +725,13 @@ tabs.forEach(function (t) {
         if (res.body.found && res.body.rides.length) { renderRides(res.body.rides); }
         else { renderEmpty(); }
       })
-      .catch(function () {
+      .catch(function (err) {
+        if (err && err.name === "AbortError") { return; }
         setStatus("지금은 조회할 수 없습니다. 잠시 후 다시 시도하시거나 062-951-5100으로 문의해주세요.", "err");
       })
-      .then(function () { submitBtn.disabled = false; });
+      .then(function () {
+        if (inflight === controller) { submitBtn.disabled = false; inflight = null; }
+      });
   });
 })();
 
@@ -748,11 +791,15 @@ tabs.forEach(function (t) {
     resultsEl.classList.add("show");
   }
 
+  var inflight = null;
+
   window.resetWePanel = function () {
+    if (inflight) { inflight.abort(); inflight = null; }
     form.reset();
     setStatus("");
     resultsEl.classList.remove("show");
     resultsEl.innerHTML = "";
+    submitBtn.disabled = false;
   };
 
   form.addEventListener("submit", function (e) {
@@ -763,6 +810,9 @@ tabs.forEach(function (t) {
       setStatus("이름과 전화번호 뒷 4자리를 정확히 입력해주세요.", "err");
       return;
     }
+    if (inflight) { inflight.abort(); }
+    var controller = new AbortController();
+    inflight = controller;
     setStatus("조회 중...");
     submitBtn.disabled = true;
     resultsEl.classList.remove("show");
@@ -771,7 +821,8 @@ tabs.forEach(function (t) {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "lookup", name: name, phoneTail: tail })
+      body: JSON.stringify({ action: "lookup", name: name, phoneTail: tail }),
+      signal: controller.signal
     })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
       .then(function (res) {
@@ -780,10 +831,13 @@ tabs.forEach(function (t) {
         if (res.body.found) { renderResult(res.body); }
         else { renderEmpty(); }
       })
-      .catch(function () {
+      .catch(function (err) {
+        if (err && err.name === "AbortError") { return; }
         setStatus("지금은 조회할 수 없습니다. 잠시 후 다시 시도하시거나 062-951-5100으로 문의해주세요.", "err");
       })
-      .then(function () { submitBtn.disabled = false; });
+      .then(function () {
+        if (inflight === controller) { submitBtn.disabled = false; inflight = null; }
+      });
   });
 })();
 
