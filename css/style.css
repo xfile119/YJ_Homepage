@@ -420,49 +420,48 @@ a.feature-card:hover .fc-more { color: var(--color-primary-dark); }
 }
 .notice-badge.info { background: var(--color-primary-light); color: var(--color-primary); }
 
-/* ---------- Entry band (index — 신규/재원 동선 분리) ---------- */
+/* ---------- Entry band (index — 신규/재원 동선 분리) ----------
+   카드 전체가 링크입니다. 마우스를 올리면(포커스 시에도 동일) 진한 남색으로
+   바뀌어 "누를 수 있다"는 신호를 주고, 노란 CTA는 색이 유일하게 강조되는
+   지점으로 남겨둡니다(60-30-10 중 강조색 10% 자리). */
 .entry-band { align-items: stretch; }
 .entry-card {
-  border-radius: var(--radius-lg);
-  padding: 40px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-.entry-card-primary { background: var(--color-primary); color: #fff; box-shadow: var(--shadow-md); }
-.entry-card-secondary { background: #fff; border: 1px solid var(--color-line); box-shadow: var(--shadow-sm); }
-.entry-eyebrow {
-  display: inline-flex;
   align-items: center;
-  width: fit-content;
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 700;
+  text-align: center;
+  gap: 16px;
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.entry-card-primary .entry-eyebrow { background: rgba(255,255,255,0.16); color: #fff; }
-.entry-card-secondary .entry-eyebrow { background: var(--color-primary-light); color: var(--color-primary); }
-.entry-card h2 { margin: 0; font-weight: 800; line-height: 1.35; }
-.entry-card-primary h2 { font-size: 30px; }
-.entry-card-secondary h2 { font-size: 24px; color: var(--color-ink); }
-.entry-card p { margin: 0; font-size: 15.5px; line-height: 1.65; }
-.entry-card-primary p { color: rgba(255,255,255,0.85); }
-.entry-card-secondary p { color: var(--color-muted); }
-.entry-chips { display: flex; gap: 8px; flex-wrap: wrap; }
-.entry-chip {
-  font-size: 12.5px;
-  font-weight: 700;
-  padding: 5px 13px;
-  border-radius: 999px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-line);
-  color: var(--color-body);
+.entry-card:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+.entry-eyebrow { font-size: 13px; font-weight: 700; transition: color 0.2s ease; }
+.entry-card h2 { margin: 0; font-size: 28px; font-weight: 800; line-height: 1.35; transition: color 0.2s ease; }
+.entry-card p { margin: 0; font-size: 15px; line-height: 1.7; transition: color 0.2s ease; }
+
+.entry-card-primary { background: #fff; border: 1px solid var(--color-line); box-shadow: var(--shadow-sm); }
+.entry-card-primary .entry-eyebrow { color: var(--color-muted); }
+.entry-card-primary h2 { color: var(--color-ink); }
+.entry-card-primary p { color: var(--color-muted); }
+.entry-card-primary:hover, .entry-card-primary:focus-visible {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+  box-shadow: var(--shadow-md);
 }
-.entry-card-cta { margin-top: auto; align-self: flex-start; }
-.entry-card-primary .entry-card-cta { background: #fff; color: var(--color-primary); }
-.entry-card-primary .entry-card-cta:hover { background: var(--color-surface); }
-.entry-card-secondary .entry-card-cta { background: #fff; color: var(--color-primary); border: 2px solid var(--color-primary); }
-.entry-card-secondary .entry-card-cta:hover { background: var(--color-primary-light); }
+.entry-card-primary:hover .entry-eyebrow, .entry-card-primary:focus-visible .entry-eyebrow { color: var(--color-accent); }
+.entry-card-primary:hover h2, .entry-card-primary:focus-visible h2 { color: #fff; }
+.entry-card-primary:hover p, .entry-card-primary:focus-visible p { color: rgba(255,255,255,0.75); }
+
+.entry-card-secondary { background: var(--color-primary-dark); box-shadow: var(--shadow-md); }
+.entry-card-secondary .entry-eyebrow { color: var(--color-accent); }
+.entry-card-secondary h2 { color: #fff; }
+.entry-card-secondary p { color: rgba(255,255,255,0.75); }
+.entry-card-secondary:hover, .entry-card-secondary:focus-visible { background: #081428; box-shadow: var(--shadow-lg); }
+
+.entry-card-cta { background: var(--color-accent); color: var(--color-ink); pointer-events: none; }
 
 /* ---------- Partner strip (index) ---------- */
 .partner-strip {
@@ -920,9 +919,8 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
   .header-cta { flex-shrink: 0; gap: 8px; }
   .hero-stats { gap: 20px; }
   .grid-4, .grid-3, .grid-2, .steps { grid-template-columns: 1fr; }
-  .entry-card { padding: 28px 24px; }
-  .entry-card-primary h2 { font-size: 24px; }
-  .entry-card-secondary h2 { font-size: 20px; }
+  .entry-card { padding: 24px; }
+  .entry-card h2 { font-size: 21px; }
   .section { padding: 56px 0; }
   .cta-banner { flex-direction: column; text-align: center; padding: 34px 24px; }
   .footer-top { grid-template-columns: 1fr; gap: 28px; }
