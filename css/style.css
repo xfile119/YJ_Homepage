@@ -218,7 +218,7 @@ button { font-family: inherit; cursor: pointer; }
 .hero {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(125deg, #060D1C 0%, #0F2148 50%, #1E4C86 100%);
+  background: var(--color-deep);
   color: #fff;
 }
 .hero::after {
@@ -431,7 +431,7 @@ a.feature-card:hover .fc-more { color: var(--color-primary-dark); }
   align-items: center;
   text-align: center;
   gap: 16px;
-  border-radius: var(--radius-lg);
+  border-radius: 16px;
   padding: 32px;
   text-decoration: none;
   cursor: pointer;
@@ -567,7 +567,7 @@ a.partner-strip:hover { box-shadow: var(--shadow-sm); }
 
 /* ---------- CTA banner ---------- */
 .cta-banner {
-  background: linear-gradient(125deg, #060D1C 0%, #0F2148 50%, #1E4C86 100%);
+  background: var(--color-deep);
   border-radius: var(--radius-lg);
   padding: 48px;
   color: #fff;
@@ -598,7 +598,7 @@ a.partner-strip:hover { box-shadow: var(--shadow-sm); }
 
 /* ---------- Page header (inner pages) ---------- */
 .page-header {
-  background: linear-gradient(125deg, #060D1C 0%, #0F2148 50%, #1E4C86 100%);
+  background: var(--color-deep);
   color: #fff;
   padding: 56px 0 42px;
 }
@@ -939,7 +939,7 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
   grid-template-columns: 1.15fr 0.85fr;
   align-items: center;
   gap: 32px;
-  background: linear-gradient(125deg, #060D1C 0%, #0F2148 50%, #1E4C86 100%);
+  background: var(--color-deep);
   border-radius: var(--radius-lg);
   padding: 40px 44px;
   color: #fff;
