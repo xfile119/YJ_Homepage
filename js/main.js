@@ -1,7 +1,7 @@
 /* 실제 사이트(FTP 업로드본)가 지금 어느 작업 시점인지 확인하기 위한 버전 표시입니다.
    커밋할 때마다 이 값을 그 커밋 해시/시각으로 갱신해두면, 화면 맨 아래 작은 글씨로
    나오는 버전과 git 기록을 대조해서 "어디까지 실제로 반영됐는지" 확인할 수 있습니다. */
-var YJ_SITE_VERSION = { commit: "f149848", date: "2026-09-26 15:30 KST", note: "자가용 안내에 위치 저장 문구 추가" };
+var YJ_SITE_VERSION = { commit: "f8abd90", date: "2026-09-26 15:45 KST", note: "사이트 설명 80자 이내로 축약" };
 
 document.addEventListener("DOMContentLoaded", function () {
   var header = document.querySelector(".site-header");
