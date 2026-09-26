@@ -11,6 +11,49 @@ FTP 업로드 후 이 값이 아래 최신 항목과 일치하는지 보면, 실
 
 ---
 
+## 2026-09-26 00:20 KST — `4afc8b4` (브랜치: claude/fervent-pasteur-m0azj3)
+**홈 진입 카드 디자인 최종안.** 캔버스 목업에서 다듬은 디자인을 실제 `index.html`에 반영.
+
+- 카드 전체가 링크입니다. 노란 버튼뿐 아니라 카드 어디를 눌러도 이동합니다.
+- 마우스를 올리면 진한 남색으로 카드가 바뀝니다 (좌측 탐색기는 흰 배경→남색, 우측
+  내 일정 조회는 남색→더 진한 남색).
+- 문구를 질문형으로 교체: "나에게 맞는 면허, 어디서부터 시작할까요?" / "내 일정
+  확인 하기". 교육·셔틀·필기 칩 3개는 빼고 한 줄 설명으로 정리.
+- 카드 안 요소를 전부 가운데 정렬. 키보드로 넘어갈 때도 같은 강조가 뜨도록
+  포커스 표시 추가.
+
+**FTP로 올릴 파일**: `index.html`, `css/style.css`. DB 변경 없음.
+
+## 2026-09-25 23:50 KST — `e514847` (브랜치: claude/fervent-pasteur-m0azj3)
+**홈 진입 동선 개편 + 내 일정 조회 3종 통합 + 사이트 색상 전환.** 캔버스 목업으로
+먼저 검토한 세 가지를 새 브랜치에 반영했습니다. **main이 아닌 별도 브랜치입니다 —
+검토 후 main에 반영할지 결정해주세요.**
+
+- **홈 진입 배너**: 히어로 아래·기아차 제휴 띠 위에 신규/재원 2단 카드 추가.
+  좌측(탐색기)은 "면허, 선택만 하세요. 취득 과정·비용·기간, 나머지는 저희가
+  찾아드릴게요.", 우측은 "내 일정 조회 (교육·셔틀·필기)". 히어로의 "면허 탐색기
+  보기" 버튼은 중복이라 제거.
+- **내 일정 조회 통합**: `my-schedule.html`에 교육/셔틀/필기 탭 3개 추가.
+  탭을 바꾸면 떠나는 탭의 입력값·조회 결과가 비워져 매번 새로 조회합니다
+  (API는 기존 3개 그대로 재사용). 모든 페이지 메뉴에서 "셔틀 조회"·"필기시험
+  조회" 링크를 삭제하고 "내 일정 조회" 하나만 남겼습니다. `shuttle.html`·
+  `written-exam.html` 페이지 자체는 인쇄물 등 기존 링크를 위해 당분간 남겨둡니다.
+- **색상 전환**: 보라(#6D28D9) → 네이비(#13294B) + 옐로우(#F5B700, 기존 강조색
+  그대로). 도로 표지판(경고=노랑·안내=남색) 연상과 신뢰감을 노렸습니다. `css/style.css`의
+  `:root` 색상 토큰과, 하드코딩돼 있던 히어로·페이지 상단 배너·CTA 배너의 보라
+  그라데이션 4곳, PWA `theme-color`·manifest 5곳을 함께 고쳤습니다.
+
+**FTP로 올릴 파일**: `css/style.css`, `index.html`, `my-schedule.html`,
+`about.html`, `contact.html`, `driving-lessons.html`, `education-hours.html`,
+`large-vehicle-training.html`, `license-guide.html`, `license-picker.html`,
+`location.html`, `lookup-app.html`, `manifest-license-guide.json`,
+`manifest-license-picker.json`, `manifest-lookup-app.json`,
+`medical-checkup-hospitals.html`, `notice-detail.html`, `notice.html`,
+`privacy.html`, `shuttle.html`, `written-exam.html`. DB 변경 없음.
+
+**올린 직후 확인**: 홈 화면의 새 2단 배너, `my-schedule.html`의 탭 3개(로그인
+없이 바로 조회 가능), 전체 화면 톤이 네이비+옐로우로 바뀌었는지 확인해주세요.
+
 ## 2026-09-25 23:20 KST — `7b46bb6`
 **공지사항 예시 데이터 삭제 + 셔틀버스 안내 문구 수정.**
 
