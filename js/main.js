@@ -28,12 +28,25 @@ document.addEventListener("DOMContentLoaded", function () {
       if (header) mainNav.style.top = header.getBoundingClientRect().bottom + "px";
     }
 
-    navToggle.addEventListener("click", function () {
-      var isOpen = mainNav.classList.toggle("is-open");
+    function setNavOpen(isOpen) {
+      mainNav.classList.toggle("is-open", isOpen);
       if (isOpen) positionMobileNav();
       navToggle.classList.toggle("is-open", isOpen);
       navToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      navToggle.setAttribute("aria-label", isOpen ? "메뉴 닫기" : "메뉴 열기");
       document.body.style.overflow = isOpen ? "hidden" : "";
+    }
+
+    navToggle.addEventListener("click", function () {
+      setNavOpen(!mainNav.classList.contains("is-open"));
+    });
+
+    // Esc로 모바일 메뉴 닫기 (열려 있을 때만) — 닫은 뒤 포커스는 열기 버튼으로 되돌려줍니다.
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && mainNav.classList.contains("is-open")) {
+        setNavOpen(false);
+        navToggle.focus();
+      }
     });
 
     window.addEventListener("resize", function () {
@@ -42,10 +55,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
     mainNav.querySelectorAll("a").forEach(function (link) {
       link.addEventListener("click", function () {
-        mainNav.classList.remove("is-open");
-        navToggle.classList.remove("is-open");
-        document.body.style.overflow = "";
+        setNavOpen(false);
       });
+    });
+  }
+
+  // 모바일에서 전화·카카오·네이버 버튼 3개가 항상 펼쳐져 있어 본문과 겹치는
+  // 문제 — 평소엔 "상담" 버튼 하나만 보이고, 누르면 펼쳐지도록 합니다.
+  // 16개 페이지에 같은 floating-actions 마크업이 반복돼 있어서 파일마다
+  // 고치는 대신 여기서 한 번만 토글 버튼을 끼워 넣습니다. (맨 위로 버튼은
+  // 스크롤에 따라 따로 나타나므로 그대로 둡니다.)
+  var floatingActions = document.querySelector(".floating-actions");
+  if (floatingActions && !floatingActions.querySelector(".fa-toggle")) {
+    var faToggle = document.createElement("button");
+    faToggle.type = "button";
+    faToggle.className = "fa-toggle";
+    faToggle.setAttribute("aria-label", "상담 메뉴 열기");
+    faToggle.setAttribute("aria-expanded", "false");
+    faToggle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
+    floatingActions.appendChild(faToggle);
+    faToggle.addEventListener("click", function () {
+      var isOpen = floatingActions.classList.toggle("is-expanded");
+      faToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+      faToggle.setAttribute("aria-label", isOpen ? "상담 메뉴 닫기" : "상담 메뉴 열기");
     });
   }
 

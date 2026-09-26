@@ -260,6 +260,11 @@ function renderFlow(c){
   var giOn = c.hours.gi && c.hours.gi[0]>0;
   var doroOn = c.hours.doro && c.hours.doro[0]>0;
   steps.push({t:"학과교육", on:hakOn});
+  /* 학과교육 수강과 필기시험 합격은 서로 다른 단계입니다 — 학과 시간만 채우면
+     끝나는 게 아니라, 필기시험(학과시험)에 합격해야 다음 단계(장내기능)로
+     넘어갈 수 있어요. 학과교육이 면제되는 조건이면 필기시험도 이미 면제·합격된
+     경우로 봅니다. */
+  steps.push({t:"필기시험", on:hakOn});
   steps.push({t:"장내기능교육·시험", on:giOn});
   steps.push({t:"도로주행교육·시험", on:doroOn});
   steps.push({t:"면허증 발급", on:true, always:true});
@@ -279,7 +284,7 @@ function estimateDuration(c){
   });
   var text;
   if(total<=0) text="바로 신청 가능 (별도 의무교육 없음)";
-  else if(total<=3) text="최短 1~2일";
+  else if(total<=3) text="최단 1~2일";
   else if(total<=9) text="약 3~6일";
   else if(total<=19) text="약 1~2주";
   else text="약 2~3주";
@@ -293,9 +298,9 @@ function renderScheduleBlock(code, c){
   var prefix=code.split("-")[0];
   var hakOn = c.hours.hak && c.hours.hak[0]>0;
   var sch = SCHEDULE_BY_PREFIX[prefix];
-  var html='<div class="yjlg-info-block"><div class="yjlg-info-head">'+svgClock()+'교육 가능 시간</div>';
+  var html='<div class="yjlg-info-block"><div class="yjlg-info-head">'+svgClock()+'학과교육 시간표</div>';
   if(!hakOn){
-    html+='<p>학과교육이 면제되어 별도 시간표 확인이 필요 없어요.</p>';
+    html+='<p>학과교육은 면제됩니다. 기능·도로주행 교육 일정은 별도로 확인해 주세요.</p>';
   } else if(sch){
     html+='<p>'+sch.lines.join("<br>")+' (학과교육 기준)</p>';
     html+='<p>매달 첫째 주 일요일은 토요일과 동일하게 수업을 진행해요.</p>';
@@ -320,9 +325,9 @@ function renderExamScheduleBlock(effExamGi, effExamDoro){
   var names=[];
   if(effExamGi!==null) names.push("장내기능시험");
   if(effExamDoro!==null) names.push("도로주행시험");
-  var html='<div class="yjlg-info-block"><div class="yjlg-info-head">'+svgFlag()+'시험 일정</div>';
+  var html='<div class="yjlg-info-block"><div class="yjlg-info-head">'+svgFlag()+'시험 일정 확인 방법</div>';
   if(names.length){
-    html+='<p>'+names.join('·')+'은(는) 학원에서 정기적으로 진행돼요. 정확한 일정은 접수 시 상담을 통해 안내해드려요.</p>';
+    html+='<p>'+names.join('·')+'은(는) 학원에서 정기적으로 진행돼요. 시험 날짜는 접수 시 안내해드리고, 등록된 필기시험 일정은 <a class="yjlg-link" href="my-schedule.html">내 일정 조회</a>에서 확인하실 수 있어요.</p>';
   } else {
     html+='<p>이 과정은 별도의 실기 시험이 없어요.</p>';
   }
@@ -765,8 +770,19 @@ function renderResult(){
     }
 
     var total=calcTotalWithExam(c.cost, effExamGi, effExamDoro);
+    if(DATA_IS_STALE){
+      html+='<div class="yjlg-callout yjlg-warn">지금 최신 수강료 정보를 불러오지 못해, 참고용 기본값을 보여드리고 있어요. 정확한 금액은 상담 시 다시 확인해주세요.</div>';
+    }
     html+='<div class="yjlg-total-tile"><span class="yjlg-k">예상 합계</span><span class="yjlg-v">'+(total==="unknown"?"문의 필요":won(total))+'</span></div>';
-    html+='<p class="yjlg-fineprint">'+(total==="unknown"?"":"정확한 금액은 상담 시 확인해드려요. 상기 수강료는 의무교육을 기준으로 산정되었으며, 시험은 각 1회씩 포함된 가격입니다.")+'</p>';
+    /* "시험은 각 1회씩 포함"이라고만 하면 어떤 시험인지, 반대로 뭐가 안 포함인지
+       불명확했습니다. 이 과정에 실제로 포함된 시험 이름을 그대로 쓰고, 데이터에
+       없어서 이 합계에 못 넣은 항목(필기시험 응시료·신체검사비·발급 수수료)은
+       빠져 있다고 분명히 밝힙니다. */
+    var includedExamNames=[];
+    if(effExamGi!==null) includedExamNames.push("장내기능시험");
+    if(effExamDoro!==null) includedExamNames.push("도로주행시험");
+    var includedExamText = includedExamNames.length ? (includedExamNames.join('·')+' 응시료 1회분을 포함한') : "의무교육";
+    html+='<p class="yjlg-fineprint">'+(total==="unknown"?"":"정확한 금액은 상담 시 확인해드려요. 위 합계는 "+esc(includedExamText)+" 비용 기준이며, 필기시험 응시료·신체검사 비용·면허증 발급 수수료는 포함되어 있지 않아요.")+'</p>';
     consultInfo.total=(total==="unknown"?"문의 필요":won(total));
     html+=consultSlot();
 
@@ -817,10 +833,14 @@ function init(){
   render();
 }
 
+/* API 호출이 실패하면 코드에 내장된 기본값(DATA)을 그대로 보여주는데, 지금까지는
+   아무 표시 없이 조용히 넘어가서 방문자가 이걸 최신 데이터로 오해할 수 있었습니다.
+   실패 여부를 var DATA_IS_STALE로 남겨두고, 결과 화면에서 금액 근처에 안내를 띄웁니다. */
+var DATA_IS_STALE = false;
 function startWithFreshData(){
   fetch("api/license-data.php").then(function(r){ return r.ok ? r.json() : null; }).then(function(res){
-    if(res && res.data){ DATA = res.data; }
-  }).catch(function(){}).then(function(){
+    if(res && res.data){ DATA = res.data; } else { DATA_IS_STALE = true; }
+  }).catch(function(){ DATA_IS_STALE = true; }).then(function(){
     if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", init); } else { init(); }
   });
 }

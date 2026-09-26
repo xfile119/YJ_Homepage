@@ -16,7 +16,10 @@
   --color-deep-2: #16294D;
   --color-ink: #1C2333;
   --color-body: #3E4759;
-  --color-muted: #7A8699;
+  /* 흰 배경 위 13px 안내문 기준으로 대비를 계산해보니 #7A8699는 약 3.7:1로
+     본문 기준(4.5:1)에 못 미쳤습니다. 톤은 유지하면서 조금 더 진하게
+     (약 4.8:1) 고쳤습니다. */
+  --color-muted: #64748B;
   --color-line: #E2E6EE;
   --color-surface: #F5F7FA;
   --color-white: #ffffff;
@@ -864,6 +867,9 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
 .fa-kakao { background: #FEE500; color: #3C1E1E; }
 .fa-naver { background: #03C75A; color: #fff; }
 .fa-top { background: #fff; color: var(--color-ink); border: 1px solid var(--color-line); opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+/* 상담 묶음 토글 버튼 — 넓은 화면에서는 4개가 다 보여도 안 겹치니 숨겨두고,
+   좁은 화면(760px 이하)에서만 보이게 합니다 */
+.fa-toggle { display: none; }
 .fa-top.is-visible { opacity: 1; pointer-events: auto; }
 .floating-actions svg { width: 22px; height: 22px; }
 
@@ -931,6 +937,27 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
   .footer-top { grid-template-columns: 1fr; gap: 28px; }
   .form-grid { grid-template-columns: 1fr; }
   .contact-side { order: -1; }
+
+  /* 상담 버튼 4개가 항상 펼쳐져 있으면 좁은 화면에서 본문과 겹칩니다.
+     "상담" 버튼 하나만 기본으로 두고, 누르면 전화·카카오·네이버가 펼쳐지도록
+     합니다 (맨 위로 버튼은 스크롤에 따라 따로 나타나므로 그대로 둠). */
+  .floating-actions { right: 16px; bottom: 16px; gap: 8px; }
+  .floating-actions a, .floating-actions button { width: 46px; height: 46px; }
+  .floating-actions svg { width: 20px; height: 20px; }
+  .fa-call, .fa-kakao, .fa-naver {
+    opacity: 0;
+    transform: scale(0.5);
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+  .floating-actions.is-expanded .fa-call,
+  .floating-actions.is-expanded .fa-kakao,
+  .floating-actions.is-expanded .fa-naver {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+  .fa-toggle { display: flex; background: var(--color-primary); color: #fff; order: 99; }
 }
 
 /* ---------- 홈 대형연수 홍보 배너 ---------- */
