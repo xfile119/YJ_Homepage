@@ -3,22 +3,29 @@
    Throwable 등 PHP 7+ 전용 문법을 쓰지 않습니다). */
 
 if (session_status() === PHP_SESSION_NONE) {
+    /* 세션 쿠키 보안 속성. PHP 7.3 미만에서도 SameSite가 적용되도록,
+       PHP가 path 문자열을 Set-Cookie 헤더에 그대로 옮겨 적는 점을 이용한
+       방식을 씁니다("path; samesite=Lax" 자체가 하나의 값처럼 보이지만,
+       브라우저는 세미콜론 기준으로 나눠서 두 개의 속성으로 해석합니다). */
+    $yj_https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+    session_set_cookie_params(0, '/; samesite=Lax', '', $yj_https, true);
     session_start();
 }
 
-/* 치명적 오류(fatal error)가 나도 빈 화면 대신 원인을 알 수 있는 JSON을 돌려줍니다.
-   (디버깅용 — 문제 원인이 밝혀지면 이 블록은 다시 지워도 됩니다) */
+/* 치명적 오류(fatal error)가 나도 빈 화면 대신 JSON을 돌려줘서, 화면 쪽
+   fetch().catch()가 "서버에 접속할 수 없습니다" 대신 정상적인 오류 처리를
+   타게 합니다. 원인(파일 경로·줄 번호·오류 원문)은 방문자에게 보여주지 않고
+   서버 오류 로그에만 남깁니다. */
 register_shutdown_function(function () {
     $err = error_get_last();
     if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        error_log('[YJ] Fatal error: ' . $err['message'] . ' in ' . $err['file'] . ' on line ' . $err['line']);
         if (!headers_sent()) {
             http_response_code(500);
             header('Content-Type: application/json; charset=utf-8');
         }
         echo json_encode([
-            'error' => 'Fatal error: ' . $err['message'],
-            'file' => $err['file'],
-            'line' => $err['line'],
+            'error' => '서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.',
         ], JSON_UNESCAPED_UNICODE);
     }
 });

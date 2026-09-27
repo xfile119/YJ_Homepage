@@ -82,6 +82,20 @@ if ($action === 'submit' || $action === 'consult') {
 /* 문의 등록은 누구나(로그인 없이) 할 수 있어야 하므로 다른 액션들과 달리
    관리자 권한 확인보다 먼저 처리합니다. */
 if ($action === 'submit') {
+    /* 세션당 10분에 5회 (consult 액션과 같은 기준. 별도 카운터를 써서 서로
+       한도를 깎아먹지 않게 합니다) */
+    $now = time();
+    $tries = [];
+    if (isset($_SESSION['yj_contact_try']) && is_array($_SESSION['yj_contact_try'])) {
+        foreach ($_SESSION['yj_contact_try'] as $t) {
+            if ($now - $t < 600) { $tries[] = $t; }
+        }
+    }
+    if (count($tries) >= 5) {
+        $_SESSION['yj_contact_try'] = $tries;
+        yj_json(['error' => '문의가 너무 많이 접수됐습니다. 잠시 후 다시 시도하시거나 전화로 문의해주세요.'], 429);
+    }
+
     $name = trim((string)(isset($body['name']) ? $body['name'] : ''));
     $phone = trim((string)(isset($body['phone']) ? $body['phone'] : ''));
     $message = trim((string)(isset($body['message']) ? $body['message'] : ''));
@@ -89,9 +103,15 @@ if ($action === 'submit') {
     if ($name === '' || $phone === '' || $message === '') {
         yj_json(['error' => '이름, 연락처, 문의 내용을 모두 입력해주세요.'], 400);
     }
+    if (strlen(preg_replace('/[^0-9]/', '', $phone)) < 9) {
+        yj_json(['error' => '연락처를 다시 확인해주세요.'], 400);
+    }
     if (mb_strlen($name) > 50 || mb_strlen($phone) > 30 || mb_strlen($message) > 2000) {
         yj_json(['error' => '입력한 내용이 너무 깁니다.'], 400);
     }
+
+    $tries[] = $now;
+    $_SESSION['yj_contact_try'] = $tries;
 
     list($attrSrc, $attrKw) = yj_contact_attr($body);
     yj_contact_ensure_schema($table);

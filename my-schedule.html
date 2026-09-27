@@ -590,7 +590,7 @@ tabList.addEventListener("keydown", function (e) {
       return;
     }
     if (inflight) { inflight.abort(); }
-    var controller = new AbortController();
+    var controller = (typeof AbortController !== "undefined") ? new AbortController() : null;
     inflight = controller;
     setStatus("조회 중...");
     submitBtn.disabled = true;
@@ -602,7 +602,7 @@ tabList.addEventListener("keydown", function (e) {
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "lookup", name: name, phoneTail: tail }),
-      signal: controller.signal
+      signal: controller ? controller.signal : undefined
     })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
       .then(function (res) {
@@ -705,7 +705,7 @@ tabList.addEventListener("keydown", function (e) {
       return;
     }
     if (inflight) { inflight.abort(); }
-    var controller = new AbortController();
+    var controller = (typeof AbortController !== "undefined") ? new AbortController() : null;
     inflight = controller;
     setStatus("조회 중...");
     submitBtn.disabled = true;
@@ -716,7 +716,7 @@ tabList.addEventListener("keydown", function (e) {
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "lookup", name: name, phoneTail: tail }),
-      signal: controller.signal
+      signal: controller ? controller.signal : undefined
     })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
       .then(function (res) {
@@ -811,7 +811,7 @@ tabList.addEventListener("keydown", function (e) {
       return;
     }
     if (inflight) { inflight.abort(); }
-    var controller = new AbortController();
+    var controller = (typeof AbortController !== "undefined") ? new AbortController() : null;
     inflight = controller;
     setStatus("조회 중...");
     submitBtn.disabled = true;
@@ -822,7 +822,7 @@ tabList.addEventListener("keydown", function (e) {
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "lookup", name: name, phoneTail: tail }),
-      signal: controller.signal
+      signal: controller ? controller.signal : undefined
     })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
       .then(function (res) {

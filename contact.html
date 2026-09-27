@@ -384,7 +384,9 @@ form.addEventListener("submit", function(e){
     }).catch(function(){
       statusEl.textContent = "서버에 접속할 수 없습니다. 잠시 후 다시 시도하거나 전화로 문의해주세요.";
       statusEl.className = "form-status is-error";
-    }).finally(function(){
+    }).then(function(){
+      /* Promise.finally() 없이도 항상 실행되도록 then의 콜백으로 씁니다
+         (구형 브라우저 대응. 위 catch가 재던지지 않으므로 이 콜백 하나로 충분함) */
       submitBtn.disabled = false;
       submitBtn.textContent = "문의 남기기";
     });

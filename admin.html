@@ -230,14 +230,17 @@ pwInput.addEventListener("keydown", function(e){
   if (e.key === "Enter") document.getElementById("btnLogin").click();
 });
 document.getElementById("btnLock").addEventListener("click", function(){
+  var cleanup = function(){
+    userInput.value = ""; pwInput.value = "";
+    showLogin();
+  };
+  /* Promise.finally() 없이도 성공/실패 모두 처리되도록 then의 두 콜백에 같은
+     함수를 씁니다 (구형 브라우저 대응). */
   fetch("api/auth.php", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "logout" })
-  }).finally(function(){
-    userInput.value = ""; pwInput.value = "";
-    showLogin();
-  });
+  }).then(cleanup, cleanup);
 });
 
 })();

@@ -453,11 +453,14 @@ tabs.forEach(function (t) {
   });
 
   document.getElementById("inLogout").addEventListener("click", function () {
+    var cleanup = function () {
+      document.getElementById("inUser").value = ""; document.getElementById("inPw").value = "";
+      showLoggedOut();
+    };
+    /* Promise.finally() 없이도 성공/실패 모두 처리되도록 then의 두 콜백에
+       같은 함수를 씁니다 (구형 브라우저 대응). */
     fetch("api/auth.php", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) })
-      .finally(function () {
-        document.getElementById("inUser").value = ""; document.getElementById("inPw").value = "";
-        showLoggedOut();
-      });
+      .then(cleanup, cleanup);
   });
 })();
 
