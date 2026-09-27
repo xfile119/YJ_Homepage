@@ -380,11 +380,11 @@ function contactBox(){
    ======================================================================= */
 var CONSULT_CSS=""
 +"#yj-license-guide .yjc-cta{margin:4px 0 22px;}"
-+"#yj-license-guide .yjc-cta-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--color-primary);color:#fff;border:none;border-radius:var(--radius-md);padding:16px;font-family:'Noto Sans KR',sans-serif;font-size:1.02rem;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(109,40,217,.28);}"
++"#yj-license-guide .yjc-cta-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--color-primary);color:#fff;border:none;border-radius:var(--radius-md);padding:16px;font-family:'Noto Sans KR',sans-serif;font-size:1.02rem;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(19,41,75,.28);}"
 +"#yj-license-guide .yjc-cta-btn svg{width:18px;height:18px;}"
 +"#yj-license-guide .yjc-cta-sub{text-align:center;font-size:.8rem;color:var(--muted);margin:8px 0 0;}"
 +"#yj-license-guide .yjc-cta-sub a{color:var(--muted);text-decoration:underline;}"
-+"#yj-license-guide .yjc-form{border:1px solid rgba(109,40,217,.35);background:var(--surface);border-radius:var(--radius-md);padding:18px 16px 16px;margin:4px 0 22px;}"
++"#yj-license-guide .yjc-form{border:1px solid rgba(19,41,75,.35);background:var(--surface);border-radius:var(--radius-md);padding:18px 16px 16px;margin:4px 0 22px;}"
 +"#yj-license-guide .yjc-form h3{font-family:'Gothic A1',sans-serif;font-weight:800;font-size:1.08rem;margin:0 0 12px;}"
 +"#yj-license-guide .yjc-summary{background:var(--info-bg);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;font-size:.86rem;line-height:1.65;}"
 +"#yj-license-guide .yjc-summary .yjc-sum-k{color:var(--info-text);font-weight:700;font-size:.74rem;margin-bottom:4px;display:block;}"

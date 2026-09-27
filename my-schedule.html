@@ -569,9 +569,14 @@ tabList.addEventListener("keydown", function (e) {
      요청이 계속 진행되다가 나중에 응답이 와서, 이미 비워둔 결과 칸에 옛
      결과를 다시 그려 넣는 문제가 생깁니다. */
   var inflight = null;
+  /* AbortController가 없는 구형 브라우저에서는 이전 요청을 실제로 취소하지
+     못합니다. 그 요청이 나중에 응답으로 와도 화면에 반영되지 않도록,
+     매 요청마다 번호를 매겨 "지금 화면과 같은 번호"일 때만 그립니다. */
+  var requestSeq = 0;
 
   window.resetMsPanel = function () {
     if (inflight) { inflight.abort(); inflight = null; }
+    requestSeq++;
     form.reset();
     setStatus("");
     resultsEl.classList.remove("show");
@@ -592,6 +597,7 @@ tabList.addEventListener("keydown", function (e) {
     if (inflight) { inflight.abort(); }
     var controller = (typeof AbortController !== "undefined") ? new AbortController() : null;
     inflight = controller;
+    var mySeq = ++requestSeq;
     setStatus("조회 중...");
     submitBtn.disabled = true;
     resultsEl.classList.remove("show");
@@ -606,6 +612,7 @@ tabList.addEventListener("keydown", function (e) {
     })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
       .then(function (res) {
+        if (mySeq !== requestSeq) { return; }
         if (!res.ok || res.body.error) { throw new Error(res.body.error || "조회에 실패했습니다."); }
         setStatus("");
         if (res.body.found && res.body.schedule.length) { renderItems(res.body.schedule); }
@@ -613,6 +620,7 @@ tabList.addEventListener("keydown", function (e) {
       })
       .catch(function (err) {
         if (err && err.name === "AbortError") { return; }
+        if (mySeq !== requestSeq) { return; }
         setStatus("지금은 조회할 수 없습니다. 잠시 후 다시 시도하시거나 062-951-5100으로 문의해주세요.", "err");
       })
       .then(function () {
@@ -686,9 +694,14 @@ tabList.addEventListener("keydown", function (e) {
   }
 
   var inflight = null;
+  /* AbortController가 없는 구형 브라우저에서는 이전 요청을 실제로 취소하지
+     못합니다. 그 요청이 나중에 응답으로 와도 화면에 반영되지 않도록,
+     매 요청마다 번호를 매겨 "지금 화면과 같은 번호"일 때만 그립니다. */
+  var requestSeq = 0;
 
   window.resetShPanel = function () {
     if (inflight) { inflight.abort(); inflight = null; }
+    requestSeq++;
     form.reset();
     setStatus("");
     resultsEl.classList.remove("show");
@@ -707,6 +720,7 @@ tabList.addEventListener("keydown", function (e) {
     if (inflight) { inflight.abort(); }
     var controller = (typeof AbortController !== "undefined") ? new AbortController() : null;
     inflight = controller;
+    var mySeq = ++requestSeq;
     setStatus("조회 중...");
     submitBtn.disabled = true;
     resultsEl.classList.remove("show");
@@ -720,6 +734,7 @@ tabList.addEventListener("keydown", function (e) {
     })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
       .then(function (res) {
+        if (mySeq !== requestSeq) { return; }
         if (!res.ok || res.body.error) { throw new Error(res.body.error || "조회에 실패했습니다."); }
         setStatus("");
         if (res.body.found && res.body.rides.length) { renderRides(res.body.rides); }
@@ -727,6 +742,7 @@ tabList.addEventListener("keydown", function (e) {
       })
       .catch(function (err) {
         if (err && err.name === "AbortError") { return; }
+        if (mySeq !== requestSeq) { return; }
         setStatus("지금은 조회할 수 없습니다. 잠시 후 다시 시도하시거나 062-951-5100으로 문의해주세요.", "err");
       })
       .then(function () {
@@ -792,9 +808,14 @@ tabList.addEventListener("keydown", function (e) {
   }
 
   var inflight = null;
+  /* AbortController가 없는 구형 브라우저에서는 이전 요청을 실제로 취소하지
+     못합니다. 그 요청이 나중에 응답으로 와도 화면에 반영되지 않도록,
+     매 요청마다 번호를 매겨 "지금 화면과 같은 번호"일 때만 그립니다. */
+  var requestSeq = 0;
 
   window.resetWePanel = function () {
     if (inflight) { inflight.abort(); inflight = null; }
+    requestSeq++;
     form.reset();
     setStatus("");
     resultsEl.classList.remove("show");
@@ -813,6 +834,7 @@ tabList.addEventListener("keydown", function (e) {
     if (inflight) { inflight.abort(); }
     var controller = (typeof AbortController !== "undefined") ? new AbortController() : null;
     inflight = controller;
+    var mySeq = ++requestSeq;
     setStatus("조회 중...");
     submitBtn.disabled = true;
     resultsEl.classList.remove("show");
@@ -826,6 +848,7 @@ tabList.addEventListener("keydown", function (e) {
     })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
       .then(function (res) {
+        if (mySeq !== requestSeq) { return; }
         if (!res.ok || res.body.error) { throw new Error(res.body.error || "조회에 실패했습니다."); }
         setStatus("");
         if (res.body.found) { renderResult(res.body); }
@@ -833,6 +856,7 @@ tabList.addEventListener("keydown", function (e) {
       })
       .catch(function (err) {
         if (err && err.name === "AbortError") { return; }
+        if (mySeq !== requestSeq) { return; }
         setStatus("지금은 조회할 수 없습니다. 잠시 후 다시 시도하시거나 062-951-5100으로 문의해주세요.", "err");
       })
       .then(function () {
