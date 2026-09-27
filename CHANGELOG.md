@@ -11,6 +11,35 @@ FTP 업로드 후 이 값이 아래 최신 항목과 일치하는지 보면, 실
 
 ---
 
+## 2026-09-27 06:00 KST — `6da5a8e`
+**GPT 최종 재점검 반영: 면허 탐색기 CSS 버그 + 캐시 근본 대응.** 외부 GPT의
+두 번째(재배포 후) 점검을 코드로 대조 확인한 뒤, 사실로 확인된 것만
+반영했습니다.
+
+- `license-picker.html`/`license-guide.html`: 위젯 안에서 `--radius-lg`를
+  `var(--radius-lg)`로(같은 이름으로) 재선언하고 있어 자기 자신을 참조하는
+  순환 참조가 됐고, 그 결과 카드·버튼 모서리가 전부 0px(각짐)로 렌더링되고
+  있었음. 재선언을 지워 `:root`의 22px를 정상 상속받도록 수정
+- `js/license-wizard.js`: 예전 보라색 `rgba(109,40,217,…)` 잔여 2곳을
+  네이비로 교체
+- `my-schedule.html`: 구형 브라우저(AbortController 미지원)에서 빠르게
+  다시 조회하면 늦게 도착한 이전 요청 응답이 최신 결과를 덮어쓸 수 있던
+  문제 — 요청마다 번호를 매겨 최신 요청의 응답만 반영하도록 교육·셔틀·
+  필기 3개 탭 모두 수정. 헤드리스 브라우저로 재현·검증함
+- **`.htaccess`**: 오늘 반복됐던 "분명히 올렸는데 옛날 화면이 보인다"
+  문제의 근본 원인은 브라우저가 `css/style.css`·`js/main.js`를 한 번
+  받으면 계속 캐시해서 쓰고 있었기 때문. HTML·CSS·JS 응답에
+  `Cache-Control: no-cache, must-revalidate`를 붙여 매번 서버에 재확인하게
+  함(안 바뀌었으면 304로 짧게 끝남). ⚠️ 이 작업 환경엔 Apache가 없어 실제
+  응답 헤더까지는 확인 못 함 — 배포 후 개발자도구 Network 탭에서
+  `style.css` 응답의 Cache-Control 헤더를 한 번 확인해주세요.
+
+**FTP로 올릴 파일**: `.htaccess`, `js/license-wizard.js`,
+`license-guide.html`, `license-picker.html`, `my-schedule.html`,
+`js/main.js`. DB 변경 없음.
+
+---
+
 ## 2026-09-27 05:20 KST — `6f0f48c`
 **홈 진입 카드: '내 일정 확인' 카드도 기본 흰색으로, 호버 시에만 반전.**
 직전 두 차례 수정(호버 피드백 추가, 테두리 통일)에도 여전히 이상하다는
