@@ -448,33 +448,27 @@ a.feature-card:hover .fc-more { color: var(--color-primary-dark); }
 .entry-card h2 { margin: 0; font-size: 28px; font-weight: 800; line-height: 1.35; transition: color 0.2s ease; }
 .entry-card p { margin: 0; font-size: 15px; line-height: 1.7; transition: color 0.2s ease; }
 
-.entry-card-primary { background: #fff; border: 1px solid var(--color-line); box-shadow: var(--shadow-sm); }
+/* 두 카드 모두 평소엔 흰 배경이다가, 마우스를 올리면(호버) 남색+흰 글씨로
+   반전됩니다 — 마우스가 없을 땐 어느 카드도 반전 상태로 보이면 안 되고,
+   딱 올라가 있는 카드만 반전되는 게 원칙입니다. */
+.entry-card-primary, .entry-card-secondary { background: #fff; border: 1px solid var(--color-line); box-shadow: var(--shadow-sm); }
 /* var(--color-muted)는 흰 배경에서 13px 글자 기준 명도 대비가 3.7:1 정도라
    본문 텍스트 기준(4.5:1)에 못 미칩니다. 더 진한 --color-body로 바꿉니다. */
-.entry-card-primary .entry-eyebrow { color: var(--color-body); }
-.entry-card-primary h2 { color: var(--color-ink); }
-.entry-card-primary p { color: var(--color-body); }
-.entry-card-primary:hover, .entry-card-primary:focus-visible {
+.entry-card-primary .entry-eyebrow, .entry-card-secondary .entry-eyebrow { color: var(--color-body); }
+.entry-card-primary h2, .entry-card-secondary h2 { color: var(--color-ink); }
+.entry-card-primary p, .entry-card-secondary p { color: var(--color-body); }
+.entry-card-primary:hover, .entry-card-primary:focus-visible,
+.entry-card-secondary:hover, .entry-card-secondary:focus-visible {
   background: var(--color-primary-dark);
   border-color: var(--color-primary-dark);
   box-shadow: 0 0 0 2px var(--color-accent), var(--shadow-lg);
 }
-.entry-card-primary:hover .entry-eyebrow, .entry-card-primary:focus-visible .entry-eyebrow { color: var(--color-accent); }
-.entry-card-primary:hover h2, .entry-card-primary:focus-visible h2 { color: #fff; }
-.entry-card-primary:hover p, .entry-card-primary:focus-visible p { color: rgba(255,255,255,0.75); }
-
-.entry-card-secondary { background: var(--color-primary-dark); box-shadow: var(--shadow-md); }
-.entry-card-secondary .entry-eyebrow { color: var(--color-accent); }
-.entry-card-secondary h2 { color: #fff; }
-.entry-card-secondary p { color: rgba(255,255,255,0.75); }
-/* 이 카드는 기본 상태부터 이미 짙은 남색이라, 호버 시 배경이 아주 살짝만
-   더 어두워지는 것(#0B1B36→#081428)만으로는 거의 눈에 안 띕니다. 왼쪽
-   카드처럼 "확 반전"되는 변화가 없는 대신, 노란 테두리 광채로 명확한
-   신호를 줍니다 (box-shadow라 레이아웃 크기에는 영향 없음). */
-.entry-card-secondary:hover, .entry-card-secondary:focus-visible {
-  background: #081428;
-  box-shadow: 0 0 0 2px var(--color-accent), var(--shadow-lg);
-}
+.entry-card-primary:hover .entry-eyebrow, .entry-card-primary:focus-visible .entry-eyebrow,
+.entry-card-secondary:hover .entry-eyebrow, .entry-card-secondary:focus-visible .entry-eyebrow { color: var(--color-accent); }
+.entry-card-primary:hover h2, .entry-card-primary:focus-visible h2,
+.entry-card-secondary:hover h2, .entry-card-secondary:focus-visible h2 { color: #fff; }
+.entry-card-primary:hover p, .entry-card-primary:focus-visible p,
+.entry-card-secondary:hover p, .entry-card-secondary:focus-visible p { color: rgba(255,255,255,0.75); }
 
 /* margin-top:auto로 버튼을 카드 바닥에 붙입니다. 두 카드는 높이가
    맞춰져 있는데(align-items:stretch) 헤드라인 줄 수가 서로 달라서, 이게
