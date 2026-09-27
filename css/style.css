@@ -457,7 +457,7 @@ a.feature-card:hover .fc-more { color: var(--color-primary-dark); }
 .entry-card-primary:hover, .entry-card-primary:focus-visible {
   background: var(--color-primary-dark);
   border-color: var(--color-primary-dark);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 0 0 2px var(--color-accent), var(--shadow-lg);
 }
 .entry-card-primary:hover .entry-eyebrow, .entry-card-primary:focus-visible .entry-eyebrow { color: var(--color-accent); }
 .entry-card-primary:hover h2, .entry-card-primary:focus-visible h2 { color: #fff; }
