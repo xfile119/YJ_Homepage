@@ -10,9 +10,13 @@ Allow: /
 Disallow: /admin.html
 Disallow: /admin-accounts.html
 Disallow: /admin-license.html
+Disallow: /admin-messages.html
+Disallow: /admin-my-schedule.html
 Disallow: /admin-notice.html
+Disallow: /admin-schedule-overview.html
 Disallow: /admin-shuttle.html
 Disallow: /admin-staff.html
+Disallow: /admin-stats.html
 Disallow: /api/
 Disallow: /db/
 Disallow: /uploads/

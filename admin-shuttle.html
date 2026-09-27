@@ -612,9 +612,21 @@ document.getElementById("btnDeletePast").addEventListener("click", function () {
 
 attachTimeHelpers(gridEl);
 
-/* 시작 */
-dateEl.value = todayStr();
-load();
+/* 시작 — 다른 admin-*.html처럼, 로그인 안 된 상태면 화면을 그리지 않고
+   바로 관리자 홈(로그인 화면)으로 보냅니다. 이게 없으면 로그인 안 한
+   방문자도 이 도구의 화면 구성 자체는 볼 수 있었습니다(데이터는
+   api/shuttle.php가 401로 막아 실제 명단은 안 보였지만, 형태만으로도
+   불필요하게 노출되는 부분이라 다른 화면과 통일함). */
+fetch("api/auth.php").then(function (r) { return r.json(); }).then(function (res) {
+  if (!res || !res.loggedIn) {
+    location.href = "admin.html";
+    return;
+  }
+  dateEl.value = todayStr();
+  load();
+}).catch(function () {
+  location.href = "admin.html";
+});
 
 })();
 </script>
