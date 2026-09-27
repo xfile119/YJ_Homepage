@@ -11,3 +11,15 @@ RewriteRule ^ https://www.yjcdrive.co.kr%{REQUEST_URI} [L,R=301]
 #  스타일/이미지가 깨져 보이는 문제를 막기 위한 조치)
 RewriteCond %{HTTPS} off
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# HTML·CSS·JS는 브라우저가 "예전 것도 확인 없이 계속 써도 됨"이라고 판단하지
+# 않도록 매번 서버에 재확인(revalidate)하게 합니다 (2026-09-27, 색상·호버
+# 개편 파일들을 FTP로 새로 올려도 방문자 브라우저에 옛 CSS·JS가 남아있던
+# 문제 때문에 추가). 파일이 실제로 안 바뀌었으면 서버가 304로 짧게 응답하고
+# 끝나므로 매번 전체를 다시 받는 것보다 훨씬 가볍습니다. 이미지·아이콘·폰트는
+# 자주 안 바뀌므로 여기서 건드리지 않습니다.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|css|js)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
