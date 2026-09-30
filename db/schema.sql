@@ -15,7 +15,19 @@ CREATE TABLE IF NOT EXISTS {prefix}admin_users (
   real_name VARCHAR(50) NULL DEFAULT NULL,
   -- 임직원 등록 화면에서 자동 생성된 계정이면, 어느 staff 카드에서 만들어졌는지 연결
   staff_id INT NULL DEFAULT NULL,
+  -- 비밀번호 변경/계정 삭제 시 올라가서, 그 전에 발급된 로그인 세션을 다음 요청부터
+  -- 무효화합니다 (api/_db.php의 yj_session_is_valid 참고)
+  session_version INT NOT NULL DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- 로그인 실패 시도를 IP별로 기록해서 무차별 대입(비밀번호 자동 시도)을 막습니다.
+-- (api/auth.php에서 일정 시간 내 실패 횟수가 너무 많으면 잠깐 막아둡니다)
+CREATE TABLE IF NOT EXISTS {prefix}login_attempts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ip VARCHAR(45) NOT NULL DEFAULT '',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_ip_time (ip, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS {prefix}notices (
@@ -75,7 +87,30 @@ CREATE TABLE IF NOT EXISTS {prefix}contact_messages (
   message TEXT NOT NULL,
   -- 'unread' = 원장님이 아직 확인 안 함, 'read' = 확인함
   status VARCHAR(10) NOT NULL DEFAULT 'unread',
+  -- 어디서 들어온 문의인지: '' = 상담문의 페이지, 'license' = 면허 탐색기 결과의 "상담 신청하기"
+  source VARCHAR(20) NOT NULL DEFAULT '',
+  -- 아래는 면허 탐색기 상담 신청일 때만 채워집니다 (과정별 문의 통계를 낼 수 있게 따로 저장)
+  course_code VARCHAR(20) NOT NULL DEFAULT '',
+  course_title VARCHAR(100) NOT NULL DEFAULT '',
+  course_path VARCHAR(255) NOT NULL DEFAULT '',
+  est_total VARCHAR(30) NOT NULL DEFAULT '',
+  -- 학생이 고른 연락 가능한 시간 (09:00~18:00, 30분 단위, 예: "14:30")
+  contact_time VARCHAR(5) NOT NULL DEFAULT '',
+  -- 어디서 들어온 사람인지(광고·검색 등, 예: naver_powerlink)와 네이버 광고 키워드
+  channel VARCHAR(40) NOT NULL DEFAULT '',
+  ad_keyword VARCHAR(60) NOT NULL DEFAULT '',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- 유입 경로 측정 (개인정보 없음, 13개월 보관). event: visit·call·kakao·talk·consult·contact
+CREATE TABLE IF NOT EXISTS {prefix}track_events (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  event VARCHAR(20) NOT NULL DEFAULT '',
+  src VARCHAR(40) NOT NULL DEFAULT '',
+  kw VARCHAR(60) NOT NULL DEFAULT '',
+  page VARCHAR(60) NOT NULL DEFAULT '',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_time (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- 학사서버(MSSQL)에서 주기적으로 밀어넣는(push) "다가오는 일정"의 최소 정보 사본입니다.

@@ -22,7 +22,7 @@
 
 <!-- PWA: 이 페이지만 태블릿·휴대폰 홈 화면에 앱처럼 설치할 수 있게 합니다 -->
 <link rel="manifest" href="manifest-license-guide.json" />
-<meta name="theme-color" content="#ff8a1f" />
+<meta name="theme-color" content="#13294B" />
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
 <link rel="apple-touch-icon" href="icons/license-guide-192.png" />
@@ -47,7 +47,12 @@
   --line:var(--color-line);--line-strong:var(--color-line);--accent:var(--color-accent);--accent-soft:color-mix(in srgb, var(--color-accent) 16%, white);
   --accent-text:#9a6b00;--success-text:#1F8A5F;--success-bg:#E4F5EC;--warn-text:#9A5B12;--warn-bg:#FBEDDA;
   --danger-text:#B23A3A;--danger-bg:#FBEAEA;--info-text:var(--color-primary);--info-bg:var(--color-primary-light);
-  --shadow:var(--shadow-md);--radius-lg:var(--radius-lg);--radius-md:var(--radius-md);--radius-sm:var(--radius-sm);
+  --shadow:var(--shadow-md);
+  /* --radius-lg/md/sm는 여기서 다시 선언하지 않습니다. 이름이 site 전역
+     토큰(css/style.css :root)과 똑같아서 "자기 자신을 참조"하는 게 되어
+     버림 — CSS 스펙상 이런 순환 참조는 계산값이 무효가 되고, 그 결과
+     border-radius가 전부 0px로 계산됩니다. 그냥 안 적으면 :root의 값을
+     상속받아 정상 동작합니다. */
 }
 @media (prefers-color-scheme: dark){
   #yj-license-guide:not([data-theme='light']){
@@ -182,8 +187,6 @@
     <div class="topbar-links">
       <a href="location.html">오시는 길</a>
       <a href="my-schedule.html">내 일정 조회</a>
-      <a href="shuttle.html">셔틀 조회</a>
-      <a href="written-exam.html">필기시험 조회</a>
       <a href="notice.html">공지사항</a>
     </div>
     <a class="topbar-tel" href="tel:062-951-5100">☎ 062-951-5100</a>
@@ -250,8 +253,6 @@
           <li><a href="large-vehicle-training.html">대형연수</a></li>
           <li><a href="driving-lessons.html">도로연수</a></li>
           <li><a href="my-schedule.html">내 일정 조회</a></li>
-          <li><a href="shuttle.html">셔틀 조회</a></li>
-          <li><a href="written-exam.html">필기시험 조회</a></li>
           <li><a href="notice.html">공지사항</a></li>
           <li><a href="location.html">오시는길</a></li>
         </ul>

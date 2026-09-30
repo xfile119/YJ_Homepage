@@ -1,6 +1,37 @@
+RewriteEngine On
+
+# www 없는 주소(yjcdrive.co.kr)로 들어오면 www.yjcdrive.co.kr로 한 번에 옮깁니다.
+# 같은 페이지가 두 주소로 나뉘어 검색엔진에 따로 평가되지 않도록 대표 주소를 하나로 모읍니다
+# (페이지들의 canonical·사이트맵도 모두 https://www.yjcdrive.co.kr 기준).
+RewriteCond %{HTTP_HOST} ^yjcdrive\.co\.kr$ [NC]
+RewriteRule ^ https://www.yjcdrive.co.kr%{REQUEST_URI} [L,R=301]
+
 # http:// 로 들어오는 모든 요청을 https:// 로 강제 전환합니다.
 # (SSL 없이 접속됐을 때 브라우저가 "연결이 안전하지 않음" 경고를 띄우고
 #  스타일/이미지가 깨져 보이는 문제를 막기 위한 조치)
-RewriteEngine On
 RewriteCond %{HTTPS} off
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# 지금의 YJ_Homepage(정적 HTML) 이전에 쓰던 옛 PHP 템플릿 사이트·게시판 주소가
+# 구글 검색 결과에 아직 남아있어서, 그 링크를 누르면 404가 뜨는 문제 (2026-09-28
+# 발견). 정확히 어떤 옛 게시글이었는지까지는 알 수 없어 페이지 "종류"별로 지금
+# 가장 가까운 페이지로 보내줍니다 — 죽은 링크보다는 관련 있는 페이지로라도
+# 가는 게 방문자·검색엔진 모두에게 낫습니다.
+RewriteRule ^introduction[0-9]*\.php$ /about.html [L,R=301]
+RewriteRule ^curriculum[0-9]*\.php$ /license-picker.html [L,R=301]
+RewriteRule ^company_[0-9]+\.(html|php)$ /about.html [L,R=301]
+RewriteCond %{QUERY_STRING} bb_table=notice
+RewriteRule ^bbs/board\.php$ /notice.html? [L,R=301]
+RewriteRule ^bbs/board\.php$ /contact.html? [L,R=301]
+
+# HTML·CSS·JS는 브라우저가 "예전 것도 확인 없이 계속 써도 됨"이라고 판단하지
+# 않도록 매번 서버에 재확인(revalidate)하게 합니다 (2026-09-27, 색상·호버
+# 개편 파일들을 FTP로 새로 올려도 방문자 브라우저에 옛 CSS·JS가 남아있던
+# 문제 때문에 추가). 파일이 실제로 안 바뀌었으면 서버가 304로 짧게 응답하고
+# 끝나므로 매번 전체를 다시 받는 것보다 훨씬 가볍습니다. 이미지·아이콘·폰트는
+# 자주 안 바뀌므로 여기서 건드리지 않습니다.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|css|js)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>

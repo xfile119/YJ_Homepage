@@ -8,6 +8,17 @@
 (function(){
 "use strict";
 
+/* api/license-data.php에서 받아온 DATA(면허별 안내문구·학원 연락처 등, 관리자가
+   콘텐츠 관리 화면에서 입력)는 아래에서 innerHTML에 그대로 꽂아 넣기 전에
+   반드시 이 함수로 이스케이프합니다. 관리자 계정이 뚫리거나 실수로 <script>
+   같은 텍스트를 넣어도, 그게 그대로 실행되지 않고 글자 그대로만 보이게 하기
+   위해서입니다 (NODES/opt 같은 코드에 고정된 값은 대상이 아닙니다). */
+function esc(s){
+  return String(s===null||s===undefined?"":s).replace(/[&<>"']/g, function(ch){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch];
+  });
+}
+
 /* =======================================================================
    질문 흐름 — 법령·학원 실제 운영기준에 따라 확정된 케이스만 담겨 있음
    ======================================================================= */
@@ -249,6 +260,11 @@ function renderFlow(c){
   var giOn = c.hours.gi && c.hours.gi[0]>0;
   var doroOn = c.hours.doro && c.hours.doro[0]>0;
   steps.push({t:"학과교육", on:hakOn});
+  /* 학과교육 수강과 필기시험 합격은 서로 다른 단계입니다 — 학과 시간만 채우면
+     끝나는 게 아니라, 필기시험(학과시험)에 합격해야 다음 단계(장내기능)로
+     넘어갈 수 있어요. 학과교육이 면제되는 조건이면 필기시험도 이미 면제·합격된
+     경우로 봅니다. */
+  steps.push({t:"필기시험", on:hakOn});
   steps.push({t:"장내기능교육·시험", on:giOn});
   steps.push({t:"도로주행교육·시험", on:doroOn});
   steps.push({t:"면허증 발급", on:true, always:true});
@@ -268,7 +284,7 @@ function estimateDuration(c){
   });
   var text;
   if(total<=0) text="바로 신청 가능 (별도 의무교육 없음)";
-  else if(total<=3) text="최短 1~2일";
+  else if(total<=3) text="최단 1~2일";
   else if(total<=9) text="약 3~6일";
   else if(total<=19) text="약 1~2주";
   else text="약 2~3주";
@@ -282,9 +298,9 @@ function renderScheduleBlock(code, c){
   var prefix=code.split("-")[0];
   var hakOn = c.hours.hak && c.hours.hak[0]>0;
   var sch = SCHEDULE_BY_PREFIX[prefix];
-  var html='<div class="yjlg-info-block"><div class="yjlg-info-head">'+svgClock()+'교육 가능 시간</div>';
+  var html='<div class="yjlg-info-block"><div class="yjlg-info-head">'+svgClock()+'학과교육 시간표</div>';
   if(!hakOn){
-    html+='<p>학과교육이 면제되어 별도 시간표 확인이 필요 없어요.</p>';
+    html+='<p>학과교육은 면제됩니다. 기능·도로주행 교육 일정은 별도로 확인해 주세요.</p>';
   } else if(sch){
     html+='<p>'+sch.lines.join("<br>")+' (학과교육 기준)</p>';
     html+='<p>매달 첫째 주 일요일은 토요일과 동일하게 수업을 진행해요.</p>';
@@ -309,9 +325,9 @@ function renderExamScheduleBlock(effExamGi, effExamDoro){
   var names=[];
   if(effExamGi!==null) names.push("장내기능시험");
   if(effExamDoro!==null) names.push("도로주행시험");
-  var html='<div class="yjlg-info-block"><div class="yjlg-info-head">'+svgFlag()+'시험 일정</div>';
+  var html='<div class="yjlg-info-block"><div class="yjlg-info-head">'+svgFlag()+'시험 일정 확인 방법</div>';
   if(names.length){
-    html+='<p>'+names.join('·')+'은(는) 학원에서 정기적으로 진행돼요. 정확한 일정은 접수 시 상담을 통해 안내해드려요.</p>';
+    html+='<p>'+names.join('·')+'은(는) 학원에서 정기적으로 진행돼요. 시험 날짜는 접수 시 안내해드리고, 등록된 필기시험 일정은 <a class="yjlg-link" href="my-schedule.html">내 일정 조회</a>에서 확인하실 수 있어요.</p>';
   } else {
     html+='<p>이 과정은 별도의 실기 시험이 없어요.</p>';
   }
@@ -350,9 +366,261 @@ function contactBox(){
   return ""
     +'<div class="yjlg-contact-box">'
       +'<div class="yjlg-head">학원에 문의하기</div>'
-      +'<div class="yjlg-contact-row">'+svgPhone()+' <a href="tel:'+(c.phoneHref||"")+'">'+(c.phone||"")+'</a></div>'
-      +'<div class="yjlg-contact-row">'+svgPin()+' '+(c.address||"")+'</div>'
+      +'<div class="yjlg-contact-row">'+svgPhone()+' <a href="tel:'+esc(c.phoneHref||"")+'">'+esc(c.phone||"")+'</a></div>'
+      +'<div class="yjlg-contact-row">'+svgPin()+' '+esc(c.address||"")+'</div>'
     +'</div>';
+}
+
+/* =======================================================================
+   상담 신청 — 결과 화면의 "이 과정 상담 신청하기"
+   과정·예상금액을 함께 담아 api/contact.php(action=consult)로 보냅니다.
+   관리자 화면 "문의 관리"에 그대로 들어가고, 관리자 메인에 새 문의 뱃지가 뜹니다.
+   스타일은 license-guide.html/license-picker.html 두 곳에 똑같이 넣지 않도록
+   여기서 한 번만 주입합니다.
+   ======================================================================= */
+var CONSULT_CSS=""
++"#yj-license-guide .yjc-cta{margin:4px 0 22px;}"
++"#yj-license-guide .yjc-cta-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--color-primary);color:#fff;border:none;border-radius:var(--radius-md);padding:16px;font-family:'Noto Sans KR',sans-serif;font-size:1.02rem;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(19,41,75,.28);}"
++"#yj-license-guide .yjc-cta-btn svg{width:18px;height:18px;}"
++"#yj-license-guide .yjc-cta-sub{text-align:center;font-size:.8rem;color:var(--muted);margin:8px 0 0;}"
++"#yj-license-guide .yjc-cta-sub a{color:var(--muted);text-decoration:underline;}"
++"#yj-license-guide .yjc-form{border:1px solid rgba(19,41,75,.35);background:var(--surface);border-radius:var(--radius-md);padding:18px 16px 16px;margin:4px 0 22px;}"
++"#yj-license-guide .yjc-form h3{font-family:'Gothic A1',sans-serif;font-weight:800;font-size:1.08rem;margin:0 0 12px;}"
++"#yj-license-guide .yjc-summary{background:var(--info-bg);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;font-size:.86rem;line-height:1.65;}"
++"#yj-license-guide .yjc-summary .yjc-sum-k{color:var(--info-text);font-weight:700;font-size:.74rem;margin-bottom:4px;display:block;}"
++"#yj-license-guide .yjc-summary b{color:var(--ink);}"
++"#yj-license-guide .yjc-field{margin-bottom:14px;}"
++"#yj-license-guide .yjc-field>label,#yj-license-guide .yjc-field>.yjc-label{display:block;font-size:.84rem;font-weight:700;margin-bottom:6px;}"
++"#yj-license-guide .yjc-req{color:var(--danger-text);margin-left:2px;}"
++"#yj-license-guide .yjc-opt{color:var(--muted);font-weight:400;margin-left:4px;font-size:.78rem;}"
++"#yj-license-guide .yjc-field input[type=text],#yj-license-guide .yjc-field input[type=tel],#yj-license-guide .yjc-field textarea{width:100%;border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px 12px;font-size:.95rem;font-family:'Noto Sans KR',sans-serif;background:#fff;color:#221c33;}"
++"#yj-license-guide .yjc-field textarea{resize:vertical;min-height:74px;}"
++"#yj-license-guide .yjc-agree{display:flex;gap:8px;align-items:flex-start;font-size:.82rem;color:var(--muted);margin:4px 0 14px;line-height:1.5;}"
++"#yj-license-guide .yjc-agree input{margin-top:3px;}"
++"#yj-license-guide .yjc-agree a{color:var(--muted);}"
++"#yj-license-guide .yjc-submit{width:100%;background:var(--color-primary);color:#fff;border:none;border-radius:var(--radius-md);padding:14px;font-size:.98rem;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;}"
++"#yj-license-guide .yjc-submit:disabled{opacity:.6;cursor:default;}"
++"#yj-license-guide .yjc-error{color:var(--danger-text);font-size:.84rem;margin:10px 0 0;text-align:center;}"
++"#yj-license-guide .yjc-alt{text-align:center;font-size:.8rem;color:var(--muted);margin:10px 0 0;}"
++"#yj-license-guide .yjc-alt a{color:var(--color-primary);font-weight:700;}"
++"#yj-license-guide .yjc-done{background:var(--success-bg);color:var(--success-text);border-radius:var(--radius-md);padding:18px 16px;margin:4px 0 22px;line-height:1.6;font-size:.9rem;}"
++"#yj-license-guide .yjc-done strong{display:block;font-size:1.02rem;margin-bottom:4px;}"
++"#yj-license-guide .yjc-done small{display:block;font-size:.8rem;opacity:.85;margin-top:4px;}"
++"#yj-license-guide .yjf-box{background:#fff;border:1px solid var(--line);border-radius:var(--radius-md);padding:14px 12px 12px;}"
++"#yj-license-guide .yjf-row{display:flex;align-items:center;justify-content:center;gap:6px;}"
++"#yj-license-guide .yjf-colon{font-family:'Oswald',sans-serif;font-size:48px;font-weight:600;color:#1E1A2B;line-height:1;}"
++"#yj-license-guide .flip{position:relative;width:88px;height:108px;border-radius:12px;background:#1E1A2B;perspective:400px;box-shadow:0 4px 10px rgba(30,26,43,.25);user-select:none;-webkit-user-select:none;flex:none;}"
++"#yj-license-guide .flip .half{position:absolute;left:0;right:0;height:50%;overflow:hidden;background:#1E1A2B;}"
++"#yj-license-guide .flip .top{top:0;border-radius:12px 12px 0 0;}"
++"#yj-license-guide .flip .bottom{bottom:0;border-radius:0 0 12px 12px;}"
++"#yj-license-guide .flip .half span{position:absolute;left:0;right:0;height:200%;display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;font-weight:600;font-size:50px;color:#fff;}"
++"#yj-license-guide.yjf-font-ok .flip .half span{font-size:68px;}"
++"#yj-license-guide .flip .top span{top:0;}"
++"#yj-license-guide .flip .bottom span{bottom:0;}"
++"#yj-license-guide .flip::after{content:'';position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:rgba(0,0,0,.6);z-index:5;}"
++"#yj-license-guide .flip .flap-top{transform-origin:50% 100%;z-index:3;animation:yjfTop .22s ease-in forwards;backface-visibility:hidden;-webkit-backface-visibility:hidden;}"
++"#yj-license-guide .flip .flap-bottom{transform-origin:50% 0;z-index:4;transform:rotateX(90deg);animation:yjfBottom .22s ease-out .22s forwards;backface-visibility:hidden;-webkit-backface-visibility:hidden;}"
++"@keyframes yjfTop{to{transform:rotateX(-90deg);}}"
++"@keyframes yjfBottom{to{transform:rotateX(0deg);}}"
++"#yj-license-guide .yjf-hit{position:absolute;left:0;right:0;height:50%;z-index:6;background:none;border:none;padding:0;cursor:pointer;display:flex;justify-content:center;color:rgba(255,255,255,.45);}"
++"#yj-license-guide .yjf-hit.up{top:0;align-items:flex-start;padding-top:2px;}"
++"#yj-license-guide .yjf-hit.dn{bottom:0;align-items:flex-end;padding-bottom:2px;}"
++"#yj-license-guide .yjf-hit svg{width:16px;height:16px;}"
++"#yj-license-guide .yjf-hit:disabled{cursor:default;color:transparent;}"
++"#yj-license-guide .yjf-hit:focus-visible{outline:2px solid #fff;outline-offset:-4px;border-radius:10px;}"
++"#yj-license-guide .yjf-sum{text-align:center;margin-top:12px;font-size:.92rem;color:#221c33;}"
++"#yj-license-guide .yjf-sum b{color:var(--color-primary);}"
++"#yj-license-guide .yjf-help{text-align:center;font-size:.76rem;color:var(--muted);margin-top:4px;line-height:1.5;}"
++"#yj-license-guide .yjf-notice{margin-top:10px;background:var(--info-bg);color:var(--info-text);border-radius:var(--radius-sm);padding:9px 11px;font-size:.8rem;line-height:1.55;text-align:center;}";
+
+var CONSULT_MIN=9*60, CONSULT_MAX=18*60, CONSULT_STEP=30;
+var consultInfo=null;
+
+function ensureConsultAssets(){
+  if(document.getElementById("yjlg-consult-css")) return;
+  var st=document.createElement("style");
+  st.id="yjlg-consult-css";
+  st.textContent=CONSULT_CSS;
+  document.head.appendChild(st);
+  /* 숫자 글꼴(Oswald)이 실제로 받아졌을 때만 숫자를 크게 키웁니다.
+     못 받으면 기본 글꼴은 폭이 넓어서, 작은 크기 그대로 둬야 카드 밖으로 안 넘칩니다.
+     글꼴 정의(@font-face)는 이 스타일시트가 다 받아진 뒤에야 브라우저가 알게 되므로
+     onload 뒤에 요청해야 합니다 (바로 요청하면 "그런 글꼴 없음"으로 끝나버립니다). */
+  var fl=document.createElement("link");
+  fl.rel="stylesheet";
+  fl.href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&display=swap";
+  fl.onload=function(){
+    if(!document.fonts || !document.fonts.load) return;
+    document.fonts.load("600 68px Oswald").then(function(list){
+      if(list && list.length && root){ root.classList.add("yjf-font-ok"); }
+    }).catch(function(){});
+  };
+  document.head.appendChild(fl);
+}
+
+function two(n){ return (n<10?"0":"")+n; }
+function hhmm(m){ return two(Math.floor(m/60))+":"+two(m%60); }
+
+function consultSlot(){
+  var c=DATA.contact||{};
+  var chat='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5z"/></svg>';
+  return '<div id="yjc-slot"><div class="yjc-cta">'
+    +'<button type="button" class="yjc-cta-btn" onclick="__yjwiz.consult()">'+chat+'이 과정 상담 신청하기</button>'
+    +'<p class="yjc-cta-sub">선택하신 과정과 예상 금액이 상담원에게 함께 전달돼요'
+    +(c.phoneHref?' · 급하시면 <a href="tel:'+esc(c.phoneHref)+'">전화 상담</a>':'')+'</p>'
+    +'</div></div>';
+}
+
+function openConsult(){
+  var slot=document.getElementById("yjc-slot");
+  if(!slot || !consultInfo) return;
+  var c=DATA.contact||{};
+  var info=consultInfo;
+  slot.innerHTML='<form class="yjc-form" id="yjc-form" novalidate>'
+    +'<h3>상담 신청</h3>'
+    +'<div class="yjc-summary"><span class="yjc-sum-k">상담 요청 과정 (자동으로 함께 전달돼요)</span>'
+      +'<b>'+esc(info.title)+'</b><br>'+esc(info.path)+' · 코드 '+esc(info.code)
+      +(info.total?'<br>예상 합계 <b>'+esc(info.total)+'</b>':'')+'</div>'
+    +'<div class="yjc-field"><label for="yjc-name">이름<span class="yjc-req">*</span></label><input type="text" id="yjc-name" maxlength="50" autocomplete="name"></div>'
+    +'<div class="yjc-field"><label for="yjc-phone">연락처<span class="yjc-req">*</span></label><input type="tel" id="yjc-phone" maxlength="30" placeholder="010-0000-0000" autocomplete="tel"></div>'
+    +'<div class="yjc-field"><span class="yjc-label" id="yjc-time-label">연락 가능한 시간<span class="yjc-req">*</span></span><div class="yjf-box" id="yjf-box" role="group" aria-labelledby="yjc-time-label"></div></div>'
+    +'<div class="yjc-field"><label for="yjc-msg">더 궁금한 점<span class="yjc-opt">(선택)</span></label><textarea id="yjc-msg" maxlength="2000" placeholder="예) 주말에도 수업 들을 수 있나요?"></textarea></div>'
+    +'<label class="yjc-agree"><input type="checkbox" id="yjc-agree"><span>상담 연락을 위한 개인정보 수집·이용에 동의합니다. (수집 항목: 이름·연락처, 선택 입력한 문의 내용 / 보유기간: 접수일로부터 1개월 · 동의하지 않으시면 신청하실 수 없어요 · <a href="privacy.html" target="_blank" rel="noopener">자세히</a>)</span></label>'
+    +'<button type="submit" class="yjc-submit" id="yjc-submit">상담 신청 보내기</button>'
+    +'<p class="yjc-error" id="yjc-error" role="alert"></p>'
+    +(c.phoneHref?'<p class="yjc-alt">급하시면 <a href="tel:'+esc(c.phoneHref)+'">'+esc(c.phone||c.phoneHref)+'</a></p>':'')
+    +'</form>';
+  var time=installFlipClock(document.getElementById("yjf-box"));
+  var formEl=document.getElementById("yjc-form");
+  formEl.addEventListener("submit", function(e){
+    e.preventDefault();
+    submitConsult(time);
+  });
+  /* 고쳐 입력하기 시작하면 이전 오류 문구는 지웁니다 */
+  function clearError(){ document.getElementById("yjc-error").textContent=""; }
+  formEl.addEventListener("input", clearError);
+  formEl.addEventListener("change", clearError);
+  document.getElementById("yjc-name").focus();
+}
+
+/* 연락 가능한 시간 하나를 고르는 플립시계. 09:00~18:00, 30분 단위.
+   처음 값은 지금 시각 이후 가장 가까운 30분(근무시간 밖이면 09:00). */
+function installFlipClock(box){
+  var now=new Date(), nowMin=now.getHours()*60+now.getMinutes();
+  var t=Math.ceil(nowMin/CONSULT_STEP)*CONSULT_STEP;
+  if(t<CONSULT_MIN || t>CONSULT_MAX){ t=CONSULT_MIN; }
+  var state={ t:t };
+  var reduceMotion=window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var up='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>';
+  var dn='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+  function card(p){
+    var what=p==="h"?"시":"분";
+    return '<div class="flip" id="yjf-'+p+'"><div class="half top"><span></span></div><div class="half bottom"><span></span></div>'
+      +'<button type="button" class="yjf-hit up" data-p="'+p+'" data-d="1" aria-label="'+what+' 올리기">'+up+'</button>'
+      +'<button type="button" class="yjf-hit dn" data-p="'+p+'" data-d="-1" aria-label="'+what+' 내리기">'+dn+'</button></div>';
+  }
+  box.innerHTML='<div class="yjf-row">'+card("h")+'<span class="yjf-colon" aria-hidden="true">:</span>'+card("m")+'</div>'
+    +'<div class="yjf-sum" id="yjf-sum" aria-live="polite"></div>'
+    +'<div class="yjf-help">숫자 위쪽을 누르면 올라가고, 아래쪽을 누르면 내려가요<br>상담 가능 시간 09:00~18:00</div>'
+    +'<div class="yjf-notice">최대한 원하시는 시간에 연락드리겠지만, 약간의 오차가 발생할 수 있습니다.</div>';
+
+  function setCard(el, val, animate){
+    var old=el.getAttribute("data-v");
+    el.setAttribute("data-v", val);
+    var top=el.querySelector(".top span"), bottom=el.querySelector(".bottom span");
+    if(!animate || reduceMotion || old===null || old===val){ top.textContent=val; bottom.textContent=val; return; }
+    [].forEach.call(el.querySelectorAll(".flap-top,.flap-bottom"), function(f){ f.parentNode.removeChild(f); });
+    top.textContent=val;
+    var ft=document.createElement("div"); ft.className="half top flap-top"; ft.innerHTML="<span>"+old+"</span>";
+    var fb=document.createElement("div"); fb.className="half bottom flap-bottom"; fb.innerHTML="<span>"+val+"</span>";
+    el.insertBefore(ft, el.querySelector(".yjf-hit"));
+    el.insertBefore(fb, el.querySelector(".yjf-hit"));
+    fb.addEventListener("animationend", function(){
+      bottom.textContent=el.getAttribute("data-v");
+      if(ft.parentNode) ft.parentNode.removeChild(ft);
+      if(fb.parentNode) fb.parentNode.removeChild(fb);
+    });
+  }
+  /* 한 칸 움직였을 때의 값. 범위를 벗어나면 null(그 방향 표시가 사라짐).
+     시: 1시간씩, 17:30에서 올리면 18:00처럼 끝에 걸리면 끝값으로. 분: 00↔30. */
+  function next(p, dir){
+    var v;
+    if(p==="h"){
+      v=state.t+dir*60;
+      if(v>CONSULT_MAX && state.t<CONSULT_MAX) v=CONSULT_MAX;
+      if(v<CONSULT_MIN && state.t>CONSULT_MIN) v=CONSULT_MIN;
+    } else {
+      v=Math.floor(state.t/60)*60+(state.t%60===0?30:0);
+    }
+    return (v<CONSULT_MIN || v>CONSULT_MAX || v===state.t) ? null : v;
+  }
+  function draw(animate){
+    setCard(document.getElementById("yjf-h"), two(Math.floor(state.t/60)), animate);
+    setCard(document.getElementById("yjf-m"), two(state.t%60), animate);
+    [].forEach.call(box.querySelectorAll(".yjf-hit"), function(b){
+      b.disabled = next(b.getAttribute("data-p"), +b.getAttribute("data-d"))===null;
+    });
+    document.getElementById("yjf-sum").innerHTML='<b>'+hhmm(state.t)+'</b>쯤 연락주세요';
+  }
+  [].forEach.call(box.querySelectorAll(".yjf-hit"), function(b){
+    b.addEventListener("click", function(){
+      var v=next(b.getAttribute("data-p"), +b.getAttribute("data-d"));
+      if(v===null) return;
+      state.t=v;
+      draw(true);
+    });
+  });
+  draw(false);
+  return state;
+}
+
+function submitConsult(time){
+  var name=document.getElementById("yjc-name").value.trim();
+  var phone=document.getElementById("yjc-phone").value.trim();
+  var msg=document.getElementById("yjc-msg").value.trim();
+  var agree=document.getElementById("yjc-agree").checked;
+  var errEl=document.getElementById("yjc-error");
+  var btn=document.getElementById("yjc-submit");
+  var c=DATA.contact||{};
+  var phoneHint=c.phone?" 급하시면 "+c.phone+"로 전화 주세요.":"";
+  errEl.textContent="";
+  if(!name || !phone){ errEl.textContent="이름과 연락처를 입력해주세요."; return; }
+  if(phone.replace(/[^0-9]/g,"").length<9){ errEl.textContent="연락처를 다시 확인해주세요."; return; }
+  if(!agree){ errEl.textContent="개인정보 수집·이용에 동의해주세요."; return; }
+
+  var info=consultInfo;
+  var when=hhmm(time.t);
+  /* 광고·검색 등 어디서 들어온 사람인지 (js/main.js). 개인정보는 들어있지 않습니다. */
+  var attr=(window.YJ_ATTR && window.YJ_ATTR.get()) || {};
+  btn.disabled=true;
+  btn.textContent="보내는 중...";
+  fetch("api/contact.php", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({ action:"consult", name:name, phone:phone, message:msg,
+      courseCode:info.code, courseTitle:info.title, coursePath:info.path, estTotal:info.total||"", contactTime:when,
+      attrSrc:attr.src||"", attrKw:attr.kw||"" })
+  }).then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(d){ return { ok:r.ok, data:d }; });
+    })
+    .then(function(res){
+      if(!res.ok){
+        var e=new Error((res.data && res.data.error) || "접수에 실패했습니다.");
+        e.fromServer=true;
+        throw e;
+      }
+      document.getElementById("yjc-slot").innerHTML='<div class="yjc-done" role="status"><strong>상담 신청이 접수됐어요</strong>'
+        +esc(name)+'님, <b>'+esc(info.title)+'</b> 과정으로 신청해주셨어요.<br><b>'+when+'</b>쯤 입력하신 번호로 연락드릴게요.'
+        +'<small>최대한 원하시는 시간에 연락드리겠지만, 약간의 오차가 발생할 수 있습니다.</small></div>';
+    })
+    .catch(function(err){
+      /* 서버가 거절한 경우엔 그 이유를, fetch 자체가 실패(오프라인 등)하면 연결 안내를 보여줍니다 */
+      var text=(err && err.fromServer) ? err.message
+        : (err instanceof TypeError ? "인터넷 연결을 확인해주세요." : "접수에 실패했습니다.");
+      errEl.textContent=text+phoneHint;
+      btn.disabled=false;
+      btn.textContent="상담 신청 보내기";
+    });
 }
 
 function renderCrumbs(){
@@ -454,15 +722,17 @@ function renderResult(){
   html+='<div class="yjlg-code-tag">코드 '+code+'</div>';
   html+='<span class="yjlg-pill '+sl.cls+'">'+sl.text+'</span>';
   var titleText=c.target+(terminal.cond?' ('+terminal.cond+')':'');
-  html+='<div class="yjlg-result-title">'+titleText+'</div>';
+  html+='<div class="yjlg-result-title">'+esc(titleText)+'</div>';
   html+='<p class="yjlg-result-sub">선택하신 조건 기준 예상 결과예요</p>';
+  consultInfo={ code:code, title:titleText, total:"",
+    path:history.map(function(h){ return h.opt.t; }).join(" › ") };
 
   if(c.status!=="doc" && c.status!=="unknown" && c.hours){ html+=renderFlow(c); }
 
   if(c.status==="doc"){
-    html+='<div class="yjlg-callout yjlg-info">'+c.note+'</div>'+contactBox();
+    html+='<div class="yjlg-callout yjlg-info">'+esc(c.note)+'</div>'+consultSlot()+contactBox();
   } else if(c.status==="unknown"){
-    html+='<div class="yjlg-callout yjlg-warn">'+c.note+'</div>'+contactBox();
+    html+='<div class="yjlg-callout yjlg-warn">'+esc(c.note)+'</div>'+consultSlot()+contactBox();
   } else {
     html+='<div class="yjlg-section-label">필요한 교육시간</div><div class="yjlg-stat-grid">';
     ["hak","gi","doro"].forEach(function(k){
@@ -500,10 +770,23 @@ function renderResult(){
     }
 
     var total=calcTotalWithExam(c.cost, effExamGi, effExamDoro);
+    if(DATA_IS_STALE){
+      html+='<div class="yjlg-callout yjlg-warn">지금 최신 수강료 정보를 불러오지 못해, 참고용 기본값을 보여드리고 있어요. 정확한 금액은 상담 시 다시 확인해주세요.</div>';
+    }
     html+='<div class="yjlg-total-tile"><span class="yjlg-k">예상 합계</span><span class="yjlg-v">'+(total==="unknown"?"문의 필요":won(total))+'</span></div>';
-    html+='<p class="yjlg-fineprint">'+(total==="unknown"?"":"정확한 금액은 상담 시 확인해드려요. 상기 수강료는 의무교육을 기준으로 산정되었으며, 시험은 각 1회씩 포함된 가격입니다.")+'</p>';
+    /* "시험은 각 1회씩 포함"이라고만 하면 어떤 시험인지, 반대로 뭐가 안 포함인지
+       불명확했습니다. 이 과정에 실제로 포함된 시험 이름을 그대로 쓰고, 데이터에
+       없어서 이 합계에 못 넣은 항목(필기시험 응시료·신체검사비·발급 수수료)은
+       빠져 있다고 분명히 밝힙니다. */
+    var includedExamNames=[];
+    if(effExamGi!==null) includedExamNames.push("장내기능시험");
+    if(effExamDoro!==null) includedExamNames.push("도로주행시험");
+    var includedExamText = includedExamNames.length ? (includedExamNames.join('·')+' 응시료 1회분을 포함한') : "의무교육";
+    html+='<p class="yjlg-fineprint">'+(total==="unknown"?"":"정확한 금액은 상담 시 확인해드려요. 위 합계는 "+esc(includedExamText)+" 비용 기준이며, 필기시험 응시료·신체검사 비용·면허증 발급 수수료는 포함되어 있지 않아요.")+'</p>';
+    consultInfo.total=(total==="unknown"?"문의 필요":won(total));
+    html+=consultSlot();
 
-    if(c.note){ html+='<div class="yjlg-callout '+(c.status==="warn"?"yjlg-warn":"yjlg-ok")+'">'+c.note+'</div>'; }
+    if(c.note){ html+='<div class="yjlg-callout '+(c.status==="warn"?"yjlg-warn":"yjlg-ok")+'">'+esc(c.note)+'</div>'; }
 
     html+=estimateDuration(c);
     html+=renderScheduleBlock(code, c);
@@ -522,16 +805,16 @@ function render(){
   var c=DATA.contact||{};
   root.innerHTML=""
     +'<div class="yjlg-shell">'
-      +'<div class="yjlg-brand"><div class="yjlg-id">'+svgCar()+'<span><b>'+(c.name||"")+'</b> · '+(window.YJLG_ROOT_MODE==="images"?"이미지로 면허 찾기":"면허 가이드")+'</span></div></div>'
+      +'<div class="yjlg-brand"><div class="yjlg-id">'+svgCar()+'<span><b>'+esc(c.name||"")+'</b> · '+(window.YJLG_ROOT_MODE==="images"?"이미지로 면허 찾기":"면허 가이드")+'</span></div></div>'
       +'<header class="yjlg-hero"><h1>면허, 선택만 하세요. 나머지는 저희가 찾아드릴게요.</h1>'
       +'<p>지금 갖고 계신 면허와 새로 따고 싶은 면허를 하나씩 골라주시면, 필요한 교육시간과 예상 수강료를 바로 계산해드려요.</p></header>'
       +'<div class="yjlg-crumbs" id="yjlg-crumbs"></div>'
       +'<main class="yjlg-card yjlg-animate" id="yjlg-card"></main>'
-      +'<footer><span class="yjlg-school">'+(c.name||"")+'</span><br/>'+(c.address||"")+' · 전화 '+(c.phone||"")+'<br/>'
+      +'<footer><span class="yjlg-school">'+esc(c.name||"")+'</span><br/>'+esc(c.address||"")+' · 전화 '+esc(c.phone||"")+'<br/>'
       +'안내된 시간·비용은 참고용이며, 실제 등록 시 최신 기준으로 다시 확인해드려요.'
-      +(DATA.updatedAt? '<br/>최근 업데이트: '+DATA.updatedAt : '')+'</footer>'
+      +(DATA.updatedAt? '<br/>최근 업데이트: '+esc(DATA.updatedAt) : '')+'</footer>'
     +'</div>';
-  window.__yjwiz={ choose:function(i){ choose(window.__yjwizOpts[i]); }, back:goBack, reset:resetAll };
+  window.__yjwiz={ choose:function(i){ choose(window.__yjwizOpts[i]); }, back:goBack, reset:resetAll, consult:openConsult };
   renderCrumbs();
   if(terminal){ renderResult(); } else { renderQuestion(currentNodeId()); }
 }
@@ -546,13 +829,18 @@ function init(){
     fontLink.href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;700;800&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap";
     document.head.appendChild(fontLink);
   }
+  ensureConsultAssets();
   render();
 }
 
+/* API 호출이 실패하면 코드에 내장된 기본값(DATA)을 그대로 보여주는데, 지금까지는
+   아무 표시 없이 조용히 넘어가서 방문자가 이걸 최신 데이터로 오해할 수 있었습니다.
+   실패 여부를 var DATA_IS_STALE로 남겨두고, 결과 화면에서 금액 근처에 안내를 띄웁니다. */
+var DATA_IS_STALE = false;
 function startWithFreshData(){
   fetch("api/license-data.php").then(function(r){ return r.ok ? r.json() : null; }).then(function(res){
-    if(res && res.data){ DATA = res.data; }
-  }).catch(function(){}).then(function(){
+    if(res && res.data){ DATA = res.data; } else { DATA_IS_STALE = true; }
+  }).catch(function(){ DATA_IS_STALE = true; }).then(function(){
     if(document.readyState==="loading"){ document.addEventListener("DOMContentLoaded", init); } else { init(); }
   });
 }

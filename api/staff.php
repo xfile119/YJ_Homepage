@@ -31,7 +31,11 @@ function yj_work_type_to_role($w) {
 }
 
 function yj_is_content_admin_session() {
-    if (empty($_SESSION['yj_admin'])) { return false; }
+    /* GET은 로그인 없이도 열리는 공개 목록이라 yj_require_login()으로 막을 수
+       없지만, real_name처럼 로그인 상태에 따라 더 보여주는 정보는 세션이 지금도
+       유효한지(비밀번호·역할이 바뀌었거나 계정이 삭제되지 않았는지) 확인한
+       뒤에만 내보내야 합니다. */
+    if (!yj_session_is_valid()) { return false; }
     $raw = isset($_SESSION['yj_role']) ? (string)$_SESSION['yj_role'] : 'admin';
     $roles = array_filter(array_map('trim', explode(',', $raw)));
     return in_array('admin', $roles, true) || in_array('manager', $roles, true);
@@ -100,10 +104,15 @@ try {
 
     $insert = $db->prepare("INSERT INTO $table (name, mbti, work_type, course_types, photo, greeting, real_name, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     $update = $db->prepare("UPDATE $table SET name=?, mbti=?, work_type=?, course_types=?, photo=?, greeting=?, real_name=?, sort_order=? WHERE id=?");
-    $accountCheck = $db->prepare("SELECT id, username FROM $usersTable WHERE staff_id = ? LIMIT 1");
+    $accountCheck = $db->prepare("SELECT id, username, role FROM $usersTable WHERE staff_id = ? LIMIT 1");
     $usernameTaken = $db->prepare("SELECT COUNT(*) FROM $usersTable WHERE username = ?");
     $accountInsert = $db->prepare("INSERT INTO $usersTable (username, password_hash, role, real_name, staff_id) VALUES (?, ?, ?, ?, ?)");
-    $accountSync = $db->prepare("UPDATE $usersTable SET role = ?, real_name = ? WHERE staff_id = ?");
+    /* 역할이 실제로 바뀔 때만 session_version을 올립니다 (매번 통째로 저장하는
+       화면이라, 안 바뀐 계정까지 매번 로그아웃시키면 안 되니까요). role <> ? 를
+       UPDATE 문 안에서 비교하면 그 문장에서 방금 SET한 새 값과 비교하게 돼
+       (한 UPDATE 안의 뒤쪽 SET은 앞쪽에서 바뀐 값을 봅니다) 항상 같다고 나와서,
+       바뀌었는지 여부는 미리 PHP에서 판단해 0/1로 넘겨줍니다. */
+    $accountSync = $db->prepare("UPDATE $usersTable SET role = ?, real_name = ?, session_version = session_version + ? WHERE staff_id = ?");
 
     $keepIds = [];
     $i = 0;
@@ -146,7 +155,10 @@ try {
             /* 이미 연동된 계정이 있으면, 근무형태·실명이 바뀌었을 수 있으니 매번 동기화합니다
                (역할이 하나도 안 남으면 최소 하나는 있어야 로그인 의미가 있으므로 기존 역할 유지). */
             if (!empty($roles)) {
-                $accountSync->execute([implode(',', $roles), $realName !== '' ? $realName : null, $id]);
+                $roleStr = implode(',', $roles);
+                $prevRole = isset($existingAccount['role']) ? (string)$existingAccount['role'] : '';
+                $bump = ($prevRole !== $roleStr) ? 1 : 0;
+                $accountSync->execute([$roleStr, $realName !== '' ? $realName : null, $bump, $id]);
             }
         } elseif (!empty($r['autoCreateAccount'])) {
             if (!empty($roles) && (!in_array('instructor', $roles, true) || $realName !== '')) {

@@ -54,7 +54,9 @@ if ($action === 'set_password') {
     if (strlen($password) < 8) {
         yj_json(['error' => '비밀번호는 8자 이상으로 정해주세요.'], 400);
     }
-    $stmt = $db->prepare("UPDATE $table SET password_hash = ? WHERE username = ?");
+    /* session_version도 같이 올려서, 바뀌기 전 비밀번호로 이미 로그인해 있던
+       세션은 다음 요청부터 무효화됩니다. */
+    $stmt = $db->prepare("UPDATE $table SET password_hash = ?, session_version = session_version + 1 WHERE username = ?");
     $stmt->execute([password_hash($password, PASSWORD_DEFAULT), $username]);
     if ($stmt->rowCount() === 0) {
         /* 값이 같아도 rowCount가 0이 될 수 있어 존재 여부를 따로 확인합니다 */

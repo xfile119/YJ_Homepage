@@ -38,6 +38,13 @@
   .msg-status.unread { background: var(--color-primary); color: #fff; }
   .msg-status.read { background: var(--color-line); color: var(--color-muted); }
   .msg-body { font-size: 14px; color: var(--color-body); line-height: 1.7; white-space: pre-wrap; margin-bottom: 12px; }
+  .msg-src { display: inline-block; font-size: 11.5px; font-weight: 800; color: var(--color-primary); background: #fff; border: 1px solid var(--color-primary); border-radius: 999px; padding: 1px 9px; margin-bottom: 8px; }
+  .msg-consult { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13.5px; line-height: 1.6; background: #fff; border: 1px solid var(--color-line); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 10px; }
+  .msg-consult dt { color: var(--color-muted); font-weight: 700; }
+  .msg-consult dd { margin: 0; color: var(--color-ink); }
+  .msg-consult .msg-time { font-weight: 800; color: var(--color-primary); font-size: 15px; }
+  .msg-channel { font-size: 12px; color: var(--color-muted); margin: -2px 0 8px; }
+  .msg-channel b { color: var(--color-ink); font-weight: 700; }
   .msg-actions { display: flex; gap: 8px; flex-wrap: wrap; }
   .msg-actions button {
     border: 1px solid var(--color-line); background: #fff; border-radius: var(--radius-sm);
@@ -62,7 +69,8 @@
 
   <div class="admin-warning">
     <strong>이 페이지는 비공개 도구입니다.</strong> 홈페이지 메뉴 어디에도 연결되어 있지 않고 검색엔진에도 노출되지 않아요.<br>
-    상담문의 페이지의 "문의 남기기" 양식으로 접수된 내용을 확인할 수 있습니다. 연락처에는 고객 개인정보가 포함되어 있으니 취급에 주의해주세요.
+    상담문의 페이지의 "문의 남기기"와 면허 탐색기의 "상담 신청하기"로 접수된 내용을 확인할 수 있습니다. 연락처에는 고객 개인정보가 포함되어 있으니 취급에 주의해주세요.<br>
+    <strong>개인정보처리방침에 따라 접수일로부터 1개월이 지난 문의는 자동으로 삭제됩니다.</strong> 계속 관리가 필요한 분은 그 전에 학사 시스템 등으로 옮겨주세요.
   </div>
 
   <p id="loadingMsg">불러오는 중...</p>
@@ -77,6 +85,7 @@
   </div>
 </div>
 
+<script src="js/yj-channels.js"></script>
 <script>
 (function(){
 "use strict";
@@ -96,6 +105,26 @@ function telHref(phone){
   return "tel:" + String(phone || "").replace(/[^0-9+]/g, "");
 }
 
+/* 면허 탐색기 "상담 신청하기"로 들어온 문의는 과정·예상금액·연락 가능한 시간을
+   따로 보여줍니다 (상담원이 전화 걸기 전에 한눈에 보도록). */
+function consultHtml(row){
+  if (row.source !== "license") return "";
+  return '<span class="msg-src">면허 탐색기 상담 신청</span>' +
+    '<dl class="msg-consult">' +
+      '<dt>연락 가능</dt><dd class="msg-time">' + esc(row.contactTime || "-") + '</dd>' +
+      '<dt>과정</dt><dd>' + esc(row.courseTitle) + (row.courseCode ? ' (코드 ' + esc(row.courseCode) + ')' : '') + '</dd>' +
+      (row.coursePath ? '<dt>선택 경로</dt><dd>' + esc(row.coursePath) + '</dd>' : '') +
+      (row.estTotal ? '<dt>예상 합계</dt><dd>' + esc(row.estTotal) + '</dd>' : '') +
+    '</dl>';
+}
+
+/* 이 문의가 어디서 들어온 사람인지 (광고·검색 등). 측정 기능 이전 문의는 비어 있습니다. */
+function channelHtml(row){
+  if (!row.channel) return "";
+  return '<div class="msg-channel">유입: <b>' + esc(YJ_CHANNEL.label(row.channel)) + '</b>' +
+    (row.adKeyword ? ' · 광고 키워드 "' + esc(row.adKeyword) + '"' : '') + '</div>';
+}
+
 function render(){
   msgList.innerHTML = "";
   emptyNote.style.display = DATA.length ? "none" : "block";
@@ -112,7 +141,9 @@ function render(){
         '</span>' +
         '<span class="msg-date">' + esc(row.createdAt) + '</span>' +
       '</div>' +
-      '<div class="msg-body">' + esc(row.message) + '</div>' +
+      channelHtml(row) +
+      consultHtml(row) +
+      (row.message ? '<div class="msg-body">' + (row.source === "license" ? "추가 문의: " : "") + esc(row.message) + '</div>' : '') +
       '<div class="msg-actions">' +
         '<button type="button" class="btn-toggle-status">' + (row.status === "unread" ? "읽음 처리" : "안읽음으로") + '</button>' +
         '<button type="button" class="btn-del danger">삭제</button>' +
@@ -150,7 +181,8 @@ function render(){
 }
 
 fetch("api/auth.php").then(function(r){ return r.json(); }).then(function(res){
-  if (!res || !res.loggedIn || res.role === "office") {
+  var roles = (res && res.roles) || [];
+  if (!res || !res.loggedIn || (roles.indexOf("admin") < 0 && roles.indexOf("manager") < 0)) {
     location.href = "admin.html";
     return;
   }

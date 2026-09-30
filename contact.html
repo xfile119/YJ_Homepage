@@ -155,8 +155,6 @@
     <div class="topbar-links">
       <a href="location.html">오시는 길</a>
       <a href="my-schedule.html">내 일정 조회</a>
-      <a href="shuttle.html">셔틀 조회</a>
-      <a href="written-exam.html">필기시험 조회</a>
       <a href="notice.html">공지사항</a>
     </div>
     <a class="topbar-tel" href="tel:062-951-5100">☎ 062-951-5100</a>
@@ -244,7 +242,7 @@
           <div class="form-field full">
             <label class="form-check">
               <input type="checkbox" id="cf-agree" required />
-              <span>개인정보 수집·이용에 동의합니다. (<a href="privacy.html" target="_blank" rel="noopener">자세히 보기</a>)</span>
+              <span>개인정보 수집·이용에 동의합니다. (수집 항목: 이름·연락처·문의 내용 / 목적: 상담 연락 / 보유기간: 접수일로부터 1개월 · 동의하지 않으시면 문의를 남기실 수 없어요 · <a href="privacy.html" target="_blank" rel="noopener">자세히 보기</a>)</span>
             </label>
           </div>
           <div class="form-field full">
@@ -294,8 +292,6 @@
           <li><a href="large-vehicle-training.html">대형연수</a></li>
           <li><a href="driving-lessons.html">도로연수</a></li>
           <li><a href="my-schedule.html">내 일정 조회</a></li>
-          <li><a href="shuttle.html">셔틀 조회</a></li>
-          <li><a href="written-exam.html">필기시험 조회</a></li>
           <li><a href="notice.html">공지사항</a></li>
           <li><a href="location.html">오시는길</a></li>
         </ul>
@@ -371,7 +367,10 @@ form.addEventListener("submit", function(e){
   fetch("api/contact.php", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "submit", name: name, phone: phone, message: message })
+    body: JSON.stringify((function(){
+      var attr = window.YJ_ATTR ? window.YJ_ATTR.get() : {};
+      return { action: "submit", name: name, phone: phone, message: message, attrSrc: attr.src || "", attrKw: attr.kw || "" };
+    })())
   }).then(function(r){ return r.json().then(function(data){ return { ok: r.ok, data: data }; }); })
     .then(function(res){
       if (res.ok) {
@@ -385,7 +384,9 @@ form.addEventListener("submit", function(e){
     }).catch(function(){
       statusEl.textContent = "서버에 접속할 수 없습니다. 잠시 후 다시 시도하거나 전화로 문의해주세요.";
       statusEl.className = "form-status is-error";
-    }).finally(function(){
+    }).then(function(){
+      /* Promise.finally() 없이도 항상 실행되도록 then의 콜백으로 씁니다
+         (구형 브라우저 대응. 위 catch가 재던지지 않으므로 이 콜백 하나로 충분함) */
       submitBtn.disabled = false;
       submitBtn.textContent = "문의 남기기";
     });

@@ -3,20 +3,25 @@
    ========================================================================== */
 
 :root {
-  /* 색상 테스트: 마켓컬리 느낌의 보라색 팔레트 (2026-09) — 기존 주황/네이비 팔레트에서 전환 */
-  --color-primary: #6D28D9;
-  --color-primary-dark: #5B21B6;
-  --color-primary-light: #F3E8FF;
+  /* 색상 테스트: 네이비+옐로우 팔레트 (2026-09-25) — 도로 표지판(경고=노랑·안내=남색)
+     연상과 신뢰감을 노려 마켓컬리 느낌의 보라색 팔레트에서 전환. 강조색(노랑)은 그대로 두고
+     주 색상만 보라→남색으로 바꿨습니다. */
+  --color-primary: #13294B;
+  --color-primary-dark: #0B1B36;
+  --color-primary-light: #E7ECF5;
   --color-accent: #F5B700;
   --color-accent-dark: #D69E00;
-  /* 어두운 배경(상단바·푸터·정보카드)에 쓰는 짙은 보라 (기존 네이비 자리) */
-  --color-deep: #241934;
-  --color-deep-2: #3D2A5C;
-  --color-ink: #2E2440;
-  --color-body: #4A4258;
-  --color-muted: #8A8299;
-  --color-line: #ECE6F5;
-  --color-surface: #FAF8FC;
+  /* 어두운 배경(상단바·푸터·정보카드)에 쓰는 짙은 남색 */
+  --color-deep: #0A1730;
+  --color-deep-2: #16294D;
+  --color-ink: #1C2333;
+  --color-body: #3E4759;
+  /* 흰 배경 위 13px 안내문 기준으로 대비를 계산해보니 #7A8699는 약 3.7:1로
+     본문 기준(4.5:1)에 못 미쳤습니다. 톤은 유지하면서 조금 더 진하게
+     (약 4.8:1) 고쳤습니다. */
+  --color-muted: #64748B;
+  --color-line: #E2E6EE;
+  --color-surface: #F5F7FA;
   --color-white: #ffffff;
   --radius-sm: 8px;
   --radius-md: 14px;
@@ -216,7 +221,7 @@ button { font-family: inherit; cursor: pointer; }
 .hero {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(125deg, #0F0819 0%, #221040 50%, #3B1D6E 100%);
+  background: var(--color-deep);
   color: #fff;
 }
 .hero::after {
@@ -292,7 +297,7 @@ button { font-family: inherit; cursor: pointer; }
   right: -25%;
   top: -20%;
   bottom: -10%;
-  background: radial-gradient(ellipse 60% 60% at 62% 42%, rgba(233,216,250,0.5), rgba(233,216,250,0) 70%);
+  background: radial-gradient(ellipse 60% 60% at 62% 42%, rgba(200,220,250,0.5), rgba(200,220,250,0) 70%);
   filter: blur(46px);
   pointer-events: none;
   z-index: 0;
@@ -418,6 +423,58 @@ a.feature-card:hover .fc-more { color: var(--color-primary-dark); }
 }
 .notice-badge.info { background: var(--color-primary-light); color: var(--color-primary); }
 
+/* ---------- Entry band (index — 신규/재원 동선 분리) ----------
+   카드 전체가 링크입니다. 마우스를 올리면(포커스 시에도 동일) 진한 남색으로
+   바뀌어 "누를 수 있다"는 신호를 주고, 노란 CTA는 색이 유일하게 강조되는
+   지점으로 남겨둡니다(60-30-10 중 강조색 10% 자리). */
+.entry-band { align-items: stretch; }
+.entry-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  border-radius: 16px;
+  padding: 32px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.entry-card:focus-visible { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+/* 두 카드 모두 호버·포커스 시 살짝 떠오르는 느낌을 줘서, 배경색 변화가
+   작은(오른쪽) 카드에서도 "반응하고 있다"는 게 눈에 보이게 합니다. */
+.entry-card:hover, .entry-card:focus-visible { transform: translateY(-4px); }
+.entry-eyebrow { font-size: 13px; font-weight: 700; transition: color 0.2s ease; }
+.entry-card h2 { margin: 0; font-size: 28px; font-weight: 800; line-height: 1.35; transition: color 0.2s ease; }
+.entry-card p { margin: 0; font-size: 15px; line-height: 1.7; transition: color 0.2s ease; }
+
+/* 두 카드 모두 평소엔 흰 배경이다가, 마우스를 올리면(호버) 남색+흰 글씨로
+   반전됩니다 — 마우스가 없을 땐 어느 카드도 반전 상태로 보이면 안 되고,
+   딱 올라가 있는 카드만 반전되는 게 원칙입니다. */
+.entry-card-primary, .entry-card-secondary { background: #fff; border: 1px solid var(--color-line); box-shadow: var(--shadow-sm); }
+/* var(--color-muted)는 흰 배경에서 13px 글자 기준 명도 대비가 3.7:1 정도라
+   본문 텍스트 기준(4.5:1)에 못 미칩니다. 더 진한 --color-body로 바꿉니다. */
+.entry-card-primary .entry-eyebrow, .entry-card-secondary .entry-eyebrow { color: var(--color-body); }
+.entry-card-primary h2, .entry-card-secondary h2 { color: var(--color-ink); }
+.entry-card-primary p, .entry-card-secondary p { color: var(--color-body); }
+.entry-card-primary:hover, .entry-card-primary:focus-visible,
+.entry-card-secondary:hover, .entry-card-secondary:focus-visible {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+  box-shadow: 0 0 0 2px var(--color-accent), var(--shadow-lg);
+}
+.entry-card-primary:hover .entry-eyebrow, .entry-card-primary:focus-visible .entry-eyebrow,
+.entry-card-secondary:hover .entry-eyebrow, .entry-card-secondary:focus-visible .entry-eyebrow { color: var(--color-accent); }
+.entry-card-primary:hover h2, .entry-card-primary:focus-visible h2,
+.entry-card-secondary:hover h2, .entry-card-secondary:focus-visible h2 { color: #fff; }
+.entry-card-primary:hover p, .entry-card-primary:focus-visible p,
+.entry-card-secondary:hover p, .entry-card-secondary:focus-visible p { color: rgba(255,255,255,0.75); }
+
+/* margin-top:auto로 버튼을 카드 바닥에 붙입니다. 두 카드는 높이가
+   맞춰져 있는데(align-items:stretch) 헤드라인 줄 수가 서로 달라서, 이게
+   없으면 짧은 카드의 버튼이 긴 카드보다 위쪽에 뜨는 문제가 있었습니다. */
+.entry-card-cta { background: var(--color-accent); color: var(--color-ink); pointer-events: none; margin-top: auto; }
+
 /* ---------- Partner strip (index) ---------- */
 .partner-strip {
   display: flex;
@@ -517,7 +574,7 @@ a.partner-strip:hover { box-shadow: var(--shadow-sm); }
 
 /* ---------- CTA banner ---------- */
 .cta-banner {
-  background: linear-gradient(125deg, #0F0819 0%, #221040 50%, #3B1D6E 100%);
+  background: var(--color-deep);
   border-radius: var(--radius-lg);
   padding: 48px;
   color: #fff;
@@ -548,7 +605,7 @@ a.partner-strip:hover { box-shadow: var(--shadow-sm); }
 
 /* ---------- Page header (inner pages) ---------- */
 .page-header {
-  background: linear-gradient(125deg, #0F0819 0%, #221040 50%, #3B1D6E 100%);
+  background: var(--color-deep);
   color: #fff;
   padding: 56px 0 42px;
 }
@@ -814,6 +871,9 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
 .fa-kakao { background: #FEE500; color: #3C1E1E; }
 .fa-naver { background: #03C75A; color: #fff; }
 .fa-top { background: #fff; color: var(--color-ink); border: 1px solid var(--color-line); opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+/* 상담 묶음 토글 버튼 — 넓은 화면에서는 4개가 다 보여도 안 겹치니 숨겨두고,
+   좁은 화면(760px 이하)에서만 보이게 합니다 */
+.fa-toggle { display: none; }
 .fa-top.is-visible { opacity: 1; pointer-events: auto; }
 .floating-actions svg { width: 22px; height: 22px; }
 
@@ -874,11 +934,34 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
   .header-cta { flex-shrink: 0; gap: 8px; }
   .hero-stats { gap: 20px; }
   .grid-4, .grid-3, .grid-2, .steps { grid-template-columns: 1fr; }
+  .entry-card { padding: 24px; }
+  .entry-card h2 { font-size: 21px; }
   .section { padding: 56px 0; }
   .cta-banner { flex-direction: column; text-align: center; padding: 34px 24px; }
   .footer-top { grid-template-columns: 1fr; gap: 28px; }
   .form-grid { grid-template-columns: 1fr; }
   .contact-side { order: -1; }
+
+  /* 상담 버튼 4개가 항상 펼쳐져 있으면 좁은 화면에서 본문과 겹칩니다.
+     "상담" 버튼 하나만 기본으로 두고, 누르면 전화·카카오·네이버가 펼쳐지도록
+     합니다 (맨 위로 버튼은 스크롤에 따라 따로 나타나므로 그대로 둠). */
+  .floating-actions { right: 16px; bottom: 16px; gap: 8px; }
+  .floating-actions a, .floating-actions button { width: 46px; height: 46px; }
+  .floating-actions svg { width: 20px; height: 20px; }
+  .fa-call, .fa-kakao, .fa-naver {
+    opacity: 0;
+    transform: scale(0.5);
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+  .floating-actions.is-expanded .fa-call,
+  .floating-actions.is-expanded .fa-kakao,
+  .floating-actions.is-expanded .fa-naver {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+  .fa-toggle { display: flex; background: var(--color-primary); color: #fff; order: 99; }
 }
 
 /* ---------- 홈 대형연수 홍보 배너 ---------- */
@@ -887,7 +970,7 @@ table.simple-table td { color: var(--color-ink); font-weight: 500; }
   grid-template-columns: 1.15fr 0.85fr;
   align-items: center;
   gap: 32px;
-  background: linear-gradient(125deg, #0F0819 0%, #221040 50%, #3B1D6E 100%);
+  background: var(--color-deep);
   border-radius: var(--radius-lg);
   padding: 40px 44px;
   color: #fff;

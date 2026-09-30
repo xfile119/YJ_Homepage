@@ -34,8 +34,51 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}admin_users (
   username VARCHAR(50) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
   role VARCHAR(20) NOT NULL DEFAULT 'admin',
+  session_version INT NOT NULL DEFAULT 1,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
+/* 보안 — 최고관리자(admin) 계정이 이미 있는 사이트에서는, 로그인도 안 한
+   외부인이 이 화면에 다시 접속해서 계정을 만들거나 기존 아이디의 비밀번호를
+   덮어쓸 수 있으면 안 됩니다. 파일을 지우지 않고 재배포로 다시 올라와도
+   안전하도록, 코드 자체에서 막습니다. (아래에서 매번 만드는 office 계정은
+   admin이 아니라서 여기 안 걸립니다 — 안 걸리면 최초 설치 때 office 계정이
+   먼저 생기고 나서 관리자 계정 생성 폼을 제출하는 순간 막혀버립니다.)
+   최초 설치(admin 계정이 하나도 없는 상태)는 지금처럼 로그인 없이 그대로 진행됩니다. */
+$existingAdminCount = (int)$pdo->query("SELECT COUNT(*) FROM {$prefix}admin_users WHERE FIND_IN_SET('admin', role) > 0")->fetchColumn();
+if ($existingAdminCount > 0) {
+    if (session_status() === PHP_SESSION_NONE) { session_start(); }
+    $sessionRoles = isset($_SESSION['yj_role']) ? explode(',', (string)$_SESSION['yj_role']) : [];
+    $isLoggedInAdmin = !empty($_SESSION['yj_admin']) && in_array('admin', $sessionRoles, true);
+    /* 세션이 지금도 유효한지(로그인한 뒤 비밀번호가 바뀌어 무효화되지 않았는지)
+       한 번 더 DB로 확인합니다. session_version 컬럼이 아직 없는 예전 설치
+       (마이그레이션 전)에서는 이 확인을 건너뛰고 위 role 확인만으로 통과시킵니다. */
+    if ($isLoggedInAdmin && !empty($_SESSION['yj_uid'])) {
+        try {
+            $verStmt = $pdo->prepare("SELECT session_version FROM {$prefix}admin_users WHERE id = ? AND username = ?");
+            $verStmt->execute([(int)$_SESSION['yj_uid'], (string)$_SESSION['yj_admin']]);
+            $curVer = $verStmt->fetchColumn();
+            $sessVer = isset($_SESSION['yj_sver']) ? (int)$_SESSION['yj_sver'] : -1;
+            if ($curVer === false || (int)$curVer !== $sessVer) {
+                $isLoggedInAdmin = false;
+            }
+        } catch (Exception $e) {
+            /* session_version 컬럼이 아직 없는 예전 설치 — 아래 마이그레이션에서 곧 추가됩니다 */
+        }
+    }
+    if (!$isLoggedInAdmin) {
+        http_response_code(403);
+        echo '<!doctype html><html lang="ko"><head><meta charset="UTF-8">'
+           . '<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>이미 설치됨</title></head>'
+           . '<body style="font-family:sans-serif;max-width:560px;margin:60px auto;padding:0 20px;line-height:1.7;">'
+           . '<h1 style="font-size:20px;">이미 설치되어 있습니다</h1>'
+           . '<p>관리자 계정이 이미 있어서, 이 설치 화면은 <b>최고관리자로 로그인한 상태</b>에서만 다시 열 수 있습니다.</p>'
+           . '<p><a href="../admin.html">관리자 로그인</a> 후 같은 주소로 다시 접속해주세요.</p>'
+           . '<p style="color:#888;font-size:13px;">설치를 이미 마치셨다면, 이 파일(db/setup.php)은 서버에서 삭제해두시는 걸 권장합니다.</p>'
+           . '</body></html>';
+        exit;
+    }
+}
 
 $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}notices (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -243,6 +286,15 @@ foreach ($holidays2026_2027 as $h) {
     $holidayIns->execute($h);
 }
 
+/* 로그인 실패 시도를 IP별로 기록해서 무차별 대입(비밀번호 자동 시도)을 막습니다.
+   (api/auth.php에서 일정 시간 내 실패 횟수가 너무 많으면 잠깐 막아둡니다) */
+$pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}login_attempts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ip VARCHAR(45) NOT NULL DEFAULT '',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_ip_time (ip, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
 /* 이미 만들어진 notices 테이블에 content/image 컬럼이 없으면 추가합니다.
    (기존에 db/setup.php를 이미 한 번 실행한 사이트를 위한 안전한 마이그레이션 — 여러 번 실행해도 안전합니다.) */
 function yj_ensure_column($pdo, $table, $column, $definition) {
@@ -269,6 +321,38 @@ yj_ensure_column($pdo, $prefix . 'written_exam', 'student_phone', "VARCHAR(30) N
 yj_ensure_column($pdo, $prefix . 'staff', 'real_name', "VARCHAR(50) NULL DEFAULT NULL");
 yj_ensure_column($pdo, $prefix . 'admin_users', 'real_name', "VARCHAR(50) NULL DEFAULT NULL");
 yj_ensure_column($pdo, $prefix . 'admin_users', 'staff_id', "INT NULL DEFAULT NULL");
+
+/* 비밀번호 변경/계정 삭제 시 이 값을 올려서, 그 전에 이미 로그인해 있던 세션을
+   다음 요청부터 무효화합니다 (계정을 지우거나 비밀번호를 바꿨는데도 이미 열려있던
+   브라우저 세션으로 계속 접근할 수 있으면 안 되니까요). api/_db.php의
+   yj_session_is_valid()에서 로그인 시 세션에 저장해둔 값과 비교합니다. */
+yj_ensure_column($pdo, $prefix . 'admin_users', 'session_version', 'INT NOT NULL DEFAULT 1');
+
+/* 면허 탐색기 결과의 "상담 신청하기"로 들어온 문의는 과정·예상금액·연락 가능한
+   시간을 문의 내용에 섞지 않고 따로 저장합니다 (과정별 문의 통계용).
+   api/contact.php의 yj_contact_ensure_schema()와 반드시 같게 유지하세요. */
+yj_ensure_column($pdo, $prefix . 'contact_messages', 'source', "VARCHAR(20) NOT NULL DEFAULT ''");
+yj_ensure_column($pdo, $prefix . 'contact_messages', 'course_code', "VARCHAR(20) NOT NULL DEFAULT ''");
+yj_ensure_column($pdo, $prefix . 'contact_messages', 'course_title', "VARCHAR(100) NOT NULL DEFAULT ''");
+yj_ensure_column($pdo, $prefix . 'contact_messages', 'course_path', "VARCHAR(255) NOT NULL DEFAULT ''");
+yj_ensure_column($pdo, $prefix . 'contact_messages', 'est_total', "VARCHAR(30) NOT NULL DEFAULT ''");
+yj_ensure_column($pdo, $prefix . 'contact_messages', 'contact_time', "VARCHAR(5) NOT NULL DEFAULT ''");
+
+/* 유입 경로 측정: 문의가 어디서 들어온 사람인지(광고·검색 등)와 광고 키워드.
+   경로별 방문·클릭·상담 건수는 개인정보 없이 track_events에 따로 쌓습니다
+   (문의는 1개월 뒤 파기되지만 통계는 13개월 유지). api/_db.php의
+   yj_track_record()·api/contact.php와 정의를 같게 유지하세요. */
+yj_ensure_column($pdo, $prefix . 'contact_messages', 'channel', "VARCHAR(40) NOT NULL DEFAULT ''");
+yj_ensure_column($pdo, $prefix . 'contact_messages', 'ad_keyword', "VARCHAR(60) NOT NULL DEFAULT ''");
+$pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}track_events (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  event VARCHAR(20) NOT NULL DEFAULT '',
+  src VARCHAR(40) NOT NULL DEFAULT '',
+  kw VARCHAR(60) NOT NULL DEFAULT '',
+  page VARCHAR(60) NOT NULL DEFAULT '',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_time (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
 /* role은 원래 VARCHAR(20)으로 만들어졌는데, 겸직 지원으로 쉼표 구분 여러 값
    ("admin,manager,office,instructor" 이면 32자)을 담아야 해서 넓혀둡니다. */
@@ -369,23 +453,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = '비밀번호는 8자 이상으로 설정해주세요.';
     } else {
         $hash = password_hash($password, PASSWORD_DEFAULT);
+        /* 기존 계정 비밀번호를 재설정하는 경우, session_version을 올려서 이전
+           비밀번호로 로그인해 있던 세션을 무효화합니다. */
         $stmt = $pdo->prepare("INSERT INTO {$prefix}admin_users (username, password_hash) VALUES (?, ?)
-            ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash)");
+            ON DUPLICATE KEY UPDATE password_hash = VALUES(password_hash), session_version = session_version + 1");
         $stmt->execute([$username, $hash]);
         $done = true;
         $message = '관리자 계정이 생성/변경되었습니다.';
-    }
-}
-
-/* 셔틀 명단 작성용 office 계정 3개를 만들어 둡니다.
-   비밀번호는 임시값이며, 관리자 화면의 "계정 관리"에서 반드시 바꿔주세요. */
-$officeTempPw = 'yjoffice1234';
-$officeIns = $pdo->prepare("INSERT INTO {$prefix}admin_users (username, password_hash, role) VALUES (?, ?, 'office')");
-foreach (['office1', 'office2', 'office3'] as $officeName) {
-    $chk = $pdo->prepare("SELECT COUNT(*) FROM {$prefix}admin_users WHERE username = ?");
-    $chk->execute([$officeName]);
-    if ((int)$chk->fetchColumn() === 0) {
-        $officeIns->execute([$officeName, password_hash($officeTempPw, PASSWORD_DEFAULT)]);
     }
 }
 

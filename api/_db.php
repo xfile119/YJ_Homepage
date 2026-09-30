@@ -3,22 +3,29 @@
    Throwable 등 PHP 7+ 전용 문법을 쓰지 않습니다). */
 
 if (session_status() === PHP_SESSION_NONE) {
+    /* 세션 쿠키 보안 속성. PHP 7.3 미만에서도 SameSite가 적용되도록,
+       PHP가 path 문자열을 Set-Cookie 헤더에 그대로 옮겨 적는 점을 이용한
+       방식을 씁니다("path; samesite=Lax" 자체가 하나의 값처럼 보이지만,
+       브라우저는 세미콜론 기준으로 나눠서 두 개의 속성으로 해석합니다). */
+    $yj_https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+    session_set_cookie_params(0, '/; samesite=Lax', '', $yj_https, true);
     session_start();
 }
 
-/* 치명적 오류(fatal error)가 나도 빈 화면 대신 원인을 알 수 있는 JSON을 돌려줍니다.
-   (디버깅용 — 문제 원인이 밝혀지면 이 블록은 다시 지워도 됩니다) */
+/* 치명적 오류(fatal error)가 나도 빈 화면 대신 JSON을 돌려줘서, 화면 쪽
+   fetch().catch()가 "서버에 접속할 수 없습니다" 대신 정상적인 오류 처리를
+   타게 합니다. 원인(파일 경로·줄 번호·오류 원문)은 방문자에게 보여주지 않고
+   서버 오류 로그에만 남깁니다. */
 register_shutdown_function(function () {
     $err = error_get_last();
     if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        error_log('[YJ] Fatal error: ' . $err['message'] . ' in ' . $err['file'] . ' on line ' . $err['line']);
         if (!headers_sent()) {
             http_response_code(500);
             header('Content-Type: application/json; charset=utf-8');
         }
         echo json_encode([
-            'error' => 'Fatal error: ' . $err['message'],
-            'file' => $err['file'],
-            'line' => $err['line'],
+            'error' => '서버에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.',
         ], JSON_UNESCAPED_UNICODE);
     }
 });
@@ -64,10 +71,80 @@ function yj_json($data, $status = 200) {
     exit;
 }
 
-function yj_require_login() {
-    if (empty($_SESSION['yj_admin'])) {
-        yj_json(['error' => '로그인이 필요합니다.'], 401);
+/* 세션을 완전히 비우고 쿠키도 지웁니다 (로그아웃, 또는 세션이 더 이상
+   유효하지 않다고 판단됐을 때 공통으로 씁니다). */
+function yj_destroy_session() {
+    $_SESSION = [];
+    if (ini_get('session.use_cookies')) {
+        $p = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
     }
+    session_destroy();
+}
+
+/* 로그인 세션이 지금도 유효한지 매 요청마다 DB로 다시 확인합니다. 로그인 시
+   세션에 저장해둔 session_version이 admin_users의 현재 값과 다르면(비밀번호가
+   바뀌었거나) 계정이 아예 없어졌으면(삭제됐으면), 세션을 지우고 false를
+   돌려줍니다. 통과하면 role도 그 사이 바뀌었을 수 있으니 세션 값을 최신으로
+   맞춰둡니다 — 이렇게 하면 관리자 화면에서 계정을 지우거나 비밀번호·역할을
+   바꾼 순간부터 그 계정의 예전 세션은 즉시 못 쓰게 됩니다. */
+function yj_session_is_valid() {
+    static $result = null;
+    if ($result !== null) {
+        return $result;
+    }
+    if (empty($_SESSION['yj_admin']) || empty($_SESSION['yj_uid'])) {
+        $result = false;
+        return false;
+    }
+    $table = yj_table('admin_users');
+    $stmt = yj_db()->prepare("SELECT username, role, session_version FROM $table WHERE id = ? LIMIT 1");
+    $stmt->execute([(int)$_SESSION['yj_uid']]);
+    $row = $stmt->fetch();
+    $sessionVer = isset($_SESSION['yj_sver']) ? (int)$_SESSION['yj_sver'] : -1;
+    if (!$row || $row['username'] !== $_SESSION['yj_admin'] || (int)$row['session_version'] !== $sessionVer) {
+        yj_destroy_session();
+        $result = false;
+        return false;
+    }
+    $_SESSION['yj_role'] = $row['role'];
+    $result = true;
+    return true;
+}
+
+/* CSRF(사이트 간 요청 위조) 방지 — 로그인 세션 쿠키로 인증하는 상태변경 요청은
+   다른 사이트가 관리자의 브라우저를 통해 몰래 대신 보낼 수 있으면 안 됩니다.
+   (JSON 본문은 php://input으로 Content-Type과 무관하게 읽히기 때문에, text/plain
+   폼처럼 <form>만으로도 이런 요청을 만들어낼 수 있는 알려진 기법이 있습니다.)
+   브라우저가 요청에 자동으로 붙이는 Origin(없으면 Referer) 헤더가 지금 이
+   사이트 자신인지 확인해서, 아니면 막습니다. 도메인을 하드코딩하지 않고 지금
+   요청이 온 Host와 비교하므로 어느 도메인/서브도메인에 배포해도 그대로 동작합니다.
+   조회만 하는 GET은 상태를 바꾸지 않으니 대상이 아닙니다. */
+function yj_verify_same_origin() {
+    if ($_SERVER['REQUEST_METHOD'] === 'GET') { return; }
+    $host = isset($_SERVER['HTTP_HOST']) ? strtolower($_SERVER['HTTP_HOST']) : '';
+    $check = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '');
+    /* HTTP_HOST에는 기본 포트(80/443)가 아니면 포트까지 포함되는데, parse_url()의
+       PHP_URL_HOST는 포트를 떼어내므로 그냥 비교하면 포트가 다른 개발 환경 등에서
+       오탐이 납니다. 포트까지 다시 붙여서 같은 형태로 맞춰 비교합니다. */
+    $checkHost = null;
+    if ($check !== '') {
+        $h = parse_url($check, PHP_URL_HOST);
+        $p = parse_url($check, PHP_URL_PORT);
+        if ($h !== null && $h !== false) {
+            $checkHost = strtolower($h) . ($p ? ':' . $p : '');
+        }
+    }
+    if ($host === '' || $checkHost === null || $checkHost !== $host) {
+        yj_json(['error' => '요청을 확인할 수 없습니다. 새로고침 후 다시 시도해주세요.'], 403);
+    }
+}
+
+function yj_require_login() {
+    if (!yj_session_is_valid()) {
+        yj_json(['error' => '로그인이 만료되었습니다. 다시 로그인해주세요.'], 401);
+    }
+    yj_verify_same_origin();
 }
 
 /* 현재 로그인한 계정의 역할들 (겸직 가능해서 쉼표로 구분된 하나 이상의 값):
@@ -130,4 +207,92 @@ function yj_input() {
     $raw = file_get_contents('php://input');
     $data = json_decode($raw, true);
     return is_array($data) ? $data : [];
+}
+
+/* 새로 추가된 칼럼·테이블이 아직 없으면(파일만 먼저 올리고 db/setup.php를 아직
+   안 돌린 경우) 그 자리에서 만들어 둡니다. 로그인·상담신청처럼 드물게 도는
+   경로에서만 부릅니다. 특히 로그인은 이게 없으면 관리자 로그인이 막히는데,
+   setup.php도 관리자로 로그인해야 열 수 있어서 스스로 풀 방법이 없어집니다.
+   칼럼 정의는 db/setup.php와 반드시 같게 유지하세요. */
+function yj_db_ensure_column($table, $column, $definition) {
+    $db = yj_db();
+    $check = $db->prepare("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?");
+    $check->execute([$table, $column]);
+    if ((int)$check->fetchColumn() === 0) {
+        $db->exec("ALTER TABLE {$table} ADD COLUMN {$column} {$definition}");
+    }
+}
+function yj_ensure_auth_schema() {
+    yj_db_ensure_column(yj_table('admin_users'), 'session_version', 'INT NOT NULL DEFAULT 1');
+    $t = yj_table('login_attempts');
+    yj_db()->exec("CREATE TABLE IF NOT EXISTS {$t} (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      ip VARCHAR(45) NOT NULL DEFAULT '',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_ip_time (ip, created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+}
+
+/* 유입 경로 측정 기록 한 건 (api/track.php, api/contact.php에서 씀).
+   개인정보 없이 이벤트 종류·유입 경로·광고 키워드·페이지만 남깁니다.
+   테이블이 아직 없으면(setup.php를 안 돌린 경우) 만들고 다시 넣습니다 —
+   정의는 db/setup.php와 같게 유지하세요. */
+function yj_track_record($event, $src, $kw, $page) {
+    $src = strtolower(preg_replace('/[^A-Za-z0-9_.:-]/', '', (string)$src));
+    $src = substr($src, 0, 40);
+    if ($src === '') { $src = 'direct'; }
+    /* utf8 칼럼이라 이모지 같은 4바이트 문자는 뺍니다 */
+    $kw = trim(preg_replace('/[\x00-\x1f<>"\'`\x{10000}-\x{10FFFF}]/u', '', (string)$kw));
+    $kw = function_exists('mb_substr') ? mb_substr($kw, 0, 60) : substr($kw, 0, 60);
+    $page = substr(preg_replace('/[^A-Za-z0-9_.-]/', '', (string)$page), 0, 60);
+
+    $t = yj_table('track_events');
+    $db = yj_db();
+    $sql = "INSERT INTO $t (event, src, kw, page) VALUES (?, ?, ?, ?)";
+    try {
+        $db->prepare($sql)->execute([$event, $src, $kw, $page]);
+    } catch (Exception $e) {
+        $db->exec("CREATE TABLE IF NOT EXISTS $t (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          event VARCHAR(20) NOT NULL DEFAULT '',
+          src VARCHAR(40) NOT NULL DEFAULT '',
+          kw VARCHAR(60) NOT NULL DEFAULT '',
+          page VARCHAR(60) NOT NULL DEFAULT '',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          INDEX idx_time (created_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+        $db->prepare($sql)->execute([$event, $src, $kw, $page]);
+    }
+    /* 13개월 지난 기록은 가끔(1% 확률) 정리 */
+    if (mt_rand(1, 100) === 1) {
+        $db->exec("DELETE FROM $t WHERE created_at < (NOW() - INTERVAL 13 MONTH)");
+    }
+}
+
+/* 로그인 무차별 대입(비밀번호 자동 시도) 방지 — 같은 IP에서 15분 안에 로그인
+   실패가 너무 많으면 잠깐 막습니다. 세션 카운터(셔틀/필기시험 조회 제한처럼)는
+   쿠키를 새로 받으면 바로 우회되므로 로그인처럼 값이 큰 대상에는 약해서,
+   IP 기준으로 DB에 기록합니다. */
+function yj_login_rate_limit_check() {
+    $ip = isset($_SERVER['REMOTE_ADDR']) ? (string)$_SERVER['REMOTE_ADDR'] : '';
+    if ($ip === '') { return; }
+    $table = yj_table('login_attempts');
+    $db = yj_db();
+    $stmt = $db->prepare("SELECT COUNT(*) FROM $table WHERE ip = ? AND created_at > (NOW() - INTERVAL 15 MINUTE)");
+    $stmt->execute([$ip]);
+    if ((int)$stmt->fetchColumn() >= 10) {
+        yj_json(['error' => '로그인 시도가 너무 많습니다. 15분 후 다시 시도해주세요.'], 429);
+    }
+    /* 오래된 기록은 매번 지우지 않고 가끔(1% 확률)만 정리해서, 매 요청마다
+       DELETE가 도는 부담을 줄입니다. */
+    if (mt_rand(1, 100) === 1) {
+        $db->exec("DELETE FROM $table WHERE created_at < (NOW() - INTERVAL 1 DAY)");
+    }
+}
+function yj_login_rate_limit_record_failure() {
+    $ip = isset($_SERVER['REMOTE_ADDR']) ? (string)$_SERVER['REMOTE_ADDR'] : '';
+    if ($ip === '') { return; }
+    $table = yj_table('login_attempts');
+    $stmt = yj_db()->prepare("INSERT INTO $table (ip) VALUES (?)");
+    $stmt->execute([$ip]);
 }
