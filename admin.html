@@ -124,6 +124,14 @@
       </div>
       <div class="tool-card" data-role="admin,manager">
         <div class="tool-card-body">
+          <h3>안내장 작성</h3>
+          <p>학사서버의 안내장 앱을 엽니다 — 지금 로그인한 계정으로 바로 들어가므로 따로 로그인할 필요가 없습니다 (학원 안 컴퓨터에서만 열립니다)</p>
+          <p class="guide-open-error" id="guideOpenError" hidden style="color:#c53030;font-weight:700;margin-top:6px;"></p>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" id="btnOpenGuide">열기</button>
+      </div>
+      <div class="tool-card" data-role="admin,manager">
+        <div class="tool-card-body">
           <h3>임직원 관리</h3>
           <p>임직원 추가·수정·삭제, 사진·성향(MBTI)·근무형태·강의종별 관리 — 학원소개 페이지 강사진에 반영</p>
         </div>
@@ -235,6 +243,30 @@ document.getElementById("btnLogin").addEventListener("click", function(){
 });
 pwInput.addEventListener("keydown", function(e){
   if (e.key === "Enter") document.getElementById("btnLogin").click();
+});
+
+/* "안내장 작성" — 홈페이지에서 일회용 확인표를 받아 안내장 앱으로 넘어갑니다.
+   새 창은 클릭 순간에 먼저 열어둬야 팝업 차단에 걸리지 않고, 확인표를 받은 뒤
+   그 창의 주소만 바꿉니다. */
+document.getElementById("btnOpenGuide").addEventListener("click", function(){
+  var errEl = document.getElementById("guideOpenError");
+  errEl.hidden = true;
+  var win = window.open("about:blank", "_blank");
+  if (win) { win.opener = null; } /* 새 창에서 이 관리자 화면을 건드릴 수 없게 */
+  fetch("api/guide-auth.php", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "token" })
+  }).then(function(r){ return r.json().then(function(d){ return { ok: r.ok, d: d }; }); })
+    .then(function(res){
+      if (!res.ok || !res.d.url) { throw new Error(res.d.error || "안내장 앱을 열지 못했습니다."); }
+      if (win) { win.location.href = res.d.url; } else { location.href = res.d.url; }
+    })
+    .catch(function(err){
+      if (win) win.close();
+      errEl.textContent = (err && err.message) || "안내장 앱을 열지 못했습니다.";
+      errEl.hidden = false;
+    });
 });
 document.getElementById("btnLock").addEventListener("click", function(){
   var cleanup = function(){
