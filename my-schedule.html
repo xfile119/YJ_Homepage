@@ -799,9 +799,9 @@ tabList.addEventListener("keydown", function (e) {
   }
 
   function renderEmpty() {
-    /* 사무실에서 상담해서 등록해준 (예전 방식) 정보가 없다는 뜻일 뿐, 실제로는
-       본인이 직접 날짜·회차를 골라 신청할 수 있는 필기시험 신청 페이지가
-       따로 있습니다(written-exam.html). 여기서 "없음"만 보여주고 끝내면
+    /* 등록된 필기시험 예약이 없다는 뜻입니다(사무실이 넣었든 본인이 신청했든 같은
+       예약 시스템 하나를 조회함). 본인이 직접 날짜·회차를 골라 신청할 수 있는
+       필기시험 신청 페이지가 따로 있습니다(written-exam.html). 여기서 "없음"만 보여주고 끝내면
        전화 문의 말고는 방법이 없어보여서, 그 페이지로 바로 갈 수 있는
        버튼을 추가합니다 (2026-09-30). */
     resultsEl.innerHTML = '<div class="we-empty">'
@@ -845,11 +845,11 @@ tabList.addEventListener("keydown", function (e) {
     submitBtn.disabled = true;
     resultsEl.classList.remove("show");
 
-    fetch("api/written-exam.php", {
+    fetch("api/written-exam-booking.php", {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "lookup", name: name, phoneTail: tail }),
+      body: JSON.stringify({ action: "lookup_phone", name: name, phoneTail: tail }),
       signal: controller ? controller.signal : undefined
     })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })

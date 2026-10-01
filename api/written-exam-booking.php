@@ -1,8 +1,9 @@
 <?php
 /* 필기시험 예약 API — 수강생 자가 신청/변경/취소 + 관리자 회차·예약 관리.
    설계 근거: docs-11-written-exam-db.md, docs-12-written-exam-screens.md
-   (yj-academy-messaging 저장소). 안내장 앱 전용 api/written-exam.php와는
-   별개입니다 — 이건 수강생이 직접 쓰는 정식 예약 시스템입니다.
+   (yj-academy-messaging 저장소). 필기시험의 유일한 저장소입니다 — 수강생 자가 신청,
+   관리자 화면, 안내장 앱(staff_*), 내 일정 조회(lookup_phone)가 모두 여기를 씁니다.
+   (2026-10-01 이전에는 안내장 앱 전용 api/written-exam.php가 따로 있었으나 합치고 없앴습니다.)
 
    PHP 5.5 이상에서 동작하도록 구형 문법으로 작성했습니다. */
 
@@ -310,6 +311,208 @@ if ($method === 'POST' && ($action === 'book' || $action === 'change' || $action
         $rel = yj_db()->prepare('SELECT RELEASE_LOCK(?)');
         $rel->execute([$lockKey]);
     }
+}
+
+/* ════════════════════ 공개(비로그인) — 내 일정 조회용: 이름 + 전화번호 뒷 4자리 ════════════════════
+   my-schedule.html의 "필기" 탭이 씁니다. 예전엔 안내장 앱 전용 옛 테이블(api/written-exam.php)을
+   조회했지만, 필기시험은 이 예약 시스템 하나로 합쳤습니다(2026-10-01). */
+if ($method === 'POST' && $action === 'lookup_phone') {
+    yj_wexam_rate_limit();
+    $name = trim((string)(isset($body['name']) ? $body['name'] : ''));
+    $tail = yj_wexam_digits(isset($body['phoneTail']) ? $body['phoneTail'] : '');
+    if ($name === '' || strlen($tail) !== 4) {
+        yj_json(['error' => '이름과 전화번호 뒷 4자리를 정확히 입력해주세요.'], 400);
+    }
+    $stmt = yj_db()->prepare(
+        "SELECT exam_date, slot_no, depart_type, phone FROM $bookingsTable
+          WHERE exam_date >= ? AND REPLACE(REPLACE(name, ' ', ''), '\t', '') = ?
+          ORDER BY exam_date"
+    );
+    $stmt->execute([date('Y-m-d'), yj_wexam_name_key($name)]);
+    $found = null;
+    foreach ($stmt->fetchAll() as $r) {
+        if (substr(yj_wexam_digits($r['phone']), -4) === $tail) { $found = $r; break; }
+    }
+    /* 이름만 맞고 번호가 틀린 경우와 아예 없는 경우를 구분하지 않습니다 (정보 유추 방지) */
+    if (!$found) { yj_json(['found' => false]); }
+    $info = yj_wexam_slot_info($found['exam_date'], $found['slot_no']);
+    yj_json([
+        'found' => true,
+        'examDate' => $found['exam_date'],
+        'examTime' => $info ? yj_wexam_depart_label($info['depart_time']) : '개인방문',
+        'place' => $info ? $info['exam_place'] : '',
+    ]);
+}
+
+/* ════════════════════ 안내장 앱 전용 (X-Sync-Key) ════════════════════
+   안내장 앱(학사서버)이 상담 중 정한 필기시험을 이 예약 시스템에 직접 넣고 읽고 지웁니다.
+   예전 api/written-exam.php(학생당 한 건짜리 별도 테이블)를 대신합니다.
+
+   - 사람 찾기: StudentID(student_key)로 먼저, 없으면 이름+전화번호 같은 예약(수강생이 홈페이지에서
+     직접 신청했거나 관리자 화면에서 손으로 넣은 것)도 같은 사람으로 봅니다.
+   - 저장은 "한 사람에 앞으로 있을 예약 하나"를 만들거나, 이미 있으면 그 예약을 새 회차로 옮깁니다.
+   - 학원출발 회차만 다룹니다(회차가 있는 날짜여야 함). 출발 시각·장소는 회차에서 가져옵니다.
+   - 정원이 찼거나 마감된 회차, 같은 날 수업이 있는 경우는 막지 않고 경고만 돌려줍니다
+     (관리자 화면과 같은 방침 — 전화로 조정하는 경우가 있음). */
+
+function yj_wexam_slot_info($examDate, $slotNo) {
+    global $slotsTable;
+    if ((int)$slotNo < 0) { return null; }
+    $s = yj_db()->prepare("SELECT depart_time, return_time, exam_place, capacity, closed FROM $slotsTable WHERE exam_date = ? AND slot_no = ?");
+    $s->execute([$examDate, (int)$slotNo]);
+    $r = $s->fetch();
+    return $r ? $r : null;
+}
+
+/* '14:20' -> '오후 14:20' (안내장·내 일정 조회가 쓰는 표기) */
+function yj_wexam_depart_label($hhmm) {
+    $h = (int)substr((string)$hhmm, 0, 2);
+    return ($h < 12 ? '오전 ' : '오후 ') . $hhmm;
+}
+
+/* 안내장 앱이 알려준 학생의 "앞으로 있을 예약"을 모두 찾습니다(가까운 날짜 순).
+   student_key 일치 또는 이름+전화번호 일치. */
+function yj_wexam_staff_find($studentKey, $name, $phone) {
+    global $bookingsTable;
+    $nameKey = yj_wexam_name_key($name);
+    $digits = yj_wexam_digits($phone);
+    $stmt = yj_db()->prepare(
+        "SELECT id, exam_date, slot_no, depart_type, name, phone, student_key FROM $bookingsTable
+          WHERE exam_date >= ? ORDER BY exam_date, id"
+    );
+    $stmt->execute([date('Y-m-d')]);
+    $out = [];
+    foreach ($stmt->fetchAll() as $r) {
+        $byKey = ($studentKey !== '' && $r['student_key'] === $studentKey);
+        $byPerson = ($digits !== '' && yj_wexam_name_key($r['name']) === $nameKey
+                     && yj_wexam_digits($r['phone']) === $digits);
+        if ($byKey || $byPerson) { $out[] = $r; }
+    }
+    return $out;
+}
+
+if ($action === 'staff_get' || $action === 'staff_save' || $action === 'staff_delete') {
+    yj_require_sync_key('written_exam_sync_key');
+    $src = $method === 'GET' ? $_GET : $body;
+    $studentId = isset($src['studentId']) ? (int)$src['studentId'] : 0;
+    if ($studentId <= 0) { yj_json(['error' => 'studentId가 필요합니다.'], 400); }
+    $studentKey = (string)$studentId;
+    $name = trim((string)(isset($src['name']) ? $src['name'] : ''));
+    $phone = trim((string)(isset($src['phone']) ? $src['phone'] : ''));
+
+    if ($method === 'GET' && $action === 'staff_get') {
+        $found = yj_wexam_staff_find($studentKey, $name, $phone);
+        if (!$found) { yj_json((object)[]); }   /* {} — 저장된 예약 없음 */
+        $f = $found[0];
+        $info = yj_wexam_slot_info($f['exam_date'], $f['slot_no']);
+        yj_json([
+            'examDate' => $f['exam_date'],
+            'slotNo' => (int)$f['slot_no'],
+            'departTime' => $info ? $info['depart_time'] : '',
+            'place' => $info ? $info['exam_place'] : '',
+            'departType' => $f['depart_type'],
+        ]);
+    }
+
+    if ($method !== 'POST') { yj_json(['error' => 'Method not allowed'], 405); }
+    $actor = trim((string)(isset($body['updatedBy']) ? $body['updatedBy'] : ''));
+    if ($actor === '') { $actor = '안내장'; }
+    if (function_exists('mb_substr')) { $actor = mb_substr($actor, 0, 40, 'UTF-8'); }
+
+    if ($action === 'staff_delete') {
+        $db = yj_db();
+        $db->beginTransaction();
+        try {
+            $found = yj_wexam_staff_find($studentKey, $name, $phone);
+            if (!$found) { $db->rollBack(); yj_json(['ok' => true, 'deleted' => false]); }
+            $f = $found[0];
+            $db->prepare("DELETE FROM $bookingsTable WHERE id = ?")->execute([$f['id']]);
+            yj_wexam_log($f['exam_date'], $f['slot_no'], '취소', $f['name'], '안내장 앱에서 삭제', $actor);
+            $db->commit();
+            yj_json(['ok' => true, 'deleted' => true]);
+        } catch (Exception $e) {
+            if ($db->inTransaction()) { $db->rollBack(); }
+            yj_json(['error' => '처리 중 오류가 발생했습니다.'], 500);
+        }
+    }
+
+    /* staff_save */
+    $birth = yj_wexam_digits(isset($body['birthDate']) ? $body['birthDate'] : '');
+    $examDate = trim((string)(isset($body['examDate']) ? $body['examDate'] : ''));
+    $slotNo = isset($body['slotNo']) ? (int)$body['slotNo'] : -1;
+    if ($name === '') { yj_json(['error' => '수강생 이름이 필요합니다.'], 400); }
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $examDate)) { yj_json(['error' => '날짜 형식이 올바르지 않습니다.'], 400); }
+    if ($examDate < date('Y-m-d')) { yj_json(['error' => '지난 날짜로는 저장할 수 없습니다.'], 400); }
+    if ($slotNo < 0) { yj_json(['error' => '학원 출발 회차를 골라주세요.'], 400); }
+
+    $db = yj_db();
+    $db->beginTransaction();
+    try {
+        $slotStmt = $db->prepare("SELECT depart_time, exam_place, capacity, closed FROM $slotsTable WHERE exam_date = ? AND slot_no = ? FOR UPDATE");
+        $slotStmt->execute([$examDate, $slotNo]);
+        $slot = $slotStmt->fetch();
+        if (!$slot) {
+            $db->rollBack();
+            yj_json(['error' => '그 날짜에는 해당 회차가 없습니다. 필기시험 관리에서 회차를 먼저 만들어주세요.'], 404);
+        }
+
+        /* 같은 날·같은 사람 예약(유일 키)이 이미 있으면 그것을 쓰고, 아니면 이 학생의 기존 예약을 옮깁니다 */
+        $found = yj_wexam_staff_find($studentKey, $name, $phone);
+        $target = null; $mover = null;
+        foreach ($found as $f) {
+            if ($f['exam_date'] === $examDate) { $target = $f; break; }
+        }
+        if (!$target && $found) { $mover = $found[0]; }
+
+        $cnt = $db->prepare("SELECT COUNT(*) FROM $bookingsTable WHERE exam_date = ? AND slot_no = ? AND id != ?");
+        $cnt->execute([$examDate, $slotNo, $target ? (int)$target['id'] : ($mover ? (int)$mover['id'] : 0)]);
+        $others = (int)$cnt->fetchColumn();
+
+        $row = $target ? $target : $mover;
+        if ($row) {
+            $db->prepare(
+                "UPDATE $bookingsTable SET exam_date = ?, slot_no = ?, depart_type = '학원출발', name = ?, phone = ?, birth_date = ?, student_key = ?, updated_by = ? WHERE id = ?"
+            )->execute([$examDate, $slotNo, $name, $phone, $birth, $studentKey, $actor, $row['id']]);
+            $detail = ($target ? $examDate . ' 저장(안내장)' : $row['exam_date'] . ' → ' . $examDate . ' (안내장)');
+            yj_wexam_log($examDate, $slotNo, '변경', $name, $detail, $actor);
+        } else {
+            $db->prepare(
+                "INSERT INTO $bookingsTable (exam_date, slot_no, depart_type, name, phone, birth_date, student_key, updated_by)
+                 VALUES (?, ?, '학원출발', ?, ?, ?, ?, ?)"
+            )->execute([$examDate, $slotNo, $name, $phone, $birth, $studentKey, $actor]);
+            yj_wexam_log($examDate, $slotNo, '신청', $name, $examDate . ' 신청(안내장)', $actor);
+        }
+        /* 같은 날짜 예약이 따로 있었는데 다른 날짜 예약도 있던 경우: 옮겨 심은 쪽만 남도록 나머지 정리 */
+        if ($target && count($found) > 1) {
+            foreach ($found as $f) {
+                if ((int)$f['id'] !== (int)$target['id'] && $f['exam_date'] !== $examDate) {
+                    $db->prepare("DELETE FROM $bookingsTable WHERE id = ?")->execute([$f['id']]);
+                    yj_wexam_log($f['exam_date'], $f['slot_no'], '취소', $f['name'], '안내장에서 다른 날짜로 저장하며 정리', $actor);
+                }
+            }
+        }
+        $db->commit();
+    } catch (Exception $e) {
+        if ($db->inTransaction()) { $db->rollBack(); }
+        yj_json(['error' => '처리 중 오류가 발생했습니다.'], 500);
+    }
+
+    $warnings = [];
+    if ((int)$slot['closed']) { $warnings[] = '이 회차는 마감 처리된 회차입니다. 그래도 저장했습니다.'; }
+    if ($others >= (int)$slot['capacity']) {
+        $warnings[] = '이 회차는 정원(' . (int)$slot['capacity'] . '명)이 이미 찼습니다. 그래도 저장했습니다 — 정원을 확인해주세요.';
+    }
+    if (count(yj_wexam_classes_that_day($name, $phone, $examDate)) > 0) {
+        $warnings[] = '이 수강생은 그날 수업이 예약돼 있습니다. 시험 시간과 겹치지 않는지 확인해주세요.';
+    }
+    yj_json([
+        'ok' => true,
+        'examDate' => $examDate,
+        'slotNo' => $slotNo,
+        'departTime' => $slot['depart_time'],
+        'place' => $slot['exam_place'],
+        'warnings' => $warnings,
+    ]);
 }
 
 /* ════════════════════ 관리자 ════════════════════ */

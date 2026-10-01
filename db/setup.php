@@ -163,20 +163,13 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}shuttle_slots (
   INDEX idx_slot_date (ride_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
-$pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}written_exam (
-  student_id INT PRIMARY KEY,
-  student_name VARCHAR(50) NOT NULL DEFAULT '',
-  student_phone VARCHAR(30) NOT NULL DEFAULT '',
-  exam_date VARCHAR(10) NOT NULL DEFAULT '',
-  exam_time VARCHAR(20) NOT NULL DEFAULT '',
-  place VARCHAR(100) NOT NULL DEFAULT '나주',
-  updated_by VARCHAR(50) NOT NULL DEFAULT '',
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+/* (2026-10-01) 예전 안내장 앱 전용 {prefix}written_exam 테이블은 필기시험 예약 시스템으로
+   합치면서 더 이상 만들지 않습니다. 이미 있는 서버에서는 그대로 남아 있으며(안 씀),
+   확인 후 직접 지우면 됩니다 — db/CHANGELOG-DB.md 참고. */
 
 /* ── 필기시험 예약 시스템 (feature/written-exam-booking) ──────────────────
-   설계 근거: docs-11/docs-12 (yj-academy-messaging 저장소). 위 written_exam
-   (안내장 앱 전용, 학생당 최신 한 건)과는 별개의 정식 예약 시스템입니다. */
+   설계 근거: docs-11/docs-12 (yj-academy-messaging 저장소). 필기시험의 유일한
+   저장소입니다(안내장 앱도 이쪽에 저장). */
 $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}written_exam_slots (
   id INT AUTO_INCREMENT PRIMARY KEY,
   exam_date VARCHAR(10) NOT NULL,
@@ -310,7 +303,6 @@ yj_ensure_column($pdo, $prefix . 'staff', 'greeting', 'VARCHAR(200) NULL');
 yj_ensure_column($pdo, $prefix . 'admin_users', 'role', "VARCHAR(20) NOT NULL DEFAULT 'admin'");
 yj_ensure_column($pdo, $prefix . 'shuttle_riders', 'updated_by', "VARCHAR(50) NOT NULL DEFAULT ''");
 yj_ensure_column($pdo, $prefix . 'student_schedule', 'license_type', "VARCHAR(30) NOT NULL DEFAULT ''");
-yj_ensure_column($pdo, $prefix . 'written_exam', 'student_phone', "VARCHAR(30) NOT NULL DEFAULT ''");
 
 /* 역할 세분화(최고관리자/사무실/셔틀/강사, 한 사람이 여러 역할을 겸직할 수 있어
    role 컬럼은 이제 쉼표로 구분된 여러 값을 담습니다, 예: "instructor,office").

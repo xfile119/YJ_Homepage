@@ -145,26 +145,13 @@ CREATE TABLE IF NOT EXISTS {prefix}shuttle_slots (
   INDEX idx_slot_date (ride_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
--- 필기시험은 학사DB(neoinfo)에 자료가 없어, 상담 후 안내장 앱(guide-print)이
--- api/written-exam.php를 통해 저장/수정/삭제합니다. 한 학생당 최신 한 건만
--- 관리합니다(예약 이력이 아니라 "지금 정해진 다음 필기시험" 하나). 주민번호 등은
--- 다루지 않습니다.
-CREATE TABLE IF NOT EXISTS {prefix}written_exam (
-  student_id INT PRIMARY KEY,
-  student_name VARCHAR(50) NOT NULL DEFAULT '',
-  -- 수강생 본인 조회(written-exam.html)에서 이름+연락처 뒷4자리로 본인 확인할 때 씁니다.
-  student_phone VARCHAR(30) NOT NULL DEFAULT '',
-  exam_date VARCHAR(10) NOT NULL DEFAULT '',
-  exam_time VARCHAR(20) NOT NULL DEFAULT '',
-  place VARCHAR(100) NOT NULL DEFAULT '나주',
-  updated_by VARCHAR(50) NOT NULL DEFAULT '',
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- (2026-10-01) 예전 안내장 앱 전용 {prefix}written_exam 테이블은 필기시험 예약 시스템으로
+-- 합치면서 더 이상 만들지 않습니다. 안내장 앱도 아래 예약 시스템에 저장합니다.
 
 -- ── 필기시험 예약 시스템 (feature/written-exam-booking) ──────────────────
--- 위 written_exam(안내장 앱 전용, 학생당 최신 한 건)과는 별개입니다. 수강생이
--- 홈페이지에서 직접 신청·변경·취소하는 정식 예약 시스템으로, 셔틀과 같은 구조
--- (관리자가 회차를 만들고, 수강생이 그 회차에 붙음)입니다.
+-- 필기시험의 유일한 저장소입니다. 수강생이 홈페이지에서 직접 신청·변경·취소하고,
+-- 직원이 관리자 화면·안내장 앱에서 넣을 수도 있으며, 셔틀과 같은 구조
+-- (관리자가 회차를 만들고, 신청자가 그 회차에 붙음)입니다.
 -- 설계 근거: docs-11-written-exam-db.md, docs-12-written-exam-screens.md
 -- (yj-academy-messaging 저장소)
 

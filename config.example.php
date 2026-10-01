@@ -18,7 +18,8 @@ return [
      * 아무나 추측할 수 없는 긴 임의의 문자열로 바꿔서 학사서버 쪽 프로그램에도 똑같이 설정하세요. */
     'schedule_sync_key' => '여기에_임의의_긴_문자열을_입력하세요',
 
-    /* 안내장 앱(guide-print)이 api/written-exam.php를 호출할 때 쓰는 값입니다.
+    /* 안내장 앱(guide-print)이 필기시험 예약(api/written-exam-booking.php의 staff_* 기능)을
+     * 호출할 때 쓰는 값입니다.
      * schedule_sync_key와는 별도의 값을 쓰세요 — 하나가 새어나가도 다른 하나는
      * 영향받지 않도록 용도별로 나눠둔 것입니다. guide-print의 config.json에도
      * 똑같이 설정하세요. */
