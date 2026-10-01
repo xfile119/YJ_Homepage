@@ -304,7 +304,7 @@
 
         <p class="we-note">
           · 필기시험 신청·변경·취소는 <strong>컴퓨터에서만</strong> 가능합니다.<br>
-          · 신청·변경·취소는 시험 2일 전까지만 가능하고, 그 이후에는 사무실 <a href="tel:062-951-5100" style="color:var(--color-primary);font-weight:700;">062-951-5100</a>으로 연락해주세요.<br>
+          · 신청·날짜 변경은 시험 2일 전까지, 취소는 시험 전날까지 가능하고, 그 이후에는 사무실 <a href="tel:062-951-5100" style="color:var(--color-primary);font-weight:700;">062-951-5100</a>으로 연락해주세요.<br>
           · 정원이 찬 회차는 자동으로 "마감"으로 표시되며, 신청은 선착순입니다.<br>
           · 같은 날짜에 수업이 예약되어 있으면 그 날짜로는 신청이 제한됩니다 — 사무실에 문의해주세요.
         </p>
@@ -384,7 +384,7 @@ var API = "api/written-exam-booking.php";
 
 var state = {
   name: "", birthDigits: "", phone: "",
-  existing: null,      /* {examDate, slotNo, departType, departTime, examPlace, canCancel} */
+  existing: null,      /* {examDate, slotNo, departType, departTime, examPlace, canCancel, canChange} */
   mode: "new",         /* "new" | "change" */
   calMonth: null,       /* Date, 항상 그 달 1일 */
   slotsByDate: {},
@@ -413,7 +413,7 @@ function startOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
 function addMonths(d, n) { return new Date(d.getFullYear(), d.getMonth() + n, 1); }
 function daysInMonth(d) { return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(); }
 function todayStr() { return fmtYMD(new Date()); }
-/* 시험 날짜까지 남은 일수 (시각은 무시, 서버의 2일전 마감 규칙과 동일한 기준) */
+/* 시험 날짜까지 남은 일수 (시각은 무시, 서버의 신청·변경 2일 전 마감 규칙과 동일한 기준) */
 function diffDaysFromToday(ymd) {
   var today = new Date(); today.setHours(0, 0, 0, 0);
   var d = parseYMD(ymd); d.setHours(0, 0, 0, 0);
@@ -508,7 +508,9 @@ function showExisting() {
   document.getElementById("weExistingBody").innerHTML = html;
 
   var actions = document.getElementById("weExistingActions");
-  if (ex.canCancel) {
+  /* 취소는 시험 전날까지, 날짜 변경은 2일 전까지(서버 규칙과 같음). 그 뒤는 사무실 안내. */
+  var phoneNote = '<a href="tel:062-951-5100" style="color:var(--color-primary);font-weight:700;">062-951-5100</a>';
+  if (ex.canChange) {
     actions.innerHTML =
       '<div class="we-phone-confirm"><label for="weExistPhone">날짜 변경·취소 전에 본인 확인을 위해 연락처를 입력해주세요</label>'
       + '<input type="tel" id="weExistPhone" placeholder="010-0000-0000" /></div>'
@@ -518,8 +520,17 @@ function showExisting() {
       + '</div>';
     document.getElementById("weBtnChange").addEventListener("click", onClickChange);
     document.getElementById("weBtnCancel").addEventListener("click", onClickCancel);
+  } else if (ex.canCancel) {
+    actions.innerHTML =
+      '<p class="we-cutoff-note">날짜 변경은 시험 2일 전까지만 가능합니다. 변경이 필요하면 사무실(' + phoneNote + ')로 연락해주세요.</p>'
+      + '<div class="we-phone-confirm"><label for="weExistPhone">취소 전에 본인 확인을 위해 연락처를 입력해주세요</label>'
+      + '<input type="tel" id="weExistPhone" placeholder="010-0000-0000" /></div>'
+      + '<div class="we-actions">'
+      + '<button type="button" class="btn btn-outline" id="weBtnCancel">취소하기</button>'
+      + '</div>';
+    document.getElementById("weBtnCancel").addEventListener("click", onClickCancel);
   } else {
-    actions.innerHTML = '<p class="we-cutoff-note">취소·변경은 시험 2일 전까지만 가능합니다. 사무실(062-951-5100)로 연락해주세요.</p>';
+    actions.innerHTML = '<p class="we-cutoff-note">당일에는 온라인으로 취소·변경할 수 없습니다. 사무실(' + phoneNote + ')로 연락해주세요.</p>';
   }
   document.getElementById("weExisting").style.display = "block";
 }

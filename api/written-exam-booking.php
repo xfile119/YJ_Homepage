@@ -90,13 +90,25 @@ function yj_wexam_log($examDate, $slotNo, $action, $name, $detail, $actor) {
     )->execute([$examDate, $slotNo, $action, $name, $detail, $actor]);
 }
 
-/* 취소·변경 마감: 시험일 - 오늘 >= 2일. 날짜만 봅니다(시각 무시). */
-function yj_wexam_can_cancel($examYmd10) {
+/* 시험일까지 남은 일수(날짜만 봅니다, 시각 무시). 날짜 형식이 틀리면 null. */
+function yj_wexam_days_until($examYmd10) {
     $today = new DateTime(date('Y-m-d'));
     $exam = DateTime::createFromFormat('Y-m-d', $examYmd10);
-    if (!$exam) { return false; }
-    $diff = (int)$today->diff($exam)->format('%r%a');
-    return $diff >= 2;
+    if (!$exam) { return null; }
+    return (int)$today->diff($exam)->format('%r%a');
+}
+
+/* 신청·변경(옮겨 갈 날짜 포함) 마감: 시험 2일 전까지. 차량 배치·셔틀 조율 때문입니다. */
+function yj_wexam_can_change($examYmd10) {
+    $d = yj_wexam_days_until($examYmd10);
+    return $d !== null && $d >= 2;
+}
+
+/* 취소 마감: 시험 전날까지. 취소는 이미 짠 배치를 건드리지 않고 자리만 비우므로
+   변경보다 하루 더 늦게까지 받습니다(당일 취소는 사무실 전화). */
+function yj_wexam_can_cancel($examYmd10) {
+    $d = yj_wexam_days_until($examYmd10);
+    return $d !== null && $d >= 1;
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -189,6 +201,7 @@ if ($method === 'POST' && $action === 'lookup') {
         'departTime' => $slotInfo ? $slotInfo['depart_time'] : '',
         'examPlace' => $slotInfo ? $slotInfo['exam_place'] : '',
         'canCancel' => yj_wexam_can_cancel($found['exam_date']),
+        'canChange' => yj_wexam_can_change($found['exam_date']),
     ]);
 }
 
@@ -232,7 +245,7 @@ if ($method === 'POST' && ($action === 'book' || $action === 'change' || $action
             if (!$existing) { $db->rollBack(); yj_json(['error' => '취소할 예약을 찾을 수 없습니다.'], 404); }
             if (!yj_wexam_can_cancel($existing['exam_date'])) {
                 $db->rollBack();
-                yj_json(['error' => '취소는 시험 2일 전까지만 가능합니다. 사무실(062-951-5100)로 연락해주세요.'], 400);
+                yj_json(['error' => '온라인 취소는 시험 전날까지만 가능합니다. 당일 취소는 사무실(062-951-5100)로 연락해주세요.'], 400);
             }
             $db->prepare("DELETE FROM $bookingsTable WHERE id = ?")->execute([$existing['id']]);
             yj_wexam_log($existing['exam_date'], $existing['slot_no'], '취소', $name, '수강생 본인 취소', '수강생');
@@ -254,14 +267,14 @@ if ($method === 'POST' && ($action === 'book' || $action === 'change' || $action
         }
         /* 차량 배치·셔틀 조율 때문에 온라인 신청·변경(옮겨 가는 날짜)도 시험 2일 전까지만
            받습니다. 화면 달력은 이미 막아 두지만, 서버에서도 막아야 직접 요청으로 우회할 수 없습니다. */
-        if (!yj_wexam_can_cancel($examDate)) {
+        if (!yj_wexam_can_change($examDate)) {
             $db->rollBack();
             yj_json(['error' => '온라인 신청은 시험 2일 전까지만 가능합니다. 사무실(062-951-5100)로 문의해주세요.', 'pastCutoff' => true], 400);
         }
 
         if ($action === 'change') {
             if (!$existing) { $db->rollBack(); yj_json(['error' => '변경할 예약을 찾을 수 없습니다.'], 404); }
-            if (!yj_wexam_can_cancel($existing['exam_date'])) {
+            if (!yj_wexam_can_change($existing['exam_date'])) {
                 $db->rollBack();
                 yj_json(['error' => '변경은 시험 2일 전까지만 가능합니다. 사무실(062-951-5100)로 연락해주세요.'], 400);
             }
