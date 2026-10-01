@@ -281,10 +281,6 @@
             <h3 id="weConfirmTitle">신청 확인</h3>
             <div class="we-confirm-when" id="weConfirmWhen"></div>
             <form id="weConfirmForm" autocomplete="off">
-              <label class="we-checkbox-row">
-                <input type="checkbox" id="weConfirmPersonal" />
-                셔틀 대신 개인적으로 가겠습니다 (개인방문)
-              </label>
               <div class="we-fields">
                 <div class="we-field">
                   <label for="weConfirmName">이름</label>
@@ -725,7 +721,6 @@ function openConfirm() {
   document.getElementById("weConfirmSubmit").textContent = isChange ? "변경 완료" : "신청 완료";
   document.getElementById("weConfirmWhen").textContent =
     prettyDate(sel.examDate) + " · " + sel.departTime + " · " + sel.examPlace;
-  document.getElementById("weConfirmPersonal").checked = false;
   document.getElementById("weConfirmName").value = state.name;
   document.getElementById("weConfirmPhone").value = state.phone || "";
   setConfirmStatus("");
@@ -738,7 +733,6 @@ document.getElementById("weConfirmForm").addEventListener("submit", function (e)
   e.preventDefault();
   var name = document.getElementById("weConfirmName").value.trim();
   var phone = document.getElementById("weConfirmPhone").value.trim();
-  var personal = document.getElementById("weConfirmPersonal").checked;
   if (name === "" || digitsOnly(phone).length < 10) {
     setConfirmStatus("이름과 연락처를 정확히 입력해주세요.", "err");
     return;
@@ -748,7 +742,7 @@ document.getElementById("weConfirmForm").addEventListener("submit", function (e)
     name: name, phone: phone, birthDate: state.birthDigits,
     examDate: state.selectedSlot.examDate,
     slotNo: state.selectedSlot.slotNo,
-    departType: personal ? "개인방문" : "학원출발"
+    departType: "학원출발"
   };
   setConfirmStatus("처리 중...");
   var btn = document.getElementById("weConfirmSubmit");

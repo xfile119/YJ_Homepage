@@ -256,8 +256,17 @@ if ($method === 'POST' && ($action === 'book' || $action === 'change' || $action
         /* book / change 공통: 새 회차 정보와 정원 확인 */
         $examDate = trim((string)(isset($body['examDate']) ? $body['examDate'] : ''));
         $slotNo = isset($body['slotNo']) ? (int)$body['slotNo'] : -1;
-        $departType = (isset($body['departType']) && $body['departType'] === '개인방문') ? '개인방문' : '학원출발';
-        if ($departType === '개인방문') { $slotNo = -1; }
+        /* 학원은 개인방문(셔틀 없이 혼자 가는 경우)을 관리하지 않으므로 온라인 신청·변경은
+           학원출발 회차만 받습니다. 회차 없이(slotNo < 0) 날짜만으로 잡는 요청도 거절합니다. */
+        $departType = '학원출발';
+        if (isset($body['departType']) && $body['departType'] === '개인방문') {
+            $db->rollBack();
+            yj_json(['error' => '개인방문은 온라인으로 신청할 수 없습니다. 학원 출발 회차를 골라주세요.'], 400);
+        }
+        if ($slotNo < 0) {
+            $db->rollBack();
+            yj_json(['error' => '학원 출발 회차를 골라주세요.'], 400);
+        }
 
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $examDate)) {
             $db->rollBack(); yj_json(['error' => '날짜 형식이 올바르지 않습니다.'], 400);
