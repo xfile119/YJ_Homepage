@@ -116,6 +116,31 @@ body { background: var(--color-surface); }
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   font-size: 12.5px; color: var(--color-muted); margin-bottom: 14px;
 }
+
+/* ── 앱처럼 설치하기 안내 (휴대폰에서 브라우저로 열었을 때만 보임) ── */
+.install-card {
+  background: #fff; border: 1px solid var(--color-line); border-left: 5px solid var(--color-accent);
+  border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 16px; box-shadow: var(--shadow-sm);
+}
+.install-card[hidden] { display: none; }
+.install-top { display: flex; align-items: center; gap: 10px; }
+.install-top .ico { flex: none; width: 38px; height: 38px; border-radius: 10px; background: var(--color-primary-light); display: flex; align-items: center; justify-content: center; }
+.install-top .txt { flex: 1; min-width: 0; }
+.install-top .txt b { display: block; font-size: 14px; font-weight: 900; color: var(--color-ink); }
+.install-top .txt span { display: block; font-size: 12px; color: var(--color-muted); margin-top: 1px; }
+.install-btn {
+  flex: none; font-family: inherit; font-size: 12.5px; font-weight: 800; color: #fff; background: var(--color-primary);
+  border: 0; border-radius: 999px; padding: 8px 14px; cursor: pointer;
+}
+.install-steps { list-style: none; margin: 12px 0 0; padding: 12px 0 0; border-top: 1px dashed var(--color-line); display: none; }
+.install-card.is-open .install-steps { display: block; }
+.install-steps li { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; line-height: 1.5; color: var(--color-ink); padding: 5px 0; }
+.install-steps .n { flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--color-primary); color: #fff; font-size: 12px; font-weight: 900; text-align: center; line-height: 22px; }
+.install-steps svg { vertical-align: -4px; }
+.install-note { display: none; margin-top: 8px; font-size: 11.5px; color: var(--color-muted); line-height: 1.5; }
+.install-card.is-open .install-note { display: block; }
+.install-close { display: none; margin-top: 8px; background: none; border: 0; padding: 0; font-family: inherit; font-size: 11.5px; color: var(--color-muted); text-decoration: underline; cursor: pointer; }
+.install-card.is-open .install-close { display: inline-block; }
 </style>
 </head>
 <body>
@@ -124,6 +149,20 @@ body { background: var(--color-surface); }
   <div class="app-header">
     <h1>영진자동차운전전문학원</h1>
     <p>셔틀·일정 조회 / 강사 수업 조회</p>
+  </div>
+
+  <!-- 앱처럼 설치하기 안내: 휴대폰 브라우저에서만 자바스크립트가 보여줍니다(이미 앱으로 열었거나 컴퓨터면 숨김) -->
+  <div class="install-card" id="installCard" hidden>
+    <div class="install-top">
+      <div class="ico" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-primary)"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M12 7v7M9 11.5l3 3 3-3"/></svg>
+      </div>
+      <div class="txt"><b>앱처럼 설치해서 쓰기</b><span id="installSub">홈 화면에 아이콘이 생겨서 바로 열립니다</span></div>
+      <button type="button" class="install-btn" id="installBtn">방법 보기</button>
+    </div>
+    <ol class="install-steps" id="installSteps"></ol>
+    <p class="install-note" id="installNote"></p>
+    <button type="button" class="install-close" id="installClose">이 안내 다시 보지 않기</button>
   </div>
 
   <div class="app-tabs">
@@ -475,6 +514,75 @@ if ("serviceWorker" in navigator) {
       .catch(function () { /* 오프라인 캐시 없이도 페이지는 정상 동작하므로 조용히 무시합니다 */ });
   });
 }
+
+/* ───── 앱처럼 설치하기 안내 ─────
+   아이폰은 설치 버튼이 따로 없어서 "공유 → 홈 화면에 추가"를 글로 안내하고,
+   안드로이드 크롬은 브라우저가 설치 가능 신호를 주면 [앱 설치] 버튼을 바로 보여줍니다.
+   이미 앱(홈 화면 아이콘)으로 열었거나 컴퓨터에서 열면 아예 보이지 않습니다. */
+(function () {
+  var card = document.getElementById("installCard");
+  if (!card) { return; }
+  var ua = navigator.userAgent || "";
+  var standalone = (window.navigator.standalone === true) ||
+    (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+  var isIOS = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  var isAndroid = /Android/.test(ua);
+  var inApp = /KAKAOTALK|NAVER\(|NAVER|Instagram|FBAN|FBAV|Line\/|DaumApps/i.test(ua);
+  var iosOtherBrowser = isIOS && /CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+  var dismissed = false;
+  try { dismissed = localStorage.getItem("yj-install-dismissed") === "1"; } catch (e) {}
+  if (standalone || dismissed || (!isIOS && !isAndroid)) { return; }
+
+  var share = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0a84ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
+  var steps = [], note = "", sub = "홈 화면에 아이콘이 생겨서 바로 열립니다";
+  var deferred = null;
+
+  if (isIOS && inApp) {
+    sub = "지금 쓰는 앱에서는 설치가 안 돼요";
+    steps = ["오른쪽 아래 <b>⋯</b> 또는 공유 메뉴에서 <b>Safari(사파리)로 열기</b>를 누르세요",
+             "사파리에서 이 화면이 열리면 <b>공유 버튼</b> " + share + " → <b>홈 화면에 추가</b>"];
+    note = "카카오톡·네이버 앱 안에서 열면 홈 화면에 추가할 수 없습니다.";
+  } else if (isIOS) {
+    steps = ["화면 " + (iosOtherBrowser ? "위쪽" : "아래쪽") + "의 <b>공유 버튼</b> " + share + " 을 누르세요",
+             "메뉴를 내려서 <b>홈 화면에 추가</b>를 누르세요",
+             "오른쪽 위 <b>추가</b>를 누르면 홈 화면에 <b>\"영진 조회\"</b> 아이콘이 생깁니다"];
+    note = iosOtherBrowser ? "크롬·엣지에서는 사파리와 메뉴 모양이 조금 다를 수 있어요. 안 보이면 사파리로 열어주세요."
+                           : "사파리에서만 가능해요. 홈 화면 앱은 처음 한 번 로그인이 필요할 수 있습니다.";
+  } else {
+    steps = ["오른쪽 위 <b>⋮ 메뉴</b>를 누르세요",
+             "<b>앱 설치</b> 또는 <b>홈 화면에 추가</b>를 누르세요",
+             "<b>설치</b>를 누르면 홈 화면에 <b>\"영진 조회\"</b> 아이콘이 생깁니다"];
+    if (inApp) { note = "카카오톡·네이버 앱 안에서는 안 될 수 있어요. 크롬으로 열어주세요."; }
+  }
+
+  document.getElementById("installSub").textContent = sub.replace(/<[^>]+>/g, "");
+  document.getElementById("installSteps").innerHTML = steps.map(function (t, i) {
+    return '<li><span class="n">' + (i + 1) + '</span><span>' + t + '</span></li>';
+  }).join("");
+  document.getElementById("installNote").textContent = note;
+  if (!note) { document.getElementById("installNote").style.display = "none"; }
+  card.hidden = false;
+
+  var btn = document.getElementById("installBtn");
+  btn.addEventListener("click", function () {
+    if (deferred) {                       /* 안드로이드 크롬: 브라우저 설치창 바로 띄우기 */
+      deferred.prompt();
+      deferred.userChoice.then(function () { deferred = null; card.hidden = true; });
+      return;
+    }
+    var open = card.classList.toggle("is-open");
+    btn.textContent = open ? "접기" : "방법 보기";
+  });
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault(); deferred = e; btn.textContent = "앱 설치";
+    document.getElementById("installSub").textContent = "버튼 한 번으로 홈 화면에 설치됩니다";
+  });
+  window.addEventListener("appinstalled", function () { card.hidden = true; });
+  document.getElementById("installClose").addEventListener("click", function () {
+    try { localStorage.setItem("yj-install-dismissed", "1"); } catch (e) {}
+    card.hidden = true;
+  });
+})();
 </script>
 </body>
 </html>
