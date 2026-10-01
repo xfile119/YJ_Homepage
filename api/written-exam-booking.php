@@ -252,6 +252,12 @@ if ($method === 'POST' && ($action === 'book' || $action === 'change' || $action
         if ($examDate < date('Y-m-d')) {
             $db->rollBack(); yj_json(['error' => '지난 날짜로는 신청할 수 없습니다.'], 400);
         }
+        /* 차량 배치·셔틀 조율 때문에 온라인 신청·변경(옮겨 가는 날짜)도 시험 2일 전까지만
+           받습니다. 화면 달력은 이미 막아 두지만, 서버에서도 막아야 직접 요청으로 우회할 수 없습니다. */
+        if (!yj_wexam_can_cancel($examDate)) {
+            $db->rollBack();
+            yj_json(['error' => '온라인 신청은 시험 2일 전까지만 가능합니다. 사무실(062-951-5100)로 문의해주세요.', 'pastCutoff' => true], 400);
+        }
 
         if ($action === 'change') {
             if (!$existing) { $db->rollBack(); yj_json(['error' => '변경할 예약을 찾을 수 없습니다.'], 404); }
