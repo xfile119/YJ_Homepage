@@ -132,6 +132,14 @@
   .we-change-row .icon.change { color: var(--color-primary); }
   .we-change-row .who { color: var(--color-muted); font-size: 12px; }
   .we-change-row .sp2 { flex: 1; }
+  /* 최근 24시간 수강생 취소 — 시험 임박(오늘·내일·모레)은 빨강으로 눈에 띄게 */
+  .we-cancel-box { border: 1px solid #f1c5c5; background: #fff6f6; border-radius: 10px; padding: 10px 12px; margin-top: 12px; }
+  .we-cancel-box h3 { font-size: 14px; margin: 0 0 6px; color: #9b2c2c; }
+  .we-cancel-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 6px 0; border-bottom: 1px dashed #f1c5c5; font-size: 13px; color: var(--color-ink); }
+  .we-cancel-row:last-child { border-bottom: none; }
+  .we-cancel-row .when { color: var(--color-muted); font-size: 12px; margin-left: auto; }
+  .we-urgent { display: inline-block; background: #c53030; color: #fff; font-size: 11px; font-weight: 800; border-radius: 999px; padding: 2px 8px; }
+  .we-soon { display: inline-block; background: #fdeeee; color: #c53030; font-size: 11px; font-weight: 800; border-radius: 999px; padding: 2px 8px; }
 </style>
 </head>
 <body>
@@ -164,7 +172,8 @@
         <button type="button" id="btnRecentAckAll" class="btn btn-outline btn-sm" style="display:none;">전체 확인</button>
         <button type="button" id="btnRecentRefresh" class="btn btn-outline btn-sm">새로고침</button>
       </div>
-      <p class="hint" style="margin-top:6px;">수강생이 스스로 신청·변경·취소한 내역과 관리자 처리 내역 중, 아직 "확인"을 안 누른 것만 모아 보여줍니다 (최근 30건).</p>
+      <p class="hint" style="margin-top:6px;">수강생이 스스로 신청·변경·취소한 내역과 관리자 처리 내역 중, 아직 "확인"을 안 누른 것만 모아 보여줍니다 (최근 30건). 위쪽 빨간 상자는 최근 24시간 안에 <strong>수강생이 직접 한 취소</strong>이며, 확인 여부와 상관없이 24시간 동안 계속 보입니다.</p>
+      <div id="recentCancelsBox"></div>
       <div id="recentChangesList" style="margin-top:10px;"></div>
     </div>
 
@@ -396,7 +405,37 @@ function changeRowHtml(c) {
     + '</div>';
 }
 
+/* 최근 24시간 수강생 본인 취소 — "확인했음"과 상관없이 24시간 동안 표시. 오늘·내일 시험은 빨강. */
+function agoText(min) {
+  if (min < 1) { return "방금"; }
+  if (min < 60) { return min + "분 전"; }
+  return Math.floor(min / 60) + "시간 전";
+}
+function cancelRowHtml(c) {
+  var d = c.days_until;
+  var tag = d === 0 ? '<span class="we-urgent">오늘 시험</span>'
+          : d === 1 ? '<span class="we-urgent">내일 시험</span>'
+          : d === 2 ? '<span class="we-soon">모레 시험</span>' : '';
+  var where = (c.depart_time || c.exam_place) ? ' <span class="who">' + esc((c.depart_time || "") + " " + (c.exam_place || "")) + '</span>' : '';
+  return '<div class="we-cancel-row">'
+    + tag
+    + '<strong>' + esc(prettyDate(c.exam_date)) + '</strong>' + where
+    + '<span>' + esc(c.name) + ' 취소</span>'
+    + '<span class="when">' + esc(agoText(c.minutes_ago)) + '</span>'
+    + '</div>';
+}
+function loadRecentCancels() {
+  apiGet("action=admin_recent_cancels").then(function (res) {
+    var box = document.getElementById("recentCancelsBox");
+    var list = res.cancels || [];
+    if (!list.length) { box.innerHTML = ""; return; }
+    box.innerHTML = '<div class="we-cancel-box"><h3>🚫 최근 24시간 수강생 취소 ' + list.length + '건</h3>'
+      + list.map(cancelRowHtml).join("") + '</div>';
+  }).catch(function () { /* 로그인 전일 수 있음 — 조용히 넘어감 */ });
+}
+
 function loadRecentChanges() {
+  loadRecentCancels();   /* 같은 새로고침 시점에 24시간 취소 블록도 갱신 */
   apiGet("action=admin_recent_changes").then(function (res) {
     var changes = res.changes || [];
     var listEl = document.getElementById("recentChangesList");

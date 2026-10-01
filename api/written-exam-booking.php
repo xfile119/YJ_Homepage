@@ -810,6 +810,29 @@ if ($method === 'POST' && $action === 'admin_delete_holiday') {
     yj_json(['ok' => true]);
 }
 
+/* 최근 24시간 동안 수강생이 스스로 한 취소 — 시험이 임박한 취소(전날 저녁 등)를 사무실이
+   아침에 놓치지 않게 합니다. "확인했음"을 눌렀는지와 상관없이 24시간 동안 계속 보여줍니다.
+   (관리자·안내장 앱에서 한 취소는 직원이 이미 아는 일이라 뺍니다.) */
+if ($method === 'GET' && $action === 'admin_recent_cancels') {
+    $stmt = yj_db()->prepare(
+        "SELECT l.id, l.exam_date, l.slot_no, l.name, s.depart_time, s.exam_place,
+                TIMESTAMPDIFF(MINUTE, l.created_at, NOW()) AS minutes_ago
+           FROM $logTable l
+           LEFT JOIN $slotsTable s ON s.exam_date = l.exam_date AND s.slot_no = l.slot_no
+          WHERE l.action = '취소' AND l.actor = ? AND l.created_at >= (NOW() - INTERVAL 24 HOUR)
+            AND l.exam_date >= ?
+          ORDER BY l.exam_date ASC, l.created_at DESC LIMIT 50"
+    );
+    $stmt->execute(['수강생', date('Y-m-d')]);
+    $rows = $stmt->fetchAll();
+    foreach ($rows as &$r) {
+        $r['days_until'] = yj_wexam_days_until($r['exam_date']);
+        $r['minutes_ago'] = (int)$r['minutes_ago'];
+    }
+    unset($r);
+    yj_json(['cancels' => $rows]);
+}
+
 /* 셔틀 담당자용 — 최근 변경 이력(미확인만) */
 if ($method === 'GET' && $action === 'admin_recent_changes') {
     $stmt = yj_db()->query(
