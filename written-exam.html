@@ -124,10 +124,15 @@
   display: block; width: 100%; margin-top: 5px; border: none; border-radius: 6px;
   padding: 4px 5px; font-size: 10.5px; font-weight: 800; line-height: 1.35; text-align: left; cursor: pointer;
 }
-.we-cal-slot.ok { background: #e6f6ec; color: #1c8a4f; }
-.we-cal-slot.ok:hover { background: #1c8a4f; color: #fff; }
-.we-cal-slot.full { background: #fdeeee; color: #c53030; cursor: not-allowed; }
-.we-cal-slot.grey { background: #f0eef5; color: var(--color-muted); cursor: not-allowed; }
+/* 시험장별 색(나주=붉은 계열, 용봉동·광주=초록 계열, 그 밖=파랑). 정원 마감은 회색, 신청 기간이 지난 회차는 더 옅은 회색. */
+.we-cal-slot.p-naju { background: #fdeaea; color: #b42318; }
+.we-cal-slot.p-naju.ok:hover { background: #b42318; color: #fff; }
+.we-cal-slot.p-gwangju { background: #e6f6ec; color: #1c8a4f; }
+.we-cal-slot.p-gwangju.ok:hover { background: #1c8a4f; color: #fff; }
+.we-cal-slot.p-other { background: #e8eefb; color: #2b5aa8; }
+.we-cal-slot.p-other.ok:hover { background: #2b5aa8; color: #fff; }
+.we-cal-slot.full { background: #dfe2e6; color: #6b7280; cursor: not-allowed; }
+.we-cal-slot.grey { background: #f1f2f4; color: #a0a4ab; cursor: not-allowed; }
 
 .we-cal-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 18px; font-size: 11.5px; color: var(--color-muted); }
 .we-cal-legend span { display: inline-flex; align-items: center; gap: 5px; }
@@ -264,9 +269,10 @@
             <p class="we-status" id="weCalStatus"></p>
             <div class="we-cal-grid" id="weCalGrid"></div>
             <div class="we-cal-legend">
-              <span><i style="background:#e6f6ec;"></i>신청 가능</span>
-              <span><i style="background:#fdeeee;"></i>정원 마감</span>
-              <span><i style="background:#f0eef5;"></i>2일 전 마감 지남</span>
+              <span><i style="background:#fdeaea;"></i>나주 (신청 가능)</span>
+              <span><i style="background:#e6f6ec;"></i>용봉동 (신청 가능)</span>
+              <span><i style="background:#dfe2e6;"></i>정원 마감</span>
+              <span><i style="background:#f1f2f4;"></i>지남 (신청 기간 종료)</span>
               <span><i style="background:var(--color-primary);"></i>내 예약</span>
             </div>
           </div>
@@ -615,14 +621,29 @@ function loadCalendar(monthDate) {
     });
 }
 
+/* 시험장별 색: 시험장 글자에 "나주"가 있으면 붉은 계열, "용봉동"·"광주"가 있으면 초록 계열,
+   그 밖의 시험장은 파랑(중립). 정원 마감은 장소와 상관없이 회색입니다. 시험장은 "시험날짜 관리"에서
+   회차를 만들 때 정한 값(exam_place)을 그대로 씁니다. */
+function placeClass(place) {
+  var p = String(place || "");
+  if (p.indexOf("나주") >= 0) { return "p-naju"; }
+  if (p.indexOf("용봉") >= 0 || p.indexOf("광주") >= 0) { return "p-gwangju"; }
+  return "p-other";
+}
+
 function renderSlotButton(ymd, s) {
   var pastCutoff = diffDaysFromToday(ymd) < 2;
   var full = s.closed || s.remaining <= 0;
   var cls, label;
-  if (pastCutoff) { cls = "grey"; label = "마감"; }
+  if (pastCutoff) { cls = "grey"; label = "지남"; }
   else if (full) { cls = "full"; label = "마감"; }
-  else { cls = "ok"; label = s.remaining + "석"; }
-  var attrs = (cls === "ok") ? (' data-date="' + esc(ymd) + '" data-slot="' + s.slotNo + '"') : " disabled";
+  else {
+    cls = "ok " + placeClass(s.examPlace);
+    /* 색이 장소를 뜻하므로 "거의 마감"은 글자로: 정원의 1/8 이하로 남으면 "N석 남음" */
+    var near = s.capacity > 0 && s.remaining / s.capacity <= 0.125;
+    label = near ? s.remaining + "석 남음" : s.remaining + "석";
+  }
+  var attrs = (cls.indexOf("ok") === 0) ? (' data-date="' + esc(ymd) + '" data-slot="' + s.slotNo + '"') : " disabled";
   return '<button type="button" class="we-cal-slot ' + cls + '"' + attrs + '>'
     + esc(s.departTime) + ' ' + esc(s.examPlace) + '<br>' + label + '</button>';
 }
