@@ -133,6 +133,23 @@ CREATE TABLE IF NOT EXISTS {prefix}student_schedule (
   INDEX idx_date (reservation_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- 최고관리자용 일일 수강생 입학현황. 개인별 자료가 아니라 학사서버에서 이미
+-- 집계된 숫자만 저장합니다. 매일 18:30 최근 30일 창을 통째로 교체합니다.
+CREATE TABLE IF NOT EXISTS {prefix}daily_registration_summary (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  summary_date VARCHAR(10) NOT NULL,
+  -- 'function' = 장내입학(RegDate + AdmissionType 첫 글자),
+  -- 'drive'    = 도로등록(DriveRegDate + AdmissionType 둘째 글자)
+  registration_type VARCHAR(10) NOT NULL DEFAULT '',
+  class_no VARCHAR(10) NOT NULL DEFAULT '',
+  admission_code VARCHAR(10) NOT NULL DEFAULT '',
+  registration_count INT NOT NULL DEFAULT 0,
+  synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_daily_registration (summary_date, registration_type, class_no, admission_code),
+  INDEX idx_daily_registration_date (summary_date),
+  INDEX idx_daily_registration_synced (synced_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS {prefix}shuttle_slots (
   id INT AUTO_INCREMENT PRIMARY KEY,
   ride_date VARCHAR(10) NOT NULL,

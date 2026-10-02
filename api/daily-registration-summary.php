@@ -1,0 +1,72 @@
+<?php
+/* 최고관리자(admin) 전용 일일 수강생 입학현황 조회 API.
+ * 이름/전화번호/StudentID 같은 개인 식별정보는 테이블에도 없고 응답에도 없습니다.
+ * PHP 5.5 호환 문법만 사용합니다. */
+
+require __DIR__ . '/_db.php';
+
+yj_require_admin();
+
+if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
+    yj_json(['error' => 'Method not allowed'], 405);
+}
+
+function yj_daily_summary_valid_date($s) {
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $s)) { return false; }
+    $p = explode('-', $s);
+    return checkdate((int)$p[1], (int)$p[2], (int)$p[0]);
+}
+
+$date = isset($_GET['date']) ? trim((string)$_GET['date']) : '';
+if (!yj_daily_summary_valid_date($date)) {
+    yj_json(['error' => '날짜 형식이 올바르지 않습니다 (YYYY-MM-DD).'], 400);
+}
+
+$table = yj_table('daily_registration_summary');
+$db = yj_db();
+
+$stmt = $db->prepare(
+    "SELECT registration_type, class_no, admission_code, registration_count, synced_at
+       FROM $table
+      WHERE summary_date = ?
+      ORDER BY registration_type ASC, class_no ASC, admission_code ASC"
+);
+$stmt->execute([$date]);
+
+$rows = [];
+$functionTotal = 0;
+$driveTotal = 0;
+foreach ($stmt->fetchAll() as $r) {
+    $count = (int)$r['registration_count'];
+    $type = (string)$r['registration_type'];
+    if ($type === 'function') { $functionTotal += $count; }
+    if ($type === 'drive') { $driveTotal += $count; }
+
+    $rows[] = [
+        'registrationType' => $type,
+        'classNo' => (string)$r['class_no'],
+        'admissionCode' => (string)$r['admission_code'],
+        'count' => $count,
+    ];
+}
+
+/* 마지막 동기화 시각은 선택 날짜에 데이터가 0건이어도 알 수 있도록
+   전용 테이블 전체에서 가장 최근 synced_at을 확인합니다. 30일 안에 등록이 단 한 건도
+   없으면 빈 값일 수 있으며, 그 경우 화면은 '동기화 정보 없음'으로 표시합니다. */
+$meta = $db->query(
+    "SELECT MIN(summary_date) AS min_date,
+            MAX(summary_date) AS max_date,
+            MAX(synced_at) AS last_synced_at
+       FROM $table"
+)->fetch();
+
+yj_json([
+    'date' => $date,
+    'functionTotal' => $functionTotal,
+    'driveTotal' => $driveTotal,
+    'total' => $functionTotal + $driveTotal,
+    'rows' => $rows,
+    'availableFrom' => $meta && $meta['min_date'] ? (string)$meta['min_date'] : '',
+    'availableTo' => $meta && $meta['max_date'] ? (string)$meta['max_date'] : '',
+    'lastSyncedAt' => $meta && $meta['last_synced_at'] ? (string)$meta['last_synced_at'] : '',
+]);

@@ -11,6 +11,33 @@ FTP 업로드 후 이 값이 아래 최신 항목과 일치하는지 보면, 실
 
 ---
 
+## 2026-10-02 KST — 최고관리자 전용 일일 수강생 입학현황 (GPT 제작·Claude 검토, 푸터 `__HASH__`)
+학사서버가 매일 18:30 최근 30일의 `Student` 등록을 **개인정보 없이 숫자로만** 집계해서 홈페이지로 보냅니다.
+최고관리자(`admin`)만 관리자 홈 요약 카드와 상세 화면을 볼 수 있고, 사무실·셔틀·강사·비로그인은 서버 API에서 거절합니다.
+
+- 집계 단위: 날짜 × 장내입학/도로등록 × `ClassNo` × `AdmissionType` 코드 (장내 = `RegDate`+입학구분 첫 글자 / 도로 = `DriveRegDate`+둘째 글자)
+- 학사 날짜(`varchar(8) YYYYMMDD`)를 학사서버가 `YYYY-MM-DD`로 바꿔 전송. 정확히 30일 창만 받고, 빈 집계는 400으로 거절(직전 자료 보호), 같은 키가 겹치면 합산
+- 입학구분은 `REFERENCE-학사DB.md` 확정 코드만 한글 표시, 모르는 코드는 코드 그대로 표시
+- 스마트폰(650px 이하)에서는 표가 카드로 바뀌어 가로 스크롤 없이 건수가 보임. 등록이 없는 날은 "0건"과 안내 문구로 표시
+- 새 DB 테이블 `yj_daily_registration_summary` → **`db/setup.php` 1회 실행 필요** (`db/CHANGELOG-DB.md` 참고)
+- 서버 `config.php`에 `daily_registration_sync_key`(다른 키와 겹치지 않는 새 값) 추가 필요
+- 학사서버 쪽 파일은 `yj-academy-messaging/daily-registration/`에 있음(학사서버에서 DryRun 완료, 실제 전송은 아직 안 함)
+
+**FTP로 올릴 파일**:
+- `js/main.js` ← 푸터 버전
+- `admin.html`
+- `admin-daily-registration-summary.html` (신규)
+- `api/daily-registration-summary.php` (신규)
+- `api/daily-registration-summary-sync.php` (신규)
+- `db/setup.php`
+- (참고용) `config.example.php`, `db/schema.sql`, `db/CHANGELOG-DB.md`
+- 바로 아래 항목(`be8b40b`)의 4개 파일을 **아직 안 올리셨다면 함께** 올립니다.
+
+**DB 변경 있음**: 올린 뒤 최고관리자로 로그인한 상태에서 `db/setup.php`를 1회 실행하세요.
+**올린 뒤 확인**: 사이트 맨 아래가 **`__BUILD__`** 로 보이면 반영된 것입니다.
+
+---
+
 ## 2026-10-02 21:11 KST — 푸터 버전 갱신 (`be8b40b`) + 미반영분 한 번에 올리기
 푸터 버전이 `7f8e8b1`(10/1)에 머물러 있어서, 그 뒤 변경분(필기시험 2일 전 서버 검사·취소 전날까지·관리자 24시간 취소 표시·개인방문 제거·구글 확인 태그)이 서버에 올라갔는지 구분할 수 없었습니다.
 **이제부터는 사이트 파일이 바뀔 때마다 푸터 버전을 같이 갱신합니다**(`CLAUDE.md`에 규칙으로 기록).

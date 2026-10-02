@@ -18,6 +18,11 @@ return [
      * 아무나 추측할 수 없는 긴 임의의 문자열로 바꿔서 학사서버 쪽 프로그램에도 똑같이 설정하세요. */
     'schedule_sync_key' => '여기에_임의의_긴_문자열을_입력하세요',
 
+    /* 일일 수강생 입학현황 집계 전용 키입니다. 학사서버가 매일 18:30 최근 30일
+     * 집계 숫자만 api/daily-registration-summary-sync.php로 보낼 때 사용합니다.
+     * schedule_sync_key와 반드시 다른 긴 임의 문자열을 사용하세요. */
+    'daily_registration_sync_key' => '여기에_별도의_긴_임의문자열을_입력하세요',
+
     /* 안내장 앱(guide-print)이 필기시험 예약(api/written-exam-booking.php의 staff_* 기능)을
      * 호출할 때 쓰는 값입니다.
      * schedule_sync_key와는 별도의 값을 쓰세요 — 하나가 새어나가도 다른 하나는

@@ -143,6 +143,21 @@ $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}student_schedule (
   INDEX idx_date (reservation_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
 
+/* 최고관리자용 일일 수강생 입학현황. 개인별 자료는 저장하지 않고
+   학사서버에서 집계한 날짜/구분/ClassNo/AdmissionType코드/건수만 최근 30일 유지합니다. */
+$pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}daily_registration_summary (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  summary_date VARCHAR(10) NOT NULL,
+  registration_type VARCHAR(10) NOT NULL DEFAULT '',
+  class_no VARCHAR(10) NOT NULL DEFAULT '',
+  admission_code VARCHAR(10) NOT NULL DEFAULT '',
+  registration_count INT NOT NULL DEFAULT 0,
+  synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_daily_registration (summary_date, registration_type, class_no, admission_code),
+  INDEX idx_daily_registration_date (summary_date),
+  INDEX idx_daily_registration_synced (synced_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+
 $pdo->exec("CREATE TABLE IF NOT EXISTS {$prefix}contact_messages (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(50) NOT NULL DEFAULT '',

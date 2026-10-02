@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>수강생 입학현황 (최고관리자 전용)</title>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="robots" content="noindex, nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+<style>
+  body { background: var(--color-surface); }
+  .admin-shell { max-width: 980px; margin: 0 auto; padding: 32px 24px 80px; }
+  .admin-header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
+  .admin-header h1 { font-size:22px; font-weight:800; color:var(--color-ink); margin:0; }
+  .admin-header p { width:100%; margin:-8px 0 0; color:var(--color-muted); font-size:13px; }
+  .panel { background:#fff; border:1px solid var(--color-line); border-radius:var(--radius-lg); padding:22px 24px; margin-bottom:20px; }
+  .date-row { display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap; }
+  .date-box label { display:block; font-size:13px; font-weight:700; color:var(--color-ink); margin-bottom:7px; }
+  .date-box input { border:1px solid var(--color-line); border-radius:var(--radius-sm); padding:9px 11px; font:inherit; background:#fff; color:var(--color-ink); }
+  .date-actions { display:flex; gap:7px; flex-wrap:wrap; }
+  .sync-note { margin-top:13px; padding:10px 12px; border-radius:10px; background:#f6f3ee; color:#655e54; font-size:12.5px; line-height:1.55; }
+  .status { margin-top:12px; min-height:20px; font-size:13.5px; font-weight:600; }
+  .status.err { color:#c53030; }
+  .status.ok { color:var(--color-muted); }
+
+  .summary-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-bottom:20px; }
+  .summary-card { background:#fff; border:1px solid var(--color-line); border-radius:var(--radius-lg); padding:20px; }
+  .summary-card span { display:block; color:var(--color-muted); font-size:13px; font-weight:700; margin-bottom:6px; }
+  .summary-card strong { font-size:29px; line-height:1; color:var(--color-ink); }
+  .summary-card small { font-size:13px; margin-left:3px; color:var(--color-muted); }
+
+  .section-title { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:12px; }
+  .section-title h2 { margin:0; font-size:17px; color:var(--color-ink); font-weight:800; }
+  .section-title strong { color:var(--color-ink); font-size:15px; }
+  .table-wrap { overflow-x:auto; }
+  table.summary-table { width:100%; border-collapse:collapse; min-width:570px; font-size:13.5px; }
+  .summary-table th, .summary-table td { border:1px solid var(--color-line); padding:10px 12px; text-align:left; }
+  .summary-table th { background:var(--color-surface); font-size:12.5px; font-weight:800; color:var(--color-ink); }
+  .summary-table td:last-child, .summary-table th:last-child { text-align:right; width:90px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .code { display:inline-block; margin-left:6px; padding:1px 6px; border-radius:999px; background:#f1eeea; color:#70685f; font-size:11px; font-weight:700; vertical-align:1px; }
+  .empty { padding:24px 18px; border:1px dashed var(--color-line); border-radius:var(--radius-md); text-align:center; color:var(--color-muted); font-size:13.5px; }
+  .private-badge { display:inline-block; margin-left:7px; padding:3px 8px; border-radius:999px; background:#fbe2e2; color:#822d2d; font-size:11px; font-weight:800; vertical-align:3px; }
+
+  @media (max-width: 650px) {
+    .admin-shell { padding:22px 14px 60px; }
+    .panel { padding:18px 16px; }
+    .summary-grid { grid-template-columns:1fr; }
+    .summary-card { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; }
+    .summary-card span { margin:0; }
+    .summary-card strong { font-size:24px; }
+
+    /* 스마트폰에서는 3열 표를 행 단위 카드로 바꿔 가로 스크롤 없이 건수까지 보이게 한다. */
+    .table-wrap { overflow-x:visible; }
+    table.summary-table { min-width:0; width:100%; border-collapse:separate; border-spacing:0 8px; font-size:13px; }
+    .summary-table thead { display:none; }
+    .summary-table tbody { display:block; }
+    .summary-table tr {
+      display:grid;
+      grid-template-columns:minmax(0, 1fr) auto;
+      grid-template-rows:auto auto;
+      column-gap:10px;
+      row-gap:5px;
+      width:100%;
+      padding:12px 12px;
+      border:1px solid var(--color-line);
+      border-radius:12px;
+      background:#fff;
+      box-sizing:border-box;
+    }
+    .summary-table td { border:0; padding:0; min-width:0; }
+    .summary-table td:first-child { grid-column:1; grid-row:1; font-weight:800; color:var(--color-ink); line-height:1.45; }
+    .summary-table td:nth-child(2) { grid-column:1; grid-row:2; color:var(--color-muted); line-height:1.45; overflow-wrap:anywhere; }
+    .summary-table td:last-child {
+      grid-column:2;
+      grid-row:1 / span 2;
+      align-self:center;
+      width:auto;
+      min-width:48px;
+      padding-left:6px;
+      text-align:right;
+      font-size:20px;
+      line-height:1;
+      font-weight:800;
+      color:var(--color-ink);
+      white-space:nowrap;
+      font-variant-numeric:tabular-nums;
+    }
+    .code {
+      margin-left:4px;
+      margin-top:2px;
+      max-width:100%;
+      white-space:normal;
+      overflow-wrap:anywhere;
+      vertical-align:1px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="admin-shell">
+  <div class="admin-header">
+    <h1>수강생 입학현황 <span class="private-badge">최고관리자 전용</span></h1>
+    <a href="admin.html" class="btn btn-outline btn-sm">← 관리자 메인</a>
+    <p>학사서버에서 매일 18:30에 집계한 최근 30일의 등록 건수만 표시합니다. 개인정보는 이 기능에 전송·저장하지 않습니다.</p>
+  </div>
+
+  <div class="panel">
+    <div class="date-row">
+      <div class="date-box">
+        <label for="summaryDate">조회 날짜</label>
+        <input type="date" id="summaryDate" />
+      </div>
+      <div class="date-actions">
+        <button type="button" id="btnPrev" class="btn btn-outline btn-sm">← 이전날</button>
+        <button type="button" id="btnToday" class="btn btn-outline btn-sm">오늘</button>
+        <button type="button" id="btnNext" class="btn btn-outline btn-sm">다음날 →</button>
+        <button type="button" id="btnLoad" class="btn btn-primary btn-sm">조회</button>
+      </div>
+    </div>
+    <div class="sync-note">
+      자료는 <strong>매일 18:30 한 번</strong> 갱신됩니다. 18:30 이전에는 오늘 최종 집계가 아직 반영되지 않았을 수 있습니다.<br>
+      입학구분은 학사DB의 <strong>AdmissionType 코드</strong>를 기준으로 표시합니다.
+    </div>
+    <p class="status" id="status"></p>
+  </div>
+
+  <div class="summary-grid" id="summaryGrid" hidden>
+    <div class="summary-card"><span>장내입학</span><div><strong id="functionTotal">0</strong><small>건</small></div></div>
+    <div class="summary-card"><span>도로등록</span><div><strong id="driveTotal">0</strong><small>건</small></div></div>
+    <div class="summary-card"><span>전체 등록</span><div><strong id="grandTotal">0</strong><small>건</small></div></div>
+  </div>
+
+  <div id="detailWrap"></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var dateEl = document.getElementById("summaryDate");
+var statusEl = document.getElementById("status");
+var detailWrap = document.getElementById("detailWrap");
+var summaryGrid = document.getElementById("summaryGrid");
+
+var LICENSE_LABEL = {
+  "1":"1종보통(수동)", "A":"1종보통(자동)",
+  "2":"2종보통(수동)", "3":"2종보통(자동)",
+  "4":"1종대형", "5":"대형견인", "6":"구난차",
+  "7":"2종소형", "8":"원동기", "9":"소형견인"
+};
+
+/* REFERENCE-학사DB.md §2-1-c에서 코드표로 확정된 값만 이름을 붙입니다.
+   장내 Z와 도로 0은 관찰로 추정된 값이라 확정 라벨을 붙이지 않고 코드 그대로 표시합니다.
+   모르는 새 코드도 추측하지 않습니다. */
+var ADMISSION_LABEL = {
+  "function": {
+    "0":"신규",
+    "1":"학과합격자",
+    "2":"면허취소자",
+    "3":"면허소지자"
+  },
+  "drive": {
+    "A":"본학원",
+    "B":"시험장합격자",
+    "C":"타학원합격자",
+    "D":"도로연수(연수교육생)",
+    "E":"적성검사미필자",
+    "F":"면허소지자"
+  }
+};
+
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function pad2(n) { return n < 10 ? "0" + n : String(n); }
+function dateStr(d) { return d.getFullYear() + "-" + pad2(d.getMonth()+1) + "-" + pad2(d.getDate()); }
+function todayStr() { return dateStr(new Date()); }
+function addDays(s, n) {
+  var p = s.split("-");
+  var d = new Date(Number(p[0]), Number(p[1])-1, Number(p[2]));
+  d.setDate(d.getDate() + n);
+  return dateStr(d);
+}
+function setStatus(msg, kind) {
+  statusEl.textContent = msg || "";
+  statusEl.className = "status" + (kind ? " " + kind : "");
+}
+function licenseLabel(code) { return LICENSE_LABEL[code] || (code ? "종별 " + code : "종별 미지정"); }
+function admissionLabel(type, code) {
+  var map = ADMISSION_LABEL[type] || {};
+  if (Object.prototype.hasOwnProperty.call(map, code)) { return map[code]; }
+  return code ? "입학구분" : "입학구분 미지정";
+}
+function renderCode(code) {
+  return '<span class="code">코드 ' + esc(code || "-") + '</span>';
+}
+function formatSync(s) { return s ? s.replace("T", " ") : "동기화 정보 없음"; }
+
+function renderSection(title, type, rows, total) {
+  var list = rows.filter(function(r){ return r.registrationType === type; });
+  var html = '<div class="panel"><div class="section-title"><h2>' + esc(title) + '</h2><strong>총 ' + total + '건</strong></div>';
+  if (!list.length) {
+    html += '<div class="empty">이 날짜에 ' + esc(title) + ' 등록이 없습니다.</div></div>';
+    return html;
+  }
+  html += '<div class="table-wrap"><table class="summary-table"><thead><tr><th>종별</th><th>입학구분</th><th>건수</th></tr></thead><tbody>';
+  list.forEach(function(r){
+    html += '<tr><td>' + esc(licenseLabel(r.classNo)) + renderCode(r.classNo) + '</td>'
+          + '<td>' + esc(admissionLabel(type, r.admissionCode)) + renderCode(r.admissionCode) + '</td>'
+          + '<td>' + Number(r.count || 0) + '건</td></tr>';
+  });
+  html += '</tbody></table></div></div>';
+  return html;
+}
+
+function render(data) {
+  document.getElementById("functionTotal").textContent = Number(data.functionTotal || 0);
+  document.getElementById("driveTotal").textContent = Number(data.driveTotal || 0);
+  document.getElementById("grandTotal").textContent = Number(data.total || 0);
+  summaryGrid.hidden = false;
+
+  var rows = data.rows || [];
+  detailWrap.innerHTML = renderSection("장내입학", "function", rows, Number(data.functionTotal || 0))
+                       + renderSection("도로등록", "drive", rows, Number(data.driveTotal || 0));
+
+  var syncText = formatSync(data.lastSyncedAt);
+  var today = todayStr();
+  var syncedToday = data.lastSyncedAt && String(data.lastSyncedAt).substring(0, 10) === today;
+  var extra = (!syncedToday && data.date === today)
+    ? " · 오늘 18:30 집계 전일 수 있습니다."
+    : "";
+  setStatus("마지막 동기화: " + syncText + extra, "ok");
+}
+
+function load() {
+  var date = dateEl.value;
+  if (!date) { setStatus("날짜를 선택해주세요.", "err"); return; }
+  setStatus("불러오는 중...");
+  detailWrap.innerHTML = "";
+  summaryGrid.hidden = true;
+
+  fetch("api/daily-registration-summary.php?date=" + encodeURIComponent(date), { credentials:"same-origin" })
+    .then(function(r){
+      if (r.status === 401) { throw new Error("로그인이 필요합니다. 관리자 홈에서 다시 로그인해주세요."); }
+      if (r.status === 403) { throw new Error("이 화면은 최고관리자 계정만 조회할 수 있습니다."); }
+      if (!r.ok) {
+        return r.json().catch(function(){ return null; }).then(function(body){
+          throw new Error(body && body.error ? body.error : "서버(api)에 접속할 수 없습니다. (HTTP " + r.status + ")");
+        });
+      }
+      return r.json();
+    })
+    .then(function(data){
+      if (data.error) { throw new Error(data.error); }
+      render(data);
+    })
+    .catch(function(err){
+      setStatus(err.message || "조회 중 오류가 발생했습니다.", "err");
+    });
+}
+
+function updateDateLimits() {
+  var today = todayStr();
+  dateEl.max = today;
+  dateEl.min = addDays(today, -29);
+}
+
+function moveDate(days) {
+  var next = addDays(dateEl.value || todayStr(), days);
+  if (dateEl.min && next < dateEl.min) { next = dateEl.min; }
+  if (dateEl.max && next > dateEl.max) { next = dateEl.max; }
+  dateEl.value = next;
+  load();
+}
+
+document.getElementById("btnLoad").addEventListener("click", load);
+document.getElementById("btnPrev").addEventListener("click", function(){ moveDate(-1); });
+document.getElementById("btnNext").addEventListener("click", function(){ moveDate(1); });
+document.getElementById("btnToday").addEventListener("click", function(){ dateEl.value = todayStr(); load(); });
+dateEl.addEventListener("change", load);
+
+/* 화면에서 admin 여부를 먼저 확인하지만, 실제 데이터 보호는 위 API의
+   yj_require_admin()이 서버에서 다시 검사합니다. URL을 직접 알아도 우회할 수 없습니다. */
+fetch("api/auth.php", { credentials:"same-origin" }).then(function(r){ return r.json(); }).then(function(res){
+  if (!res || !res.loggedIn) { location.href = "admin.html"; return; }
+  var roles = res.roles || [];
+  if (roles.indexOf("admin") === -1) { location.href = "admin.html"; return; }
+  updateDateLimits();
+  dateEl.value = todayStr();
+  load();
+}).catch(function(){
+  setStatus("서버(api)에 접속할 수 없습니다.", "err");
+});
+
+})();
+</script>
+</body>
+</html>
