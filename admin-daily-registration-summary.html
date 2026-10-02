@@ -206,7 +206,7 @@ function renderSection(title, type, rows, total) {
   var list = rows.filter(function(r){ return r.registrationType === type; });
   var html = '<div class="panel"><div class="section-title"><h2>' + esc(title) + '</h2><strong>총 ' + total + '건</strong></div>';
   if (!list.length) {
-    html += '<div class="empty">이 날짜에는 ' + esc(title) + 이 없습니다.</div></div>';
+    html += '<div class="empty">이 날짜에는 ' + esc(title) + '이 없습니다.</div></div>';
     return html;
   }
   html += '<div class="table-wrap"><table class="summary-table"><thead><tr><th>종별</th><th>입학구분</th><th>건수</th></tr></thead><tbody>';
