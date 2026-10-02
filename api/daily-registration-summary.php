@@ -33,22 +33,41 @@ $stmt = $db->prepare(
 );
 $stmt->execute([$date]);
 
-$rows = [];
+/* 도로등록 중 새 입학이 아니라 "본학원 장내입학 후 도로 단계로 넘어온 것"으로
+   보는 코드는 여기 한 곳에서만 관리합니다. 현재 실제 학사자료 대조로 A만 확정됐습니다. */
+$transitionDriveCodes = array('A');
+
+$rows = array();
 $functionTotal = 0;
-$driveTotal = 0;
+$driveNewTotal = 0;
+$driveTransitionTotal = 0;
 foreach ($stmt->fetchAll() as $r) {
     $count = (int)$r['registration_count'];
     $type = (string)$r['registration_type'];
-    if ($type === 'function') { $functionTotal += $count; }
-    if ($type === 'drive') { $driveTotal += $count; }
+    $admissionCode = (string)$r['admission_code'];
+    $isTransition = ($type === 'drive' && in_array($admissionCode, $transitionDriveCodes, true));
 
-    $rows[] = [
+    if ($type === 'function') {
+        $functionTotal += $count;
+    } elseif ($type === 'drive') {
+        if ($isTransition) {
+            $driveTransitionTotal += $count;
+        } else {
+            /* A 외의 도로 코드는 미확인 새 코드까지 모두 '도로 신규'로 셉니다. */
+            $driveNewTotal += $count;
+        }
+    }
+
+    $rows[] = array(
         'registrationType' => $type,
         'classNo' => (string)$r['class_no'],
-        'admissionCode' => (string)$r['admission_code'],
+        'admissionCode' => $admissionCode,
         'count' => $count,
-    ];
+        'isTransition' => $isTransition,
+    );
 }
+$driveTotal = $driveNewTotal + $driveTransitionTotal;
+$newAdmissionTotal = $functionTotal + $driveNewTotal;
 
 /* 마지막 동기화 시각은 선택 날짜에 데이터가 0건이어도 알 수 있도록
    전용 테이블 전체에서 가장 최근 synced_at을 확인합니다. 30일 안에 등록이 단 한 건도
@@ -60,13 +79,17 @@ $meta = $db->query(
        FROM $table"
 )->fetch();
 
-yj_json([
+yj_json(array(
     'date' => $date,
     'functionTotal' => $functionTotal,
+    'driveNewTotal' => $driveNewTotal,
+    'driveTransitionTotal' => $driveTransitionTotal,
+    'newAdmissionTotal' => $newAdmissionTotal,
+    /* driveTotal은 기존 화면/외부 확인용 호환값으로 유지합니다.
+       신규 입학 합계에는 쓰지 않습니다. */
     'driveTotal' => $driveTotal,
-    'total' => $functionTotal + $driveTotal,
     'rows' => $rows,
     'availableFrom' => $meta && $meta['min_date'] ? (string)$meta['min_date'] : '',
     'availableTo' => $meta && $meta['max_date'] ? (string)$meta['max_date'] : '',
     'lastSyncedAt' => $meta && $meta['last_synced_at'] ? (string)$meta['last_synced_at'] : '',
-]);
+));

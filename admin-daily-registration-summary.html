@@ -28,15 +28,25 @@
   .status.err { color:#c53030; }
   .status.ok { color:var(--color-muted); }
 
-  .summary-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-bottom:20px; }
-  .summary-card { background:#fff; border:1px solid var(--color-line); border-radius:var(--radius-lg); padding:20px; }
-  .summary-card span { display:block; color:var(--color-muted); font-size:13px; font-weight:700; margin-bottom:6px; }
-  .summary-card strong { font-size:29px; line-height:1; color:var(--color-ink); }
+  .summary-grid { display:grid; grid-template-columns:1.25fr 1fr 1fr 1.2fr; gap:12px; margin-bottom:20px; }
+  .summary-card { min-width:0; background:#fff; border:1px solid var(--color-line); border-radius:var(--radius-lg); padding:20px; }
+  .summary-card span { display:block; color:var(--color-muted); font-size:13px; font-weight:700; margin-bottom:6px; overflow-wrap:anywhere; }
+  .summary-card strong { font-size:29px; line-height:1; color:var(--color-ink); font-variant-numeric:tabular-nums; }
   .summary-card small { font-size:13px; margin-left:3px; color:var(--color-muted); }
+  .summary-card .summary-detail { display:block; margin-top:8px; color:var(--color-muted); font-size:11.5px; line-height:1.45; font-weight:600; }
+  .summary-card.primary { border-color:#9cc2af; background:#f2faf6; }
+  .summary-card.primary span, .summary-card.primary strong { color:#184d37; }
+  .summary-card.primary strong { font-size:34px; }
+  .summary-card.muted { background:#f7f7f6; border-color:#dfdedb; }
+  .summary-card.muted span, .summary-card.muted strong, .summary-card.muted .summary-detail { color:#77726b; }
 
   .section-title { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:12px; }
   .section-title h2 { margin:0; font-size:17px; color:var(--color-ink); font-weight:800; }
-  .section-title strong { color:var(--color-ink); font-size:15px; }
+  .section-title strong { color:var(--color-ink); font-size:15px; font-variant-numeric:tabular-nums; }
+  .section-note { margin:-4px 0 12px; color:var(--color-muted); font-size:12.5px; line-height:1.55; }
+  .panel.muted-section { background:#fafafa; border-color:#e4e2df; }
+  .panel.muted-section .section-title h2,
+  .panel.muted-section .section-title strong { color:#726d66; }
   .table-wrap { overflow-x:auto; }
   table.summary-table { width:100%; border-collapse:collapse; min-width:570px; font-size:13.5px; }
   .summary-table th, .summary-table td { border:1px solid var(--color-line); padding:10px 12px; text-align:left; }
@@ -49,10 +59,14 @@
   @media (max-width: 650px) {
     .admin-shell { padding:22px 14px 60px; }
     .panel { padding:18px 16px; }
-    .summary-grid { grid-template-columns:1fr; }
-    .summary-card { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; }
-    .summary-card span { margin:0; }
+    .summary-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px; }
+    .summary-card { padding:15px 14px; }
+    .summary-card span { margin-bottom:7px; line-height:1.35; }
     .summary-card strong { font-size:24px; }
+    .summary-card.primary { grid-column:1 / -1; }
+    .summary-card.primary strong { font-size:31px; }
+    .summary-card.muted { grid-column:1 / -1; }
+    .summary-card .summary-detail { margin-top:6px; }
 
     /* 스마트폰에서는 3열 표를 행 단위 카드로 바꿔 가로 스크롤 없이 건수까지 보이게 한다. */
     .table-wrap { overflow-x:visible; }
@@ -124,15 +138,26 @@
     </div>
     <div class="sync-note">
       자료는 <strong>매일 18:30 한 번</strong> 갱신됩니다. 18:30 이전에는 오늘 최종 집계가 아직 반영되지 않았을 수 있습니다.<br>
-      입학구분은 학사DB의 <strong>AdmissionType 코드</strong>를 기준으로 표시합니다.
+      입학구분은 학사DB의 <strong>AdmissionType 코드</strong>를 기준으로 표시합니다.<br>
+      <strong>신규 입학 = 장내입학 + 도로 신규(본학원 제외)</strong>입니다.<br>
+      도로 <strong>C·E</strong>는 최근 30일에 자료가 없어 '새 입학'으로 보는 것은 추정입니다.
     </div>
     <p class="status" id="status"></p>
   </div>
 
   <div class="summary-grid" id="summaryGrid" hidden>
+    <div class="summary-card primary">
+      <span>신규 입학</span>
+      <div><strong id="newAdmissionTotal">0</strong><small>건</small></div>
+      <small class="summary-detail" id="newAdmissionBreakdown">장내 0 + 도로 신규 0</small>
+    </div>
     <div class="summary-card"><span>장내입학</span><div><strong id="functionTotal">0</strong><small>건</small></div></div>
-    <div class="summary-card"><span>도로등록</span><div><strong id="driveTotal">0</strong><small>건</small></div></div>
-    <div class="summary-card"><span>전체 등록</span><div><strong id="grandTotal">0</strong><small>건</small></div></div>
+    <div class="summary-card"><span>도로 신규</span><div><strong id="driveNewTotal">0</strong><small>건</small></div></div>
+    <div class="summary-card muted">
+      <span>도로 단계 진입(본학원)</span>
+      <div><strong id="driveTransitionTotal">0</strong><small>건</small></div>
+      <small class="summary-detail">새 입학 아님</small>
+    </div>
   </div>
 
   <div id="detailWrap"></div>
@@ -202,9 +227,16 @@ function renderCode(code) {
 }
 function formatSync(s) { return s ? s.replace("T", " ") : "동기화 정보 없음"; }
 
-function renderSection(title, type, rows, total) {
-  var list = rows.filter(function(r){ return r.registrationType === type; });
-  var html = '<div class="panel"><div class="section-title"><h2>' + esc(title) + '</h2><strong>총 ' + total + '건</strong></div>';
+function renderSection(title, type, rows, total, filterFn, options) {
+  options = options || {};
+  var list = rows.filter(function(r){
+    return r.registrationType === type && (!filterFn || filterFn(r));
+  });
+  var panelClass = options.muted ? 'panel muted-section' : 'panel';
+  var html = '<div class="' + panelClass + '"><div class="section-title"><h2>' + esc(title) + '</h2><strong>총 ' + total + '건</strong></div>';
+  if (options.note) {
+    html += '<p class="section-note">' + esc(options.note) + '</p>';
+  }
   if (!list.length) {
     html += '<div class="empty">이 날짜에는 ' + esc(title) + '이 없습니다.</div></div>';
     return html;
@@ -220,14 +252,32 @@ function renderSection(title, type, rows, total) {
 }
 
 function render(data) {
-  document.getElementById("functionTotal").textContent = Number(data.functionTotal || 0);
-  document.getElementById("driveTotal").textContent = Number(data.driveTotal || 0);
-  document.getElementById("grandTotal").textContent = Number(data.total || 0);
+  var functionTotal = Number(data.functionTotal || 0);
+  var driveNewTotal = Number(data.driveNewTotal || 0);
+  var driveTransitionTotal = Number(data.driveTransitionTotal || 0);
+  var newAdmissionTotal = Number(data.newAdmissionTotal || 0);
+
+  document.getElementById("newAdmissionTotal").textContent = newAdmissionTotal;
+  document.getElementById("newAdmissionBreakdown").textContent = "장내 " + functionTotal + " + 도로 신규 " + driveNewTotal;
+  document.getElementById("functionTotal").textContent = functionTotal;
+  document.getElementById("driveNewTotal").textContent = driveNewTotal;
+  document.getElementById("driveTransitionTotal").textContent = driveTransitionTotal;
   summaryGrid.hidden = false;
 
   var rows = data.rows || [];
-  detailWrap.innerHTML = renderSection("장내입학", "function", rows, Number(data.functionTotal || 0))
-                       + renderSection("도로등록", "drive", rows, Number(data.driveTotal || 0));
+  detailWrap.innerHTML = renderSection("장내입학", "function", rows, functionTotal, null)
+                       + renderSection("도로 신규 등록", "drive", rows, driveNewTotal, function(r){ return !r.isTransition; })
+                       + renderSection(
+                           "도로 단계 진입 (본학원)",
+                           "drive",
+                           rows,
+                           driveTransitionTotal,
+                           function(r){ return !!r.isTransition; },
+                           {
+                             muted:true,
+                             note:"우리 학원에서 장내 입학한 분이 도로 단계로 넘어온 건수입니다. 새 입학이 아니며 신규 입학 합계에 포함하지 않습니다."
+                           }
+                         );
 
   var syncText = formatSync(data.lastSyncedAt);
   var today = todayStr();
