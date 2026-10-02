@@ -18,6 +18,11 @@
 ## 3. 서버·기술 환경 (깨지면 운영이 멈춥니다)
 - **호스팅은 카페24**: **PHP 5.5 이상 호환 문법만** 씁니다. 쓰지 말 것: `??`, 반환 타입 선언, 스칼라 타입 힌트, `random_bytes`(필요하면 `openssl_random_pseudo_bytes` 폴백), `hash_equals` 직접 호출(→ `api/_db.php`의 `yj_require_sync_key` 패턴처럼 `function_exists` 확인). 짧은 배열 `[]`은 가능.
 - DB: MySQL(MariaDB 호환), 테이블 접두사 `yj_`, 문자셋 utf8. 새 테이블/컬럼은 `db/schema.sql`·`db/setup.php`·`db/CHANGELOG-DB.md`를 **같이** 고칩니다(`setup.php`는 원장님이 한 번 실행).
+- **[필수 규칙 — 원장님 지시, 2026-10-02] 사이트에 올라가는 파일이 하나라도 바뀌면 푸터 버전을 반드시 갱신합니다.** 그래야 "저장소에 있는 변경"과 "서버에 실제로 올라간 것"을 구분할 수 있습니다.
+  1. 바뀐 파일이 화면에 나가는 것(`*.html`, `api/*.php`, `js/*`, `css/*`, `.htaccess`, `sitemap.xml` 등)이면 → `js/main.js` 맨 위 `YJ_SITE_VERSION`의 `commit`(바로 직전 변경 커밋 해시), `date`(한국 시각 `YYYY-MM-DD HH:MM KST`), `note`(한 줄 요약)를 고칩니다. (문서만 바뀌었으면 생략)
+  2. **`js/main.js`를 "FTP로 올릴 파일" 목록에 항상 포함**하고, `CHANGELOG.md`에 같은 항목으로 적습니다.
+  3. 푸터는 "build 날짜시각 · 해시"로 보이므로, 원장님이 올린 뒤 푸터 값이 안내한 값과 같은지로 반영 여부를 확인합니다. 보고할 때 **"올린 뒤 푸터가 `build … · 해시`로 보이면 반영된 것"** 이라고 값을 정확히 알려줍니다.
+  4. 해시는 자기 자신을 가리킬 수 없으니 "변경 커밋 → 버전 갱신 커밋" 두 번으로 나눠 커밋해도 됩니다(버전에는 변경 커밋의 해시를 씁니다).
 - 배포는 **FTP로 바뀐 파일만 올립니다.** 그래서 변경할 때마다 `CHANGELOG.md`에 **"FTP로 올릴 파일" 목록**과 DB 변경 여부를 적습니다(최신 항목이 위).
 - **비밀값은 저장소에 없습니다**: `config.php`(gitignore)에만 있고 `config.example.php`에는 자리표시자만. 비밀번호·키·전화번호·수강생 정보를 코드·문서·로그에 쓰지 않습니다.
 - 공통 헬퍼는 `api/_db.php`: `yj_json`, `yj_input`, `yj_db`, `yj_table`, `yj_require_login`, `yj_require_admin`(최고관리자), `yj_require_content_admin`(최고+사무실), `yj_require_shuttle_admin`(최고+사무실+셔틀), `yj_require_sync_key($configKey)`(학사서버↔홈페이지 키), `yj_has_role`. **역할은 쉼표로 이어진 목록**(예: `instructor,admin`)이라 `yj_has_role`로만 검사합니다.
